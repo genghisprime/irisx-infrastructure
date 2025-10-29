@@ -2,7 +2,14 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { serveStatic } from '@hono/node-server/serve-static';
 import dotenv from 'dotenv';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 import pool, { query, closePool } from './db/connection.js';
 import redis, { closeRedis } from './db/redis.js';
 import FreeSWITCHService from './services/freeswitch.js';
@@ -20,6 +27,7 @@ import contactLists from './routes/contact-lists.js';
 import queues from './routes/queues.js';
 import agents from './routes/agents.js';
 import campaigns from './routes/campaigns.js';
+import billing from './routes/billing.js';
 
 dotenv.config();
 
@@ -146,9 +154,33 @@ app.get('/', (c) => {
     endpoints: {
       health: '/health',
       docs: '/docs',
+      openapi: '/openapi.yaml',
       api: '/v1'
     }
   });
+});
+
+// Serve OpenAPI documentation (Swagger UI)
+app.get('/docs', (c) => {
+  try {
+    const htmlPath = join(__dirname, '../public/swagger.html');
+    const html = readFileSync(htmlPath, 'utf-8');
+    return c.html(html);
+  } catch (error) {
+    return c.text('API Documentation not available', 500);
+  }
+});
+
+// Serve OpenAPI spec
+app.get('/openapi.yaml', (c) => {
+  try {
+    const yamlPath = join(__dirname, '../openapi.yaml');
+    const yaml = readFileSync(yamlPath, 'utf-8');
+    c.header('Content-Type', 'application/x-yaml');
+    return c.text(yaml);
+  } catch (error) {
+    return c.text('OpenAPI specification not found', 404);
+  }
 });
 
 // API v1 routes
@@ -211,6 +243,7 @@ app.route('/v1/lists', contactLists);
 app.route('/v1/queues', queues);
 app.route('/v1/agents', agents);
 app.route('/v1/campaigns', campaigns);
+app.route('/v1/billing', billing);
 
 // 404 handler
 app.notFound((c) => {

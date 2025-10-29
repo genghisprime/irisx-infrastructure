@@ -1,0 +1,1058 @@
+openapi: 3.0.3
+info:
+  title: IRIS Multi-Channel Communications Platform API
+  description: |
+    **IRIS** is a next-generation unified communications platform providing Voice, SMS, Email, and Social messaging through a single REST API.
+
+    ## Features
+    - 📞 **Voice Calling** - Inbound/outbound calls with IVR, call recording, and FreeSWITCH integration
+    - 💬 **SMS/MMS** - Send/receive SMS with delivery tracking and MMS support
+    - 📧 **Email** - Transactional and bulk email with template engine
+    - 🎯 **Campaigns** - Bulk SMS/Email/Voice campaigns with targeting
+    - 👥 **Contacts** - Contact management with lists, tags, and custom fields
+    - 📊 **Analytics** - Real-time dashboards and reporting
+    - 🔔 **Webhooks** - HMAC-signed event notifications with retry logic
+    - 💰 **Billing** - Usage tracking, invoicing, and LCR routing
+    - 📞 **Queues & Agents** - Call center ACD with skills-based routing
+    - 🤖 **TTS** - Text-to-speech with multi-provider support (OpenAI, ElevenLabs, AWS Polly)
+    - 🎙️ **IVR** - Interactive voice response with dynamic menus
+
+    ## Authentication
+    All API requests require an API key passed in the `X-API-Key` header:
+    ```
+    X-API-Key: your_api_key_here
+    ```
+
+    ## Base URL
+    ```
+    https://api.irisx.io/v1
+    ```
+
+    ## Rate Limits
+    - **Per-minute limit**: 60 requests
+    - **Per-hour limit**: 3600 requests
+    - Rate limit headers are included in all responses
+
+    ## Pagination
+    List endpoints support pagination with `limit` and `offset` query parameters:
+    - `limit`: Number of results (default: 50, max: 100)
+    - `offset`: Starting position (default: 0)
+
+    ## Webhooks
+    IRIS can send real-time event notifications to your server. Configure webhooks at `/v1/webhooks`.
+
+    Events include:
+    - `call.initiated`, `call.ringing`, `call.answered`, `call.ended`
+    - `sms.sent`, `sms.delivered`, `sms.failed`, `sms.received`
+    - `email.sent`, `email.delivered`, `email.opened`, `email.clicked`, `email.bounced`
+    - `campaign.started`, `campaign.completed`, `campaign.paused`
+
+    All webhook payloads are signed with HMAC-SHA256. Verify signatures using the webhook's `secret` key.
+
+  version: 1.0.0
+  contact:
+    name: IRIS Support
+    email: support@irisx.io
+    url: https://irisx.io
+  license:
+    name: Proprietary
+    url: https://irisx.io/terms
+
+servers:
+  - url: https://api.irisx.io/v1
+    description: Production API
+  - url: http://localhost:3000/v1
+    description: Local Development
+
+tags:
+  - name: SMS
+    description: Send and receive SMS/MMS messages
+  - name: Email
+    description: Transactional and bulk email with templates
+  - name: Webhooks
+    description: Event notification configuration and delivery tracking
+  - name: TTS
+    description: Text-to-speech generation with multi-provider support
+  - name: IVR
+    description: Interactive voice response menu management
+  - name: Contacts
+    description: Contact management with tags and custom fields
+  - name: Contact Lists
+    description: Contact list management and segmentation
+  - name: Queues
+    description: Call center queue management
+  - name: Agents
+    description: Agent presence and performance tracking
+  - name: Campaigns
+    description: Bulk messaging campaigns (SMS, Email, Voice)
+  - name: Analytics
+    description: Real-time metrics and reporting
+  - name: Billing
+    description: Usage tracking, invoicing, and rating engine
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        message:
+          type: string
+          description: Detailed error description
+      required:
+        - error
+
+    SMSMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        uuid:
+          type: string
+          format: uuid
+        tenant_id:
+          type: integer
+          format: int64
+        from_number:
+          type: string
+          example: "+15551234567"
+        to_number:
+          type: string
+          example: "+15559876543"
+        body:
+          type: string
+          example: "Hello, this is a test message"
+        direction:
+          type: string
+          enum: [inbound, outbound]
+        status:
+          type: string
+          enum: [queued, sent, delivered, failed, received]
+        segments:
+          type: integer
+          description: Number of SMS segments (160 chars each)
+        media_urls:
+          type: array
+          items:
+            type: string
+          description: URLs of attached media (MMS)
+        provider:
+          type: string
+          example: "twilio"
+        provider_message_id:
+          type: string
+        error_code:
+          type: string
+        error_message:
+          type: string
+        cost_cents:
+          type: integer
+          description: Cost in cents
+        created_at:
+          type: string
+          format: date-time
+        delivered_at:
+          type: string
+          format: date-time
+
+    Email:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        uuid:
+          type: string
+          format: uuid
+        tenant_id:
+          type: integer
+          format: int64
+        from_email:
+          type: string
+          format: email
+        to_email:
+          type: string
+          format: email
+        subject:
+          type: string
+        body_text:
+          type: string
+          description: Plain text version
+        body_html:
+          type: string
+          description: HTML version
+        template_id:
+          type: integer
+          format: int64
+        template_variables:
+          type: object
+          additionalProperties: true
+        status:
+          type: string
+          enum: [queued, sending, sent, delivered, opened, clicked, bounced, complained, failed]
+        email_type:
+          type: string
+          enum: [transactional, marketing, system]
+        provider:
+          type: string
+          example: "elastic_email"
+        provider_message_id:
+          type: string
+        opened_at:
+          type: string
+          format: date-time
+        clicked_at:
+          type: string
+          format: date-time
+        bounced_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        uuid:
+          type: string
+          format: uuid
+        tenant_id:
+          type: integer
+          format: int64
+        url:
+          type: string
+          format: uri
+          example: "https://example.com/webhooks/irisx"
+        events:
+          type: array
+          items:
+            type: string
+          example: ["call.answered", "sms.delivered"]
+        secret:
+          type: string
+          description: HMAC-SHA256 signing secret
+        is_active:
+          type: boolean
+        retry_enabled:
+          type: boolean
+        max_retries:
+          type: integer
+        retry_delay_seconds:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    Contact:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        uuid:
+          type: string
+          format: uuid
+        tenant_id:
+          type: integer
+          format: int64
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        company:
+          type: string
+        custom_fields:
+          type: object
+          additionalProperties: true
+        tags:
+          type: array
+          items:
+            type: string
+        is_dnc:
+          type: boolean
+          description: Do Not Call flag
+        opt_in_sms:
+          type: boolean
+        opt_in_email:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Campaign:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        uuid:
+          type: string
+          format: uuid
+        tenant_id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        campaign_type:
+          type: string
+          enum: [sms, email, voice]
+        status:
+          type: string
+          enum: [draft, scheduled, running, paused, completed, failed]
+        template_id:
+          type: integer
+          format: int64
+        contact_list_id:
+          type: integer
+          format: int64
+        scheduled_at:
+          type: string
+          format: date-time
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        total_recipients:
+          type: integer
+        sent_count:
+          type: integer
+        delivered_count:
+          type: integer
+        failed_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  # ==================== SMS ENDPOINTS ====================
+  /sms:
+    post:
+      tags:
+        - SMS
+      summary: Send SMS message
+      description: Send an SMS or MMS message to a phone number
+      operationId: sendSMS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - to
+                - from
+                - body
+              properties:
+                to:
+                  type: string
+                  example: "+15559876543"
+                  description: Recipient phone number (E.164 format)
+                from:
+                  type: string
+                  example: "+15551234567"
+                  description: Your IRIS phone number
+                body:
+                  type: string
+                  example: "Hello from IRIS!"
+                  maxLength: 1600
+                media_urls:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                  description: Media URLs for MMS (max 10)
+      responses:
+        '201':
+          description: SMS queued successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    $ref: '#/components/schemas/SMSMessage'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limit exceeded
+
+    get:
+      tags:
+        - SMS
+      summary: List SMS messages
+      description: Retrieve a list of SMS messages with optional filters
+      operationId: listSMS
+      parameters:
+        - name: direction
+          in: query
+          schema:
+            type: string
+            enum: [inbound, outbound]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [queued, sent, delivered, failed]
+        - name: from
+          in: query
+          schema:
+            type: string
+          description: Filter by from_number
+        - name: to
+          in: query
+          schema:
+            type: string
+          description: Filter by to_number
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of SMS messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SMSMessage'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+
+  /sms/{id}:
+    get:
+      tags:
+        - SMS
+      summary: Get SMS message
+      description: Retrieve a single SMS message by ID
+      operationId: getSMS
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: SMS message details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    $ref: '#/components/schemas/SMSMessage'
+        '404':
+          description: SMS message not found
+
+  # ==================== EMAIL ENDPOINTS ====================
+  /email:
+    post:
+      tags:
+        - Email
+      summary: Send email
+      description: Send a transactional or marketing email
+      operationId: sendEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - to
+                - from
+                - subject
+              properties:
+                to:
+                  type: string
+                  format: email
+                  example: "customer@example.com"
+                from:
+                  type: string
+                  format: email
+                  example: "noreply@yourcompany.com"
+                subject:
+                  type: string
+                  example: "Welcome to our service!"
+                body_text:
+                  type: string
+                  description: Plain text version
+                body_html:
+                  type: string
+                  description: HTML version
+                template_id:
+                  type: integer
+                  format: int64
+                  description: Use email template
+                template_variables:
+                  type: object
+                  additionalProperties: true
+                  example:
+                    first_name: "John"
+                    company: "Acme Corp"
+                email_type:
+                  type: string
+                  enum: [transactional, marketing, system]
+                  default: transactional
+      responses:
+        '201':
+          description: Email queued successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    $ref: '#/components/schemas/Email'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+  # ==================== WEBHOOK ENDPOINTS ====================
+  /webhooks:
+    post:
+      tags:
+        - Webhooks
+      summary: Create webhook
+      description: Register a new webhook endpoint
+      operationId: createWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - events
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/webhooks/irisx"
+                events:
+                  type: array
+                  items:
+                    type: string
+                  example: ["call.answered", "sms.delivered", "email.opened"]
+                retry_enabled:
+                  type: boolean
+                  default: true
+                max_retries:
+                  type: integer
+                  default: 5
+                retry_delay_seconds:
+                  type: integer
+                  default: 60
+      responses:
+        '201':
+          description: Webhook created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook:
+                    $ref: '#/components/schemas/Webhook'
+
+    get:
+      tags:
+        - Webhooks
+      summary: List webhooks
+      description: Get all registered webhooks
+      operationId: listWebhooks
+      responses:
+        '200':
+          description: List of webhooks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+
+  # ==================== ANALYTICS ENDPOINTS ====================
+  /analytics/dashboard:
+    get:
+      tags:
+        - Analytics
+      summary: Dashboard overview
+      description: Get aggregated metrics for calls, SMS, email, webhooks, and usage
+      operationId: getAnalyticsDashboard
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+          description: Number of days to include
+      responses:
+        '200':
+          description: Dashboard metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period:
+                    type: string
+                    example: "30 days"
+                  calls:
+                    type: object
+                    properties:
+                      inbound:
+                        type: integer
+                      outbound:
+                        type: integer
+                      completed:
+                        type: integer
+                      failed:
+                        type: integer
+                      total_minutes:
+                        type: number
+                      avg_duration_seconds:
+                        type: number
+                  sms:
+                    type: object
+                    properties:
+                      sent:
+                        type: integer
+                      received:
+                        type: integer
+                      delivered:
+                        type: integer
+                      failed:
+                        type: integer
+                      delivery_rate:
+                        type: string
+                        example: "98.50"
+                  email:
+                    type: object
+                    properties:
+                      sent:
+                        type: integer
+                      delivered:
+                        type: integer
+                      opened:
+                        type: integer
+                      clicked:
+                        type: integer
+                      bounced:
+                        type: integer
+                      open_rate:
+                        type: string
+                      click_rate:
+                        type: string
+                  webhooks:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      successful:
+                        type: integer
+                      failed:
+                        type: integer
+                      avg_delivery_ms:
+                        type: number
+                      success_rate:
+                        type: string
+                  usage:
+                    type: object
+                    properties:
+                      total_cost_cents:
+                        type: integer
+                      total_cost_dollars:
+                        type: string
+                      total_calls:
+                        type: integer
+                      total_sms:
+                        type: integer
+                      total_call_minutes:
+                        type: number
+
+  /analytics/calls:
+    get:
+      tags:
+        - Analytics
+      summary: Call analytics
+      description: Get call analytics with time series data
+      operationId: getCallAnalytics
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+        - name: groupBy
+          in: query
+          schema:
+            type: string
+            enum: [hour, day]
+            default: day
+      responses:
+        '200':
+          description: Call analytics data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  time_series:
+                    type: array
+                    items:
+                      type: object
+                  top_destinations:
+                    type: array
+                    items:
+                      type: object
+                  failure_reasons:
+                    type: array
+                    items:
+                      type: object
+
+  # ==================== CONTACT ENDPOINTS ====================
+  /contacts:
+    post:
+      tags:
+        - Contacts
+      summary: Create contact
+      description: Add a new contact to your contact database
+      operationId: createContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                company:
+                  type: string
+                custom_fields:
+                  type: object
+                  additionalProperties: true
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contact:
+                    $ref: '#/components/schemas/Contact'
+
+    get:
+      tags:
+        - Contacts
+      summary: List contacts
+      description: Get all contacts with optional filtering
+      operationId: listContacts
+      parameters:
+        - name: tag
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name, email, or phone
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of contacts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contacts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contact'
+                  total:
+                    type: integer
+
+  # ==================== CAMPAIGN ENDPOINTS ====================
+  /campaigns:
+    post:
+      tags:
+        - Campaigns
+      summary: Create campaign
+      description: Create a new messaging campaign
+      operationId: createCampaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - campaign_type
+                - contact_list_id
+              properties:
+                name:
+                  type: string
+                campaign_type:
+                  type: string
+                  enum: [sms, email, voice]
+                template_id:
+                  type: integer
+                  format: int64
+                contact_list_id:
+                  type: integer
+                  format: int64
+                scheduled_at:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Campaign created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaign:
+                    $ref: '#/components/schemas/Campaign'
+
+    get:
+      tags:
+        - Campaigns
+      summary: List campaigns
+      description: Get all campaigns
+      operationId: listCampaigns
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, scheduled, running, paused, completed]
+        - name: campaign_type
+          in: query
+          schema:
+            type: string
+            enum: [sms, email, voice]
+      responses:
+        '200':
+          description: List of campaigns
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaigns:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Campaign'
+
+  /campaigns/{id}/launch:
+    post:
+      tags:
+        - Campaigns
+      summary: Launch campaign
+      description: Start sending messages for this campaign
+      operationId: launchCampaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Campaign launched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaign:
+                    $ref: '#/components/schemas/Campaign'
+
+  # ==================== BILLING ENDPOINTS ====================
+  /billing/rates:
+    get:
+      tags:
+        - Billing
+      summary: List rate cards
+      description: Get international calling rates
+      operationId: listRates
+      parameters:
+        - name: prefix
+          in: query
+          schema:
+            type: string
+          description: Filter by destination prefix
+        - name: carrier_name
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of rates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        prefix:
+                          type: string
+                          example: "1"
+                        destination_name:
+                          type: string
+                          example: "United States & Canada"
+                        cost_per_minute:
+                          type: string
+                          example: "0.0085"
+                        connection_fee:
+                          type: string
+                          example: "0.0000"
+                        carrier_name:
+                          type: string
+                          example: "Twilio"
+
+  /billing/usage/current-month:
+    get:
+      tags:
+        - Billing
+      summary: Current month usage
+      description: Get usage summary for the current billing period
+      operationId: getCurrentMonthUsage
+      responses:
+        '200':
+          description: Current month usage
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  usage:
+                    type: object
+                    properties:
+                      total_call_minutes:
+                        type: number
+                      total_call_cost:
+                        type: number
+                      call_count:
+                        type: integer
+                      total_sms:
+                        type: integer
+                      total_cost:
+                        type: number
+
+  /billing/invoices:
+    get:
+      tags:
+        - Billing
+      summary: List invoices
+      description: Get billing invoices
+      operationId: listInvoices
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, sent, paid, overdue, cancelled]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invoices:
+                    type: array
+                    items:
+                      type: object

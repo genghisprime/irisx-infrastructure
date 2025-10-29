@@ -154,11 +154,31 @@ Say to Claude: "Read SESSION_RECOVERY.md. Where did we leave off?"
   - 8 REST API endpoints
   - 9 database tables
 
+- ✅ **Billing & Rating Engine (Deployed)**
+  - International rate tables with LCR (Least Cost Routing)
+  - Automatic call cost calculation with database triggers
+  - Usage tracking (daily/monthly aggregation)
+  - Spend limits with alert thresholds
+  - Invoice generation and management
+  - Payment method storage (Stripe-ready)
+  - Monthly billing summaries
+  - 10 database tables with views
+  - 19 REST API endpoints
+
+- ✅ **API Documentation System (Complete)**
+  - OpenAPI 3.0 specification for all 154 endpoints
+  - Interactive Swagger UI at `/docs`
+  - Complete request/response schemas
+  - Authentication and rate limit documentation
+  - Webhook signature verification guide
+  - Production-ready developer portal
+
 **Next:** Admin dashboard (Vue 3), Load testing, SSL/TLS setup
 **Timeline:** 34 weeks to production launch
-**Current:** Week 19 of 34 (56% complete) 🚀
+**Current:** Week 23 of 34 (68% complete) 🚀
 **Startup Cost:** ~$71-86/mo (no change)
-**API Endpoints:** 135 production-ready endpoints
+**API Endpoints:** 154 production-ready endpoints
+**API Documentation:** https://api.irisx.io/docs
 **Latest Session:** [FINAL_SESSION_SUMMARY_OCT29.md](docs/FINAL_SESSION_SUMMARY_OCT29.md) ⭐ **EPIC SESSION**
 **See Also:** [PHASE_0_COMPLETE_SUMMARY.md](docs/infrastructure/PHASE_0_COMPLETE_SUMMARY.md)
 
