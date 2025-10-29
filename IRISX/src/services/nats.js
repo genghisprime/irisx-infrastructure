@@ -54,8 +54,9 @@ class NATSService {
         console.error('[NATS] Status error:', err);
       });
 
-      // Create streams on startup
-      await this.createStreams();
+      // Streams should be created via init-nats-streams.js script
+      // NOT by every worker/API process that connects
+      // await this.createStreams();
     } catch (error) {
       console.error('[NATS] Connection error:', error);
       this.isConnected = false;
@@ -70,38 +71,38 @@ class NATSService {
     try {
       const jsm = await this.js.jetstreamManager();
 
-      // SMS Stream
+      // SMS Stream - PRODUCTION SCALE: 30GB limit
       await this.createStream(jsm, {
         name: 'SMS',
         subjects: ['sms.send', 'sms.status'],
         retention: 'limits',
         max_age: 7 * 24 * 60 * 60 * 1000000000, // 7 days in nanoseconds
-        max_msgs: 1000000,
-        max_bytes: 10737418240, // 10GB
+        max_msgs: 10000000,  // 10M messages
+        max_bytes: 32212254720, // 30GB
         storage: 'file',
         discard: 'old',
       });
 
-      // Email Stream
+      // Email Stream - PRODUCTION SCALE: 40GB limit
       await this.createStream(jsm, {
         name: 'EMAIL',
         subjects: ['email.send', 'email.status'],
         retention: 'limits',
         max_age: 7 * 24 * 60 * 60 * 1000000000, // 7 days
-        max_msgs: 1000000,
-        max_bytes: 10737418240, // 10GB
+        max_msgs: 10000000,  // 10M messages
+        max_bytes: 42949672960, // 40GB
         storage: 'file',
         discard: 'old',
       });
 
-      // Webhook Stream
+      // Webhook Stream - PRODUCTION SCALE: 20GB limit
       await this.createStream(jsm, {
         name: 'WEBHOOKS',
         subjects: ['webhooks.deliver', 'webhooks.retry'],
         retention: 'limits',
         max_age: 7 * 24 * 60 * 60 * 1000000000, // 7 days
-        max_msgs: 1000000,
-        max_bytes: 5368709120, // 5GB
+        max_msgs: 10000000,  // 10M messages
+        max_bytes: 21474836480, // 20GB
         storage: 'file',
         discard: 'old',
       });
