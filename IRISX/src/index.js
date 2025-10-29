@@ -28,6 +28,7 @@ import queues from './routes/queues.js';
 import agents from './routes/agents.js';
 import campaigns from './routes/campaigns.js';
 import billing from './routes/billing.js';
+import recordings from './routes/recordings.js';
 
 dotenv.config();
 
@@ -244,6 +245,7 @@ app.route('/v1/queues', queues);
 app.route('/v1/agents', agents);
 app.route('/v1/campaigns', campaigns);
 app.route('/v1/billing', billing);
+app.route('/v1/recordings', recordings);
 
 // 404 handler
 app.notFound((c) => {
