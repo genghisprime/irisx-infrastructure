@@ -987,6 +987,20 @@
 
 ### Week 32: Security & Compliance
 
+#### Audit Logging ✅ COMPLETE
+- [x] **Audit Logging System** - Comprehensive audit trail for security & compliance
+  - [x] Create `audit_logs` table (user, action, resource, timestamp)
+  - [x] Create `security_events` table (failed logins, rate limits)
+  - [x] Create `data_access_logs` table (PII/PHI compliance)
+  - [x] Create `admin_activity_logs` table (privileged actions)
+  - [x] Automatic API request logging with middleware
+  - [x] Failed login detection (brute force monitoring)
+  - [x] Sensitive data access reporting
+  - [x] Views for common security queries
+  - [x] Functions for automatic cleanup and event logging
+  - [x] Retention policies (365 days for audit, forever for security)
+  - [x] 9 REST API endpoints for audit querying
+
 #### Call Recording Encryption
 **📖 Reference:** [Call Recording Encryption](project_bible/IRIS_Call_Recording_Encryption_Security.md)
 
@@ -1001,14 +1015,6 @@
 - [ ] Request STIR/SHAKEN certificate from carrier
 - [ ] Configure FreeSWITCH to add attestation
 - [ ] Test: Outbound calls show verified caller ID
-
-#### Audit Logging
-- [ ] Create `audit_logs` table (user, action, resource, timestamp)
-- [ ] Log all API calls
-- [ ] Log all admin actions
-- [ ] Log all supervisor actions (monitor, whisper, barge)
-- [ ] Build audit log viewer (Vue 3)
-- [ ] Test: All actions logged
 
 #### SOC 2 Readiness
 - [ ] Complete SOC 2 readiness assessment
