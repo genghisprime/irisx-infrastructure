@@ -15,6 +15,8 @@ import analytics from './routes/analytics.js';
 import tts from './routes/tts.js';
 import ivr from './routes/ivr.js';
 import sms from './routes/sms.js';
+import contacts from './routes/contacts.js';
+import contactLists from './routes/contact-lists.js';
 
 dotenv.config();
 
@@ -201,6 +203,8 @@ app.route('/v1/analytics', analytics);
 app.route('/v1/tts', tts);
 app.route('/v1/ivr', ivr);
 app.route('/v1/sms', sms);
+app.route('/v1/contacts', contacts);
+app.route('/v1/lists', contactLists);
 
 // 404 handler
 app.notFound((c) => {
