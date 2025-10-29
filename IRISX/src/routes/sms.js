@@ -161,31 +161,6 @@ sms.get('/', async (c) => {
 });
 
 /**
- * @route GET /v1/sms/:id
- * @desc Get SMS message details
- */
-sms.get('/:id', async (c) => {
-  try {
-    const messageId = c.req.param('id');
-    const tenantId = c.get('tenantId') || 1;
-
-    const result = await query(
-      'SELECT * FROM sms_messages WHERE id = $1 AND tenant_id = $2',
-      [messageId, tenantId]
-    );
-
-    if (result.rows.length === 0) {
-      return c.json({ error: 'Message not found' }, 404);
-    }
-
-    return c.json({ message: result.rows[0] });
-  } catch (error) {
-    console.error('Error getting SMS:', error);
-    return c.json({ error: 'Failed to get message', message: error.message }, 500);
-  }
-});
-
-/**
  * @route POST /v1/sms/templates
  * @desc Create SMS template
  */
@@ -520,6 +495,31 @@ sms.get('/opt-outs', async (c) => {
   } catch (error) {
     console.error('Error listing opt-outs:', error);
     return c.json({ error: 'Failed to list opt-outs', message: error.message }, 500);
+  }
+});
+
+/**
+ * @route GET /v1/sms/:id
+ * @desc Get SMS message details
+ */
+sms.get('/:id', async (c) => {
+  try {
+    const messageId = c.req.param('id');
+    const tenantId = c.get('tenantId') || 1;
+
+    const result = await query(
+      'SELECT * FROM sms_messages WHERE id = $1 AND tenant_id = $2',
+      [messageId, tenantId]
+    );
+
+    if (result.rows.length === 0) {
+      return c.json({ error: 'Message not found' }, 404);
+    }
+
+    return c.json({ message: result.rows[0] });
+  } catch (error) {
+    console.error('Error getting SMS:', error);
+    return c.json({ error: 'Failed to get message', message: error.message }, 500);
   }
 });
 

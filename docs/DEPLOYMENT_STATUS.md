@@ -10,7 +10,7 @@
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| **API Server** | ✅ ONLINE | All 62+ endpoints operational |
+| **API Server** | ✅ ONLINE | All 87 endpoints operational |
 | **Database (PostgreSQL)** | ✅ CONNECTED | AWS RDS running smoothly |
 | **Cache (Redis)** | ✅ CONNECTED | AWS ElastiCache operational |
 | **FreeSWITCH** | ✅ CONNECTED | Voice platform ready |
@@ -33,13 +33,15 @@ Restarts: 29 (auto-recovery working)
 Health Check: http://3.83.53.69:3000/health
 ```
 
-**Available Endpoints (62+):**
+**Available Endpoints (87):**
 - `/v1/calls` - Voice/telephony API (✅ Working)
 - `/v1/dialplan` - IVR dialplan management (✅ Working)
 - `/v1/webhooks` - Webhook management (✅ Deployed)
 - `/v1/email` - Email API (✅ Deployed)
 - `/v1/analytics` - Analytics dashboard (✅ Deployed)
 - `/v1/tts` - Text-to-speech (✅ Deployed)
+- `/v1/sms` - SMS Management API (✅ Deployed - 14 endpoints)
+- `/v1/ivr` - IVR Management API (✅ Deployed - 11 endpoints)
 
 ### Queue Workers
 
@@ -128,7 +130,12 @@ TTS Cache: ~/irisx-backend/cache/tts/ (local, S3 pending)
 - [x] Send/receive SMS via Twilio
 - [x] MMS with media attachments
 - [x] Delivery status tracking
-- [x] 8 REST API endpoints
+- [x] SMS templates with variable substitution
+- [x] Scheduled SMS delivery
+- [x] Bulk SMS sending
+- [x] Opt-out management
+- [x] SMS statistics and analytics
+- [x] 14 REST API endpoints
 
 ### ✅ Webhook Notification System (COMPLETE)
 - [x] HMAC-SHA256 webhook signing
@@ -175,10 +182,19 @@ TTS Cache: ~/irisx-backend/cache/tts/ (local, S3 pending)
 - [x] 30-day cache cleanup
 - [x] 3 REST API endpoints
 
+### ✅ IVR Management API (COMPLETE)
+- [x] IVR menu CRUD operations
+- [x] Menu option management
+- [x] Active session tracking
+- [x] IVR analytics and reporting
+- [x] TTS-enabled greetings and prompts
+- [x] DTMF input handling
+- [x] Multi-level menu navigation
+- [x] 11 REST API endpoints
+
 ### ⏳ In Progress
-- [ ] Fix NATS storage configuration (NEXT PRIORITY)
+- [ ] Fix worker processes (sms-worker, email-worker, webhook-worker)
 - [ ] Admin Dashboard (Vue 3 initialized)
-- [ ] IVR integration with TTS
 - [ ] Auto-scaling setup (AMI, ALB, ASG)
 
 ---
@@ -250,8 +266,8 @@ PM2 Auto-Restart: Working (29 restarts handled)
 
 ## 📦 Database Schema
 
-**Current Version:** 006
-**Total Tables:** 54
+**Current Version:** 008
+**Total Tables:** 61
 **Migrations Applied:**
 1. `001_initial_schema.sql` - Core tables (34 tables)
 2. `002_ivr_tables.sql` - IVR menu system
@@ -259,6 +275,8 @@ PM2 Auto-Restart: Working (29 restarts handled)
 4. `004_create_webhook_tables.sql` - Webhook system (4 tables)
 5. `005_create_email_tables.sql` - Email system (10 tables)
 6. `006_update_email_providers.sql` - Elastic Email primary
+7. `007_create_sms_management_tables.sql` - SMS templates, scheduling, opt-outs (3 tables)
+8. `008_create_ivr_tables.sql` - IVR menus, options, sessions (3 tables)
 
 ---
 

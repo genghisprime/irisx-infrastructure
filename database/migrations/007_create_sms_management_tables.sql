@@ -116,9 +116,6 @@ INSERT INTO sms_templates (tenant_id, name, content, variables, category) VALUES
   (1, 'Account Alert', 'ALERT: {{alert_message}}. If this wasn''t you, please contact us immediately.', '["alert_message"]'::jsonb, 'security')
 ON CONFLICT (tenant_id, name) DO NOTHING;
 
--- Indexes for performance
-CREATE INDEX IF NOT EXISTS idx_sms_messages_template ON sms_messages(template_id) WHERE template_id IS NOT NULL;
-
 -- Add template_id column to sms_messages if it doesn't exist
 DO $$
 BEGIN
@@ -129,6 +126,9 @@ BEGIN
     ALTER TABLE sms_messages ADD COLUMN template_id INTEGER REFERENCES sms_templates(id) ON DELETE SET NULL;
   END IF;
 END $$;
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_sms_messages_template ON sms_messages(template_id) WHERE template_id IS NOT NULL;
 
 -- Grant permissions (adjust as needed for your security model)
 -- GRANT SELECT, INSERT, UPDATE, DELETE ON sms_templates TO irisx_api_user;

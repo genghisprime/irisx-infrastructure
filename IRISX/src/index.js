@@ -28,7 +28,7 @@ const freeswitch = new FreeSWITCHService({
 });
 
 // Initialize IVR service
-const ivr = new IVRService(freeswitch);
+const ivrService = new IVRService(freeswitch);
 
 // FreeSWITCH event handlers
 freeswitch.on('ready', () => {
@@ -45,7 +45,7 @@ freeswitch.on('call:created', async (data) => {
   // Auto-start IVR for inbound calls
   if (data.direction === 'inbound') {
     try {
-      await ivr.startSession(data.uuid, 1, 1); // menu_id=1, tenant_id=1
+      await ivrService.startSession(data.uuid, 1, 1); // menu_id=1, tenant_id=1
     } catch (error) {
       console.error('Failed to start IVR:', error);
     }
@@ -64,7 +64,7 @@ freeswitch.on('call:hungup', async (data) => {
   console.log('📴 Call ended:', data);
   
   // End IVR session if active
-  await ivr.endSession(data.uuid);
+  await ivrService.endSession(data.uuid);
   
   // Update database
   await query(
@@ -77,7 +77,7 @@ freeswitch.on('call:dtmf', async (data) => {
   console.log('🔢 DTMF received:', data);
   
   // Handle IVR menu navigation
-  await ivr.handleDTMF(data.uuid, data.digit);
+  await ivrService.handleDTMF(data.uuid, data.digit);
 });
 
 // Export services for use in routes
@@ -120,7 +120,7 @@ app.get('/health', async (c) => {
       database: { status: dbStatus, serverTime: dbResult.rows[0]?.time || null },
       redis: { status: redisStatus },
       freeswitch: { status: freeswitchStatus },
-      ivr: { activeSessions: ivr.activeSessions.size },
+      ivr: { activeSessions: ivrService.activeSessions.size },
       version: '1.0.0'
     });
   } catch (error) {
