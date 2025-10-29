@@ -34,6 +34,7 @@ import tenants from './routes/tenants.js';
 import notifications from './routes/notifications.js';
 import audit from './routes/audit.js';
 import rateLimits from './routes/rate-limits.js';
+import monitoring from './routes/monitoring.js';
 
 dotenv.config();
 
@@ -256,6 +257,7 @@ app.route('/v1/tenants', tenants);
 app.route('/v1/notifications', notifications);
 app.route('/v1/audit', audit);
 app.route('/v1/rate-limits', rateLimits);
+app.route('/v1/monitoring', monitoring);
 
 // 404 handler
 app.notFound((c) => {
