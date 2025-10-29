@@ -14,6 +14,7 @@ import email from './routes/email.js';
 import analytics from './routes/analytics.js';
 import tts from './routes/tts.js';
 import ivr from './routes/ivr.js';
+import sms from './routes/sms.js';
 
 dotenv.config();
 
@@ -199,6 +200,7 @@ app.route('/v1/email', email);
 app.route('/v1/analytics', analytics);
 app.route('/v1/tts', tts);
 app.route('/v1/ivr', ivr);
+app.route('/v1/sms', sms);
 
 // 404 handler
 app.notFound((c) => {
