@@ -13,6 +13,7 @@ import webhooks from './routes/webhooks.js';
 import email from './routes/email.js';
 import analytics from './routes/analytics.js';
 import tts from './routes/tts.js';
+import ivr from './routes/ivr.js';
 
 dotenv.config();
 
@@ -197,6 +198,7 @@ app.route('/v1/webhooks', webhooks);
 app.route('/v1/email', email);
 app.route('/v1/analytics', analytics);
 app.route('/v1/tts', tts);
+app.route('/v1/ivr', ivr);
 
 // 404 handler
 app.notFound((c) => {
