@@ -70,8 +70,11 @@ In order of importance:
 
 ## Current Status
 
-**Phase:** Pre-development (planning complete)
-**Next Step:** Start Phase 0, Week 1 (infrastructure setup)
+**Phase:** Phase 0, Week 2 (Backend API Development) - 50% Complete
+**Infrastructure:** ✅ AWS fully deployed (VPC, EC2, RDS, Redis, S3)
+**API Server:** ✅ Hono.js API running with PM2 (port 3000)
+**Security:** ✅ Phase 1 hardening complete (separate security groups)
+**Next Step:** Continue API development or install nginx
 **Team:** Ryan + Claude (AI-assisted development)
 
 ---
@@ -106,19 +109,43 @@ In order of importance:
 
 ```
 IRISX/
+├── README.md                        ← Project overview
+├── SESSION_RECOVERY.md              ← This file (session context)
 ├── 00_TECH_STACK_SUMMARY.md         ← Quick reference
 ├── 00_MASTER_CHECKLIST.md           ← 500+ tasks to build
-├── SESSION_RECOVERY.md              ← This file
-├── DEVELOPMENT_CHECKLIST.md         ← Same as master checklist
-├── TECH_STACK_FINAL.md              ← Same as summary
-├── project_bible/
-│   ├── 01_START_HERE_Tech_Stack_Development_Order.md  ← Read this
+├── docs/                            ← Organized documentation
+│   ├── infrastructure/              ← AWS, EC2, networking docs
+│   │   ├── AWS_COST_STRATEGY.md
+│   │   ├── AWS_INFRASTRUCTURE_SUMMARY.md
+│   │   ├── AWS_NAMING_CONVENTIONS.md
+│   │   ├── EC2_INSTANCES_SUMMARY.md
+│   │   └── PHASE_0_WEEK_1_COMPLETE.md
+│   ├── database/                    ← Database docs
+│   │   ├── DATABASE_SCHEMA.md
+│   │   ├── DATABASE_STRATEGY.md
+│   │   └── DATABASE_MIGRATION_NOTES.md
+│   ├── security/                    ← Security documentation
+│   │   ├── SECURITY_ARCHITECTURE.md
+│   │   └── SECURITY_UPDATE_PHASE1.md
+│   └── api/                         ← API documentation
+│       └── API_SETUP_COMPLETE.md
+├── database/                        ← SQL migrations & seeds
+│   ├── migrations/
+│   │   └── 001_create_core_tables.sql
+│   └── seeds/
+│       └── 001_sample_data.sql
+├── project_bible/                   ← Planning docs (25 files)
+│   ├── 01_START_HERE_Tech_Stack_Development_Order.md
 │   ├── 02_README_Platform_Overview.md
-│   ├── 03_Multi_Channel_Architecture.md
-│   ├── 04_Data_Import_Contact_API.md
 │   └── [23 more comprehensive docs]
-└── (backend, frontend, infrastructure repos - not created yet)
+└── aws-infrastructure-ids.txt       ← AWS resource IDs
 ```
+
+**GitHub Repos Created:**
+- `irisx-infrastructure` - This repo (AWS, docs, scripts)
+- `irisx-backend` - Not created yet (will be Hono.js API)
+- `irisx-frontend` - Not created yet (will be Vue 3.5)
+- `irisx-docs` - Not created yet (will be public docs)
 
 ---
 
@@ -143,15 +170,35 @@ IRISX/
 
 ## What's Been Done
 
+### Planning Phase (Complete)
 ✅ Complete platform planning (25 comprehensive documents, 1,100+ pages)
 ✅ Tech stack finalized (AWS + Firebase + Hono.js + Vue 3.5)
 ✅ Development order organized (6 phases, 34 weeks, 500+ tasks)
-✅ Cost model defined (~$70/mo startup → scales linearly)
-✅ Architecture diagrams created
-✅ Database schemas designed
-✅ API specifications written
+✅ Cost model defined (~$58/mo actual vs $70/mo planned)
 
-**Ready to start building!**
+### Phase 0, Week 1 (Infrastructure - Complete)
+✅ AWS VPC, subnets, Internet Gateway, route tables
+✅ Security groups (separate for API and FreeSWITCH)
+✅ RDS PostgreSQL db.t4g.micro (ARM-based)
+✅ ElastiCache Redis cache.t4g.micro (ARM-based)
+✅ S3 bucket for recordings
+✅ 2× EC2 t3.small instances (API + FreeSWITCH separated)
+✅ Elastic IP for FreeSWITCH (54.160.220.243)
+✅ SSH restricted to home IP only (73.6.78.238/32)
+✅ Database migrations (10 core tables created)
+
+### Phase 0, Week 2 (Backend API - 50% Complete)
+✅ Node.js 22 + npm installed on API server
+✅ Hono.js API server with PostgreSQL + Redis connections
+✅ PM2 process manager configured with auto-restart
+✅ Health check endpoint operational
+✅ Database connection pool (20 connections)
+✅ Redis caching helpers
+⏳ nginx reverse proxy (next step)
+⏳ API authentication middleware (next step)
+⏳ First API endpoint: POST /v1/calls (next step)
+
+**Documentation:** All docs organized in `/docs` folder by category!
 
 ---
 
