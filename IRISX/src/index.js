@@ -31,6 +31,7 @@ import billing from './routes/billing.js';
 import recordings from './routes/recordings.js';
 import phoneNumbers from './routes/phone-numbers.js';
 import tenants from './routes/tenants.js';
+import notifications from './routes/notifications.js';
 
 dotenv.config();
 
@@ -250,6 +251,7 @@ app.route('/v1/billing', billing);
 app.route('/v1/recordings', recordings);
 app.route('/v1/phone-numbers', phoneNumbers);
 app.route('/v1/tenants', tenants);
+app.route('/v1/notifications', notifications);
 
 // 404 handler
 app.notFound((c) => {
