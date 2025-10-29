@@ -70,11 +70,12 @@ In order of importance:
 
 ## Current Status
 
-**Phase:** Phase 0, Week 2 (Backend API Development) - 50% Complete
+**Phase:** Phase 0, Week 2 (Backend API Development) - 100% Complete ✅
 **Infrastructure:** ✅ AWS fully deployed (VPC, EC2, RDS, Redis, S3)
-**API Server:** ✅ Hono.js API running with PM2 (port 3000)
-**Security:** ✅ Phase 1 hardening complete (separate security groups)
-**Next Step:** Continue API development or install nginx
+**API Server:** ✅ Hono.js API with 3 working endpoints
+**Security:** ✅ API key authentication + rate limiting
+**API Endpoints:** ✅ POST /v1/calls, GET /v1/calls/:sid, GET /v1/calls
+**Next Step:** Week 3 - nginx reverse proxy + FreeSWITCH installation
 **Team:** Ryan + Claude (AI-assisted development)
 
 ---
@@ -187,16 +188,21 @@ IRISX/
 ✅ SSH restricted to home IP only (73.6.78.238/32)
 ✅ Database migrations (10 core tables created)
 
-### Phase 0, Week 2 (Backend API - 50% Complete)
+### Phase 0, Week 2 (Backend API - 100% Complete ✅)
 ✅ Node.js 22 + npm installed on API server
 ✅ Hono.js API server with PostgreSQL + Redis connections
 ✅ PM2 process manager configured with auto-restart
 ✅ Health check endpoint operational
 ✅ Database connection pool (20 connections)
 ✅ Redis caching helpers
-⏳ nginx reverse proxy (next step)
-⏳ API authentication middleware (next step)
-⏳ First API endpoint: POST /v1/calls (next step)
+✅ API key authentication middleware (SHA-256 hashing)
+✅ Rate limiting middleware (10 req/min for calls, 100 for reads)
+✅ POST /v1/calls endpoint (create outbound call)
+✅ GET /v1/calls/:sid endpoint (get call details)
+✅ GET /v1/calls endpoint (list calls with pagination)
+✅ Input validation with Zod v3
+✅ All endpoints tested and working
+✅ Comprehensive API documentation
 
 **Documentation:** All docs organized in `/docs` folder by category!
 
