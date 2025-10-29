@@ -1070,7 +1070,20 @@
   - [x] Auto-disable after consecutive failures
   - [x] Views for health monitoring and retry queue
   - [x] Service layer implementation (14 methods)
-  - [ ] REST API endpoints (future)
+  - [x] REST API endpoints (15 endpoints)
+    - [x] POST /webhooks/endpoints - Create endpoint
+    - [x] GET /webhooks/endpoints - List endpoints
+    - [x] GET /webhooks/endpoints/:id - Get endpoint
+    - [x] PATCH /webhooks/endpoints/:id - Update endpoint
+    - [x] DELETE /webhooks/endpoints/:id - Delete endpoint
+    - [x] POST /webhooks/endpoints/:id/rotate-secret - Rotate secret key
+    - [x] POST /webhooks/endpoints/:id/test - Test delivery
+    - [x] GET /webhooks/deliveries - List deliveries
+    - [x] GET /webhooks/deliveries/:id - Get delivery
+    - [x] POST /webhooks/deliveries/:id/retry - Retry delivery
+    - [x] GET /webhooks/endpoints/:id/stats - Get endpoint stats
+    - [x] GET /webhooks/events - List available events
+    - [x] GET /webhooks/health - System health
   - [ ] Webhook worker for delivery (future)
 
 #### Background Job Queue System ✅ COMPLETE
@@ -1087,8 +1100,21 @@
   - [x] Job priority system (0-10 priority levels)
   - [x] Performance monitoring views (queue stats, failed jobs, 24h metrics)
   - [x] Functions for automatic retry backoff calculation
+  - [x] REST API endpoints (14 endpoints)
+    - [x] POST /jobs - Create job
+    - [x] GET /jobs - List jobs
+    - [x] GET /jobs/:id - Get job
+    - [x] PATCH /jobs/:id - Update job
+    - [x] POST /jobs/:id/retry - Retry job
+    - [x] POST /jobs/:id/cancel - Cancel job
+    - [x] GET /jobs/queues/:queueName/stats - Queue stats
+    - [x] GET /jobs/queues/stats - All queue stats
+    - [x] GET /jobs/performance/metrics - Performance metrics
+    - [x] POST /jobs/scheduled - Create scheduled job
+    - [x] GET /jobs/scheduled - List scheduled jobs
+    - [x] DELETE /jobs/scheduled/:id - Delete scheduled job
+    - [x] POST /jobs/cleanup - Cleanup old jobs
   - [ ] Bull workers implementation (future)
-  - [ ] REST API endpoints (future)
 
 #### Call Recording Encryption
 **📖 Reference:** [Call Recording Encryption](project_bible/IRIS_Call_Recording_Encryption_Security.md)
