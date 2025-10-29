@@ -35,6 +35,8 @@ import notifications from './routes/notifications.js';
 import audit from './routes/audit.js';
 import rateLimits from './routes/rate-limits.js';
 import monitoring from './routes/monitoring.js';
+import jobs from './routes/jobs.js';
+import webhooksEnhanced from './routes/webhooks-enhanced.js';
 
 dotenv.config();
 
@@ -239,7 +241,6 @@ app.get('/v1', (c) => {
 // Mount API routes
 app.route('/v1/calls', calls);
 app.route('/v1/dialplan', dialplan);
-app.route('/v1/webhooks', webhooks);
 app.route('/v1/email', email);
 app.route('/v1/analytics', analytics);
 app.route('/v1/tts', tts);
@@ -258,6 +259,8 @@ app.route('/v1/notifications', notifications);
 app.route('/v1/audit', audit);
 app.route('/v1/rate-limits', rateLimits);
 app.route('/v1/monitoring', monitoring);
+app.route('/v1/jobs', jobs);
+app.route('/v1/webhooks', webhooksEnhanced); // Enhanced webhook management with full CRUD
 
 // 404 handler
 app.notFound((c) => {
