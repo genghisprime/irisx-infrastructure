@@ -84,6 +84,22 @@
 - **Cost:** ~$2/mo (based on usage)
 - **Lifecycle Policy:** Not yet configured (add later to auto-archive)
 
+### FreeSWITCH Telephony Platform
+- **Server:** FreeSWITCH-Server (54.160.220.243)
+- **Instance Type:** t3.small
+- **Version:** FreeSWITCH 1.10.12-release
+- **Status:** ✅ **Production Ready**
+- **Integration:** Node.js API via Event Socket Layer (ESL)
+- **Twilio Trunk:** FreeSWITCH-IRISX (+1-832-637-8414)
+- **Capabilities:**
+  - ✅ Inbound calls from PSTN (working)
+  - ✅ Outbound calls to PSTN (working)
+  - ✅ Real-time call events to Node.js API
+  - ✅ Bi-directional audio streaming
+  - ✅ Production-ready gateway configuration
+- **Cost:** ~$15/mo (included in EC2 estimate)
+- **Documentation:** [FREESWITCH_TELEPHONY_COMPLETE.md](./FREESWITCH_TELEPHONY_COMPLETE.md)
+
 ---
 
 ## 💰 Cost Breakdown
