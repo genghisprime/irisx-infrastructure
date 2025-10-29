@@ -19,6 +19,7 @@ import contacts from './routes/contacts.js';
 import contactLists from './routes/contact-lists.js';
 import queues from './routes/queues.js';
 import agents from './routes/agents.js';
+import campaigns from './routes/campaigns.js';
 
 dotenv.config();
 
@@ -209,6 +210,7 @@ app.route('/v1/contacts', contacts);
 app.route('/v1/lists', contactLists);
 app.route('/v1/queues', queues);
 app.route('/v1/agents', agents);
+app.route('/v1/campaigns', campaigns);
 
 // 404 handler
 app.notFound((c) => {
