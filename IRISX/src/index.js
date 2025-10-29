@@ -37,6 +37,7 @@ import rateLimits from './routes/rate-limits.js';
 import monitoring from './routes/monitoring.js';
 import jobs from './routes/jobs.js';
 import webhooksEnhanced from './routes/webhooks-enhanced.js';
+import carriers from './routes/carriers.js';
 
 dotenv.config();
 
@@ -261,6 +262,7 @@ app.route('/v1/rate-limits', rateLimits);
 app.route('/v1/monitoring', monitoring);
 app.route('/v1/jobs', jobs);
 app.route('/v1/webhooks', webhooksEnhanced); // Enhanced webhook management with full CRUD
+app.route('/v1/carriers', carriers); // Carrier management for multi-carrier routing
 
 // 404 handler
 app.notFound((c) => {

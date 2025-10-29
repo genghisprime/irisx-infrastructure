@@ -23,11 +23,12 @@ CREATE TABLE IF NOT EXISTS carriers (
   -- API Configuration (for direct API calls)
   api_key TEXT,
   api_secret TEXT,
+  account_sid VARCHAR(255), -- Twilio/Bandwidth account SID
   api_endpoint VARCHAR(255),
 
   -- Health Monitoring
   health_score INTEGER DEFAULT 100, -- 0-100, updated based on call success rate
-  last_health_check TIMESTAMPTZ,
+  last_health_check_at TIMESTAMPTZ,
   consecutive_failures INTEGER DEFAULT 0,
   total_calls INTEGER DEFAULT 0,
   failed_calls INTEGER DEFAULT 0,
@@ -35,6 +36,7 @@ CREATE TABLE IF NOT EXISTS carriers (
 
   -- Rate Information
   default_rate_per_minute DECIMAL(10, 6) DEFAULT 0.01,
+  connection_fee DECIMAL(10, 4) DEFAULT 0,
   billing_increment_seconds INTEGER DEFAULT 6, -- 6-second increments typical
   minimum_duration_seconds INTEGER DEFAULT 0,
 
@@ -50,6 +52,7 @@ CREATE TABLE IF NOT EXISTS carriers (
   codec_preferences TEXT[], -- ['PCMU', 'PCMA', 'G729']
 
   -- Metadata
+  metadata JSONB DEFAULT '{}',
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -72,6 +75,7 @@ CREATE TABLE IF NOT EXISTS carrier_rates (
   -- Pricing
   rate_per_minute DECIMAL(10, 6) NOT NULL,
   connection_fee DECIMAL(10, 4) DEFAULT 0,
+  billing_increment_seconds INTEGER DEFAULT 6,
 
   -- Validity Period
   effective_date DATE DEFAULT CURRENT_DATE,
@@ -79,7 +83,8 @@ CREATE TABLE IF NOT EXISTS carrier_rates (
 
   -- Metadata
   notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_carrier_rates_prefix ON carrier_rates(carrier_id, destination_prefix);
