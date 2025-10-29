@@ -111,9 +111,14 @@ Say to Claude: "Read SESSION_RECOVERY.md. Where did we leave off?"
 - ✅ **Queue & Agent Management System (Deployed)**
   - Redis-based real-time queue management
   - Agent presence tracking with heartbeat
-  - Round-robin, longest-idle, skills-based routing
+  - Advanced routing strategies:
+    - Round-robin (longest waiting)
+    - Longest-idle agent
+    - Skills-based routing (match caller needs to agent skills)
+    - Sticky agent (route repeat callers to same agent)
   - Queue statistics and metrics (EWT, service level)
-  - Priority queuing support
+  - Priority queuing support (1-10 priority levels)
+  - Queue overflow handling (automatic timeout)
   - Agent performance tracking
   - Queue member management (enqueue/dequeue)
   - 23 REST API endpoints (13 queue + 10 agent)

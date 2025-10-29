@@ -215,6 +215,26 @@ class QueueService {
    * Find available agent based on routing strategy
    */
   async findAvailableAgent(tenantId, queueId, strategy, callerData = {}) {
+    const queueConfig = await this.getQueueConfig(queueId, tenantId);
+
+    // STICKY AGENT: Try last agent first if sticky_agent enabled
+    if (queueConfig.sticky_agent && callerData.caller_id) {
+      const lastAgent = await this.getLastAgentForCaller(tenantId, callerData.caller_id);
+      if (lastAgent) {
+        const agentStatus = await this.getAgentStatus(tenantId, lastAgent.id);
+        if (agentStatus && agentStatus.status === 'available' && !agentStatus.current_call_uuid) {
+          // Check if agent is still in this queue
+          const isInQueue = await query(
+            `SELECT 1 FROM queue_agents WHERE queue_id = $1 AND agent_id = $2 AND status = 'active'`,
+            [queueId, lastAgent.id]
+          );
+          if (isInQueue.rows.length > 0) {
+            return lastAgent;
+          }
+        }
+      }
+    }
+
     // Get all agents for this queue
     const agents = await query(
       `SELECT a.id, a.name, a.extension, a.status, a.skills, qa.priority
@@ -255,12 +275,96 @@ class QueueService {
         return availableAgents[0]; // Already sorted by last_status_change ASC
 
       case 'skills-based':
-        // TODO: Implement skills matching
-        return availableAgents[0];
+        return this.findSkillsBasedAgent(availableAgents, queueConfig, callerData);
 
       default:
         return availableAgents[0];
     }
+  }
+
+  /**
+   * Skills-based routing: Match caller requirements to agent skills
+   */
+  findSkillsBasedAgent(availableAgents, queueConfig, callerData) {
+    const requiredSkills = queueConfig.required_skills || [];
+    const callerSkills = callerData.required_skills || [];
+
+    // Combine queue and caller skill requirements
+    const allRequiredSkills = [...new Set([...requiredSkills, ...callerSkills])];
+
+    if (allRequiredSkills.length === 0) {
+      // No skills required, return first agent (round-robin)
+      return availableAgents[0];
+    }
+
+    // Find agents that have ALL required skills
+    const matchedAgents = availableAgents.filter(agent => {
+      const agentSkills = agent.skills || [];
+      return allRequiredSkills.every(skill =>
+        agentSkills.some(s => s.toLowerCase() === skill.toLowerCase())
+      );
+    });
+
+    if (matchedAgents.length > 0) {
+      return matchedAgents[0]; // Return first matched agent (already sorted by priority)
+    }
+
+    // Fallback: No perfect match, find agent with most matching skills
+    let bestAgent = availableAgents[0];
+    let bestMatchCount = 0;
+
+    for (const agent of availableAgents) {
+      const agentSkills = agent.skills || [];
+      const matchCount = allRequiredSkills.filter(skill =>
+        agentSkills.some(s => s.toLowerCase() === skill.toLowerCase())
+      ).length;
+
+      if (matchCount > bestMatchCount) {
+        bestMatchCount = matchCount;
+        bestAgent = agent;
+      }
+    }
+
+    return bestAgent;
+  }
+
+  /**
+   * Get last agent that handled this caller (for sticky routing)
+   */
+  async getLastAgentForCaller(tenantId, callerId) {
+    const result = await query(
+      `SELECT a.* FROM agents a
+       INNER JOIN queue_members qm ON qm.assigned_agent_id = a.id
+       WHERE qm.caller_id = $1 AND a.tenant_id = $2 AND a.deleted_at IS NULL
+       ORDER BY qm.answered_at DESC
+       LIMIT 1`,
+      [callerId, tenantId]
+    );
+
+    return result.rows.length > 0 ? result.rows[0] : null;
+  }
+
+  /**
+   * Check if caller has exceeded max wait time (queue overflow)
+   */
+  async checkQueueOverflow(tenantId, queueId, call_uuid) {
+    const queueConfig = await this.getQueueConfig(queueId, tenantId);
+    const memberKey = `queue:${tenantId}:${queueId}:member:${call_uuid}`;
+
+    const callerData = await redisClient.hgetall(memberKey);
+    if (!callerData || !callerData.joined_at) {
+      return false;
+    }
+
+    const waitTime = Math.floor((Date.now() - parseInt(callerData.joined_at)) / 1000);
+
+    if (waitTime >= queueConfig.max_wait_time) {
+      // Timeout exceeded
+      await this.removeFromQueue(tenantId, queueId, call_uuid, 'timeout');
+      return true;
+    }
+
+    return false;
   }
 
   /**
