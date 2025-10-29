@@ -277,7 +277,7 @@ Say to Claude: "Read SESSION_RECOVERY.md. Where did we leave off?"
   - 4 database tables with retry queue
   - Service layer complete (14 methods)
 
-- ✅ **Background Job Queue System (Database Complete)**
+- ✅ **Background Job Queue System (Complete)**
   - Bull + Redis for async job processing
   - Exponential backoff retry (max 1h)
   - Job dependencies & chains
@@ -287,7 +287,7 @@ Say to Claude: "Read SESSION_RECOVERY.md. Where did we leave off?"
   - 4 default scheduled jobs
   - Performance monitoring & views
   - 4 database tables with job tracking
-  - Service layer & workers pending
+  - Service layer complete (20+ methods)
 
 **Next:** Complete job queue service + workers, Admin dashboard (Vue 3)
 **Timeline:** 34 weeks to production launch
