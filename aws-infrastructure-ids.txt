@@ -1,0 +1,15 @@
+# IRISX AWS Infrastructure IDs
+# Created: Tue Oct 28 19:03:15 CDT 2025
+# Region: us-east-1
+
+VPC_ID=vpc-0bab7828e5ffb7fa5
+IGW_ID=igw-0134bbf31d0996764
+PUBLIC_SUBNET_1A=subnet-0042229b35713a1b6
+PUBLIC_SUBNET_1B=subnet-08ef434ef396fb4f6
+DB_SUBNET_1A=subnet-0295f77cea5147278
+DB_SUBNET_1B=subnet-04d6b86eb8e8e36ee
+PUBLIC_RT=rtb-0f688df8fde351313
+API_SG=sg-03f77311c140b8f2e
+DB_SG=sg-0ce78464dc882274b
+CACHE_SG=sg-085c73a72931181b3
+BUCKET_NAME=irisx-prod-recordings-672e7c49
