@@ -226,11 +226,25 @@ Say to Claude: "Read SESSION_RECOVERY.md. Where did we leave off?"
   - 4 database tables with views and functions
   - 9 REST API endpoints
 
+- ✅ **Advanced Rate Limiting System (Complete)**
+  - Redis-backed sliding window rate limiting
+  - Token bucket algorithm for burst traffic
+  - Tenant/user/IP-based rate limits
+  - Custom rate limit rules per resource
+  - Quota management (hourly, daily, monthly limits)
+  - Rate limit violations tracking
+  - Auto-reset expired quotas
+  - Exemption management for VIP users
+  - Login brute force protection (5/min, 20/hour)
+  - 4 database tables with views and functions
+  - 8 REST API endpoints
+  - Middleware for automatic enforcement
+
 **Next:** Admin dashboard (Vue 3), Load testing, SSL/TLS setup
 **Timeline:** 34 weeks to production launch
-**Current:** Week 25 of 34 (74% complete) 🚀
+**Current:** Week 27 of 34 (79% complete) 🚀
 **Startup Cost:** ~$71-86/mo (no change)
-**API Endpoints:** 195 production-ready endpoints
+**API Endpoints:** 203 production-ready endpoints
 **API Documentation:** https://api.irisx.io/docs
 **Latest Session:** [FINAL_SESSION_SUMMARY_OCT29.md](docs/FINAL_SESSION_SUMMARY_OCT29.md) ⭐ **EPIC SESSION**
 **See Also:** [PHASE_0_COMPLETE_SUMMARY.md](docs/infrastructure/PHASE_0_COMPLETE_SUMMARY.md)
