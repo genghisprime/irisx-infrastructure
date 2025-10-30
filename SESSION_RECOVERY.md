@@ -91,10 +91,10 @@ In order of importance:
   - orchestrator.js ✅ (321 lines - API→NATS→FreeSWITCH)
   - cdr.js ✅ (338 lines - CDR collection for billing)
 
-### 🔄 In Progress (Oct 30, 2025 - 5:15 AM):
-- **Customer Portal:** Vue 3 project structure created (irisx-customer-portal/)
-- **Next:** Install dependencies and build authentication pages (login, signup)
-- **Blocker:** npm cache permission issue on local machine (requires manual fix or work on server)
+### 🔄 In Progress (Oct 30, 2025 - 5:25 AM):
+- **Customer Portal:** Building authentication UI (Login.vue, Signup.vue)
+- **Completed:** Auth store (Pinia), API client utility, project structure
+- **Next:** Vue Router setup, dashboard pages (home, API keys, webhooks, call logs)
 - **Note on phone testing:** Requires carrier SIP configuration (Twilio/Telnyx credentials + FreeSWITCH gateway setup)
 
 ### ✅ Just Completed (Last 30 minutes):
