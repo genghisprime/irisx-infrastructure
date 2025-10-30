@@ -88,8 +88,9 @@ In order of importance:
   - cdr.js ✅ (338 lines - CDR collection for billing)
 
 ### 🔄 In Progress (Oct 30, 2025):
-- **Fix NATS consumer API:** Workers connect to FreeSWITCH + NATS successfully, need to fix JetStream consumer subscription API
-- **Current blocker:** `js.pullSubscribe()` method not working, need to use correct NATS v2.x API
+- **Deploy cdr.js worker:** Apply same NATS consumer fix to cdr.js
+- **Test end-to-end call:** Make actual phone call via API → NATS → FreeSWITCH
+- **orchestrator.js:** ✅ FULLY OPERATIONAL - connected to FreeSWITCH + NATS, listening for call requests
 
 ### ❌ What's Missing:
 - **Customer Portal:** 0% (Vue 3 dashboard for customers)
