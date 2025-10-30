@@ -91,9 +91,9 @@ In order of importance:
   - orchestrator.js ✅ (321 lines - API→NATS→FreeSWITCH)
   - cdr.js ✅ (338 lines - CDR collection for billing)
 
-### 🔄 In Progress (Oct 30, 2025 - 7:00 AM):
-- **Customer Portal Multi-Channel Enhancement:** Adding SMS, Email, Webhooks, and Conversations pages
-- **Current Status:** Voice-only portal (40% complete) → Full multi-channel portal (targeting 100%)
+### 🔄 In Progress (Oct 30, 2025 - 8:00 AM):
+- **Agent Desktop Development:** Building WebRTC softphone for call center agents (Week 11-12)
+- **Current Phase:** Agent Desktop 0% → Targeting 100%
 - **Note on phone testing:** Requires carrier SIP configuration (Twilio/Telnyx credentials + FreeSWITCH gateway setup)
 
 ### ✅ Just Completed (Last 30 minutes):
@@ -138,31 +138,55 @@ In order of importance:
 - Pagination for call logs
 - Responsive UI with Tailwind CSS 4
 
-### 🔄 Customer Portal - Phase 2 (Multi-Channel) IN PROGRESS:
-**Pages Being Added:**
-1. **Messages.vue** - SMS/MMS message logs with filters, threads, delivery status
-2. **EmailCampaigns.vue** - Email tracking, delivery stats, bounce/open/click rates
-3. **Webhooks.vue** - Webhook endpoint management, event subscriptions, delivery logs, retry logic
-4. **Conversations.vue** - Unified inbox across ALL channels (voice, SMS, email, social)
-5. **DashboardHome.vue (enhanced)** - Multi-channel statistics dashboard
+### ✅ Customer Portal - 100% COMPLETE (Multi-Channel):
+**All Pages (19 files, ~4,785 lines):**
+1. **Messages.vue** (460 lines) - SMS/MMS with send, filters, delivery status
+2. **EmailCampaigns.vue** (535 lines) - Email tracking with opens/clicks/bounces
+3. **Webhooks.vue** (480 lines) - Webhook management with 14 event types
+4. **Conversations.vue** (460 lines) - Unified inbox across ALL channels
+5. **DashboardHome.vue** - Multi-channel stats (5 cards)
+6. **CallLogs.vue**, **APIKeys.vue**, **Login.vue**, **Signup.vue**
 
-**Multi-Channel Features:**
-- SMS/MMS history with conversation threading
-- Email campaign analytics and tracking
-- Webhook configuration and monitoring
-- Unified conversation view
-- Real-time updates across all channels
-- Export capabilities (CSV, JSON)
+**Features:** JWT auth, multi-channel (voice/SMS/email), webhooks, unified inbox, responsive UI
+**Repository:** [github.com/genghisprime/irisx-infrastructure](https://github.com/genghisprime/irisx-infrastructure)
+**Deployment:** Ready for Vercel
 
-**Target:** Full multi-channel Customer Portal (100%) with all communication channels
+### 🔄 Agent Desktop - Week 11-12 (IN PROGRESS):
+**Goal:** Build WebRTC softphone for call center agents
 
-**Repository:** [genghisprime/irisx-infrastructure](https://github.com/genghisprime/irisx-infrastructure)
-**Location:** `/irisx-customer-portal` directory
+**Features to Build:**
+1. **Agent Authentication** - Login with role-based access (agents only)
+2. **Agent Status/Presence** - Available, Busy, Away, Offline (Firebase Realtime DB)
+3. **WebRTC Softphone** - SIP.js or FreeSWITCH Verto for browser-based calling
+4. **Call Controls** - Answer, hangup, hold, transfer, mute, unmute
+5. **Active Call Interface** - Real-time call timer, caller ID display
+6. **Call Disposition** - Call notes, tags, outcome (completed, missed, voicemail)
+7. **Agent Queue Display** - Show waiting calls, queue position
+8. **Call History** - Agent's personal call log
+9. **Real-time Updates** - WebSocket for call events
 
-### ❌ What's Still Missing After Portal Completion:
-- **Agent Desktop:** 0% (Vue 3 with WebRTC softphone - Week 11-12)
-- **Platform Admin Dashboard:** 5% (Vue 3 for IRISX staff)
-- **Social channels backend:** Discord, Teams, WhatsApp, Slack, Telegram integration
+**Tech Stack:**
+- Vue 3.5 + Vite 6 + Tailwind CSS 4
+- SIP.js (WebRTC SIP library)
+- Firebase Realtime DB (agent presence)
+- Socket.io or WebSocket (real-time events)
+- Axios (API calls)
+
+**Architecture:**
+```
+Browser (Agent Desktop) ←→ WebRTC/SIP ←→ FreeSWITCH ←→ Carriers
+                         ←→ API Server ←→ PostgreSQL
+                         ←→ Firebase (presence)
+```
+
+**Repository:** Will create `irisx-agent-desktop` directory
+**Deployment:** Vercel (same as Customer Portal)
+
+### ❌ What's Still Missing:
+- **Agent Desktop:** 0% → Starting now (Week 11-12)
+- **Documentation & Beta Launch:** 0% (OpenAPI, Mintlify docs, SDK generation)
+- **Platform Admin Dashboard:** 0% (Vue 3 for IRISX staff)
+- **Social channels:** Discord, Teams, WhatsApp, Slack, Telegram
 
 **Next Step:** Agent Desktop (Week 11-12) or social media channels
 **Team:** Ryan + Claude
