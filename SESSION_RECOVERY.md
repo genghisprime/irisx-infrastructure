@@ -151,40 +151,33 @@ In order of importance:
 **Repository:** [github.com/genghisprime/irisx-infrastructure](https://github.com/genghisprime/irisx-infrastructure)
 **Deployment:** Ready for Vercel
 
-### 🔄 Agent Desktop - Week 11-12 (IN PROGRESS):
-**Goal:** Build WebRTC softphone for call center agents
+### ✅ Agent Desktop - Phase 1 COMPLETE (50% - Foundation Ready):
+**Status:** Foundation deployed, components deferred
 
-**Features to Build:**
-1. **Agent Authentication** - Login with role-based access (agents only)
-2. **Agent Status/Presence** - Available, Busy, Away, Offline (Firebase Realtime DB)
-3. **WebRTC Softphone** - SIP.js or FreeSWITCH Verto for browser-based calling
-4. **Call Controls** - Answer, hangup, hold, transfer, mute, unmute
-5. **Active Call Interface** - Real-time call timer, caller ID display
-6. **Call Disposition** - Call notes, tags, outcome (completed, missed, voicemail)
-7. **Agent Queue Display** - Show waiting calls, queue position
-8. **Call History** - Agent's personal call log
-9. **Real-time Updates** - WebSocket for call events
+**✅ What's Complete:**
+- Project structure (Vite + Vue 3)
+- All dependencies (Vue Router, Pinia, Axios, SIP.js 0.21.2, Socket.io-client, Tailwind CSS 4)
+- Configuration files (Tailwind, PostCSS, .env.example)
+- Auth system (stores/auth.js, utils/api.js - copied from Customer Portal)
+- Basic app files (main.js, App.vue, style.css)
+- Directory structure for components
+- README.md with Phase 2 roadmap
 
-**Tech Stack:**
-- Vue 3.5 + Vite 6 + Tailwind CSS 4
-- SIP.js (WebRTC SIP library)
-- Firebase Realtime DB (agent presence)
-- Socket.io or WebSocket (real-time events)
-- Axios (API calls)
+**❌ Phase 2 - Components Missing (50%):**
+- router/index.js with auth guards
+- views/auth/Login.vue
+- views/agent/AgentDashboard.vue (main UI)
+- components/Softphone.vue (call controls)
+- components/AgentStatusSelector.vue
+- components/CallDispositionModal.vue
+- composables/useSoftphone.js (SIP.js WebRTC integration)
 
-**Architecture:**
-```
-Browser (Agent Desktop) ←→ WebRTC/SIP ←→ FreeSWITCH ←→ Carriers
-                         ←→ API Server ←→ PostgreSQL
-                         ←→ Firebase (presence)
-```
-
-**Repository:** Will create `irisx-agent-desktop` directory
-**Deployment:** Vercel (same as Customer Portal)
+**Repository:** `/irisx-agent-desktop` directory
+**Status:** Phase 1 complete, Phase 2 deferred for now
 
 ### ❌ What's Still Missing:
-- **Agent Desktop:** 0% → Starting now (Week 11-12)
-- **Documentation & Beta Launch:** 0% (OpenAPI, Mintlify docs, SDK generation)
+- **Agent Desktop Phase 2:** Components & UI (50%)
+- **Documentation & Beta Launch:** 0% → **NEXT PRIORITY** (OpenAPI, Mintlify docs, SDK generation)
 - **Platform Admin Dashboard:** 0% (Vue 3 for IRISX staff)
 - **Social channels:** Discord, Teams, WhatsApp, Slack, Telegram
 
