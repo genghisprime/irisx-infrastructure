@@ -91,9 +91,9 @@ In order of importance:
   - orchestrator.js ✅ (321 lines - API→NATS→FreeSWITCH)
   - cdr.js ✅ (338 lines - CDR collection for billing)
 
-### 🔄 In Progress (Oct 30, 2025 - 6:30 AM):
-- **Next Development:** Agent Desktop (Week 11-12) or Documentation & Beta Launch
-- **Customer Portal:** ✅ 100% COMPLETE (ready for deployment!)
+### 🔄 In Progress (Oct 30, 2025 - 7:00 AM):
+- **Customer Portal Multi-Channel Enhancement:** Adding SMS, Email, Webhooks, and Conversations pages
+- **Current Status:** Voice-only portal (40% complete) → Full multi-channel portal (targeting 100%)
 - **Note on phone testing:** Requires carrier SIP configuration (Twilio/Telnyx credentials + FreeSWITCH gateway setup)
 
 ### ✅ Just Completed (Last 30 minutes):
@@ -110,7 +110,7 @@ In order of importance:
   - Collecting CDR records for billing and analytics
   - Publishing CDR events to NATS events stream
 
-### ✅ Customer Portal - 100% COMPLETE (This Session):
+### ✅ Customer Portal - Phase 1 (Voice Only) COMPLETE:
 **Files Created (15 total, ~2,850 lines):**
 - auth.js - Pinia auth store with JWT management
 - api.js - Axios client with token refresh
@@ -120,7 +120,7 @@ In order of importance:
 - main.js - App initialization with auth pre-check
 - App.vue - Main router-view component
 - DashboardLayout.vue - Navigation layout with user menu
-- DashboardHome.vue - Stats dashboard (calls, messages, cost, growth indicators)
+- DashboardHome.vue - Stats dashboard (voice calls only currently)
 - APIKeys.vue - API key management (create/revoke/copy, one-time display)
 - CallLogs.vue - Call history with filters, pagination, recording playback, modal
 - package.json - Vue 3.5, Router 4, Pinia 2.2, Axios, Tailwind 4
@@ -128,30 +128,41 @@ In order of importance:
 - postcss.config.js - PostCSS setup for Tailwind processing
 - .env.example - Environment variable template
 
-**Features Implemented:**
+**Voice Features Implemented (40% of full portal):**
 - JWT authentication with automatic token refresh and 401 retry
-- Protected routes with navigation guards (requiresAuth/requiresGuest)
-- Dashboard with 4 stats cards (Total Calls, Messages, Active Numbers, Monthly Cost)
-- Recent calls table with status badges
-- API key management (create, revoke, copy, masked display with one-time full key reveal)
+- Protected routes with navigation guards
+- Dashboard with call statistics only
 - Call logs with advanced filters (status, date range, search)
-- Pagination for call logs
 - Call details modal with recording playback
-- Debounced search for performance
+- API key management (create, revoke, copy, masked display)
+- Pagination for call logs
 - Responsive UI with Tailwind CSS 4
-- State management with Pinia
-- HTTP client with automatic auth header injection
-- Loading and empty states throughout
+
+### 🔄 Customer Portal - Phase 2 (Multi-Channel) IN PROGRESS:
+**Pages Being Added:**
+1. **Messages.vue** - SMS/MMS message logs with filters, threads, delivery status
+2. **EmailCampaigns.vue** - Email tracking, delivery stats, bounce/open/click rates
+3. **Webhooks.vue** - Webhook endpoint management, event subscriptions, delivery logs, retry logic
+4. **Conversations.vue** - Unified inbox across ALL channels (voice, SMS, email, social)
+5. **DashboardHome.vue (enhanced)** - Multi-channel statistics dashboard
+
+**Multi-Channel Features:**
+- SMS/MMS history with conversation threading
+- Email campaign analytics and tracking
+- Webhook configuration and monitoring
+- Unified conversation view
+- Real-time updates across all channels
+- Export capabilities (CSV, JSON)
+
+**Target:** Full multi-channel Customer Portal (100%) with all communication channels
 
 **Repository:** [genghisprime/irisx-infrastructure](https://github.com/genghisprime/irisx-infrastructure)
 **Location:** `/irisx-customer-portal` directory
-**Deployment Ready:** Yes - can deploy to Vercel immediately
 
-### ❌ What's Missing:
-- **Customer Portal Webhooks Page:** Optional enhancement (can add later)
+### ❌ What's Still Missing After Portal Completion:
 - **Agent Desktop:** 0% (Vue 3 with WebRTC softphone - Week 11-12)
 - **Platform Admin Dashboard:** 5% (Vue 3 for IRISX staff)
-- **Social channels:** Discord, Teams, WhatsApp, Slack, Telegram
+- **Social channels backend:** Discord, Teams, WhatsApp, Slack, Telegram integration
 
 **Next Step:** Agent Desktop (Week 11-12) or social media channels
 **Team:** Ryan + Claude

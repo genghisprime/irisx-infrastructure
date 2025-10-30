@@ -15,6 +15,11 @@ import DashboardLayout from '../views/dashboard/DashboardLayout.vue'
 import DashboardHome from '../views/dashboard/DashboardHome.vue'
 import APIKeys from '../views/dashboard/APIKeys.vue'
 import CallLogs from '../views/dashboard/CallLogs.vue'
+import Messages from '../views/dashboard/Messages.vue'
+import EmailCampaigns from '../views/dashboard/EmailCampaigns.vue'
+import Webhooks from '../views/dashboard/Webhooks.vue'
+import Conversations from '../views/dashboard/Conversations.vue'
+
 const routes = [
   {
     path: '/',
@@ -43,17 +48,35 @@ const routes = [
         component: DashboardHome
       },
       {
-        path: 'api-keys',
+        path: 'conversations',
+        name: 'Conversations',
+        component: Conversations
       },
       {
         path: 'call-logs',
         name: 'CallLogs',
-        component: CallLogs        name: 'APIKeys',
-        component: APIKeys
+        component: CallLogs
       },
-      // Future dashboard routes:
-      // { path: 'webhooks', name: 'Webhooks', component: () => import('../views/dashboard/Webhooks.vue') },
-      // { path: 'call-logs', name: 'CallLogs', component: () => import('../views/dashboard/CallLogs.vue') },
+      {
+        path: 'messages',
+        name: 'Messages',
+        component: Messages
+      },
+      {
+        path: 'emails',
+        name: 'EmailCampaigns',
+        component: EmailCampaigns
+      },
+      {
+        path: 'webhooks',
+        name: 'Webhooks',
+        component: Webhooks
+      },
+      {
+        path: 'api-keys',
+        name: 'APIKeys',
+        component: APIKeys
+      }
     ]
   }
 ]

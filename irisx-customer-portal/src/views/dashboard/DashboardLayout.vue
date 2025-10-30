@@ -21,11 +21,32 @@
                 Dashboard
               </router-link>
               <router-link
-                to="/dashboard/api-keys"
+                to="/dashboard/conversations"
                 class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                 active-class="border-indigo-500 text-gray-900"
               >
-                API Keys
+                Conversations
+              </router-link>
+              <router-link
+                to="/dashboard/call-logs"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                active-class="border-indigo-500 text-gray-900"
+              >
+                Calls
+              </router-link>
+              <router-link
+                to="/dashboard/messages"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                active-class="border-indigo-500 text-gray-900"
+              >
+                Messages
+              </router-link>
+              <router-link
+                to="/dashboard/emails"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                active-class="border-indigo-500 text-gray-900"
+              >
+                Emails
               </router-link>
               <router-link
                 to="/dashboard/webhooks"
@@ -35,11 +56,11 @@
                 Webhooks
               </router-link>
               <router-link
-                to="/dashboard/call-logs"
+                to="/dashboard/api-keys"
                 class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                 active-class="border-indigo-500 text-gray-900"
               >
-                Call Logs
+                API Keys
               </router-link>
             </div>
           </div>
