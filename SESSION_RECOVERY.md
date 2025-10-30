@@ -87,18 +87,17 @@ In order of importance:
   - orchestrator.js ✅ (321 lines - API→NATS→FreeSWITCH)
   - cdr.js ✅ (338 lines - CDR collection for billing)
 
-### 🔄 In Progress:
-- **Deploy workers to production:** Upload orchestrator.js + cdr.js
-- **Test end-to-end call:** Make actual phone call via API
+### 🔄 In Progress (Oct 30, 2025):
+- **Fix NATS consumer API:** Workers connect to FreeSWITCH + NATS successfully, need to fix JetStream consumer subscription API
+- **Current blocker:** `js.pullSubscribe()` method not working, need to use correct NATS v2.x API
 
 ### ❌ What's Missing:
-- **cdr.js worker:** Need to collect CDR for billing
 - **Customer Portal:** 0% (Vue 3 dashboard for customers)
 - **Agent Desktop:** 0% (Vue 3 with WebRTC softphone)
 - **Platform Admin Dashboard:** 5% (Vue 3 for IRISX staff)
 - **Social channels:** Discord, Teams, WhatsApp, Slack, Telegram
 
-**Next Step:** Build cdr.js worker, then Customer Portal
+**Next Step:** Fix NATS consumer API in orchestrator.js, then test end-to-end calls
 **Team:** Ryan + Claude
 
 **📊 Full Audit:** See docs/COMPLETE_AUDIT_OCT30.md

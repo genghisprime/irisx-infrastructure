@@ -276,8 +276,8 @@ async function startOrchestrator() {
       console.log('ℹ NATS stream "calls" already exists');
     }
 
-    // Subscribe to call requests (pull-based, durable consumer)
-    const sub = js.pullSubscribe('calls.>',{
+    // Subscribe to call requests (pull-based consumer with async iterator)
+    const consumer = await js.pullSubscribe('calls.>', {
       config: {
         durable_name: 'orchestrator',
         ack_policy: 'explicit',
@@ -289,13 +289,12 @@ async function startOrchestrator() {
     console.log('✓ NATS consumer "orchestrator" ready');
     console.log('✓ Orchestrator is ready and listening for call requests...\n');
 
-    // Continuously fetch and process messages
-    while (true) {
-      const messages = await sub.fetch({ batch: 10, expires: 5000 });
-      for await (const msg of messages) {
+    // Process messages using async iterator
+    (async () => {
+      for await (const msg of consumer) {
         await processCallRequest(msg);
       }
-    }
+    })();
   } catch (error) {
     console.error('[Orchestrator] Fatal error:', error);
     process.exit(1);
