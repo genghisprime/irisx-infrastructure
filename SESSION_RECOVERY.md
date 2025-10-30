@@ -87,8 +87,9 @@ In order of importance:
   - orchestrator.js ✅ (321 lines - API→NATS→FreeSWITCH)
   - cdr.js ✅ (338 lines - CDR collection for billing)
 
-### 🔄 In Progress (Oct 30, 2025 - 5:05 AM):
-- **Test end-to-end phone call:** Ready to test actual call via API → NATS → FreeSWITCH → Carrier
+### 🔄 In Progress (Oct 30, 2025 - 5:10 AM):
+- **Building Customer Portal:** Vue 3 dashboard for customers (Week 9-10 priority)
+- **Note on phone testing:** Requires carrier SIP configuration (Twilio/Telnyx credentials + FreeSWITCH gateway setup)
 
 ### ✅ Just Completed (Last 30 minutes):
 - **orchestrator.js worker:** ✅ FULLY OPERATIONAL
