@@ -1,0 +1,365 @@
+---
+title: 'List Calls'
+api: 'GET /v1/calls'
+description: 'Get a list of calls with filtering and pagination'
+---
+
+## Overview
+
+Retrieve a paginated list of calls with powerful filtering options. Use this endpoint to build call history dashboards, generate reports, or export data.
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="status" type="string">
+  Filter by call status: `initiated`, `ringing`, `in-progress`, `completed`, `failed`, `busy`, `no-answer`, `canceled`
+</ParamField>
+
+<ParamField query="direction" type="string">
+  Filter by direction: `inbound` or `outbound`
+</ParamField>
+
+<ParamField query="from" type="string">
+  Filter by caller ID (E.164 format)
+</ParamField>
+
+<ParamField query="to" type="string">
+  Filter by destination number (E.164 format)
+</ParamField>
+
+<ParamField query="start_date" type="string">
+  Filter calls after this date (ISO 8601 format)
+</ParamField>
+
+<ParamField query="end_date" type="string">
+  Filter calls before this date (ISO 8601 format)
+</ParamField>
+
+<ParamField query="page" type="integer" default={1}>
+  Page number (minimum: 1)
+</ParamField>
+
+<ParamField query="limit" type="integer" default={50}>
+  Results per page (minimum: 1, maximum: 100)
+</ParamField>
+
+## Response
+
+<ResponseField name="calls" type="array">
+  Array of call objects (see Call schema)
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination information
+
+  <Expandable title="Pagination properties">
+    <ResponseField name="page" type="integer">
+      Current page number
+    </ResponseField>
+    <ResponseField name="limit" type="integer">
+      Results per page
+    </ResponseField>
+    <ResponseField name="total" type="integer">
+      Total number of calls matching filters
+    </ResponseField>
+    <ResponseField name="pages" type="integer">
+      Total number of pages
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl "https://api.useiris.com/v1/calls?status=completed&page=1&limit=50" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function listCalls(filters = {}) {
+  try {
+    const params = new URLSearchParams({
+      page: filters.page || 1,
+      limit: filters.limit || 50,
+      ...filters
+    });
+
+    const response = await axios.get(
+      `https://api.useiris.com/v1/calls?${params}`,
+      {
+        headers: {
+          'X-API-Key': 'YOUR_API_KEY'
+        }
+      }
+    );
+
+    const { calls, pagination } = response.data;
+    console.log(`Found ${pagination.total} calls`);
+    console.log(`Showing page ${pagination.page} of ${pagination.pages}`);
+
+    return response.data;
+
+  } catch (error) {
+    console.error('Error fetching calls:', error.response?.data);
+    throw error;
+  }
+}
+
+// Examples
+listCalls({ status: 'completed' });
+listCalls({ direction: 'outbound', page: 2 });
+listCalls({
+  start_date: '2025-10-01T00:00:00Z',
+  end_date: '2025-10-31T23:59:59Z'
+});
+```
+
+```python Python
+import requests
+from urllib.parse import urlencode
+
+def list_calls(filters=None):
+    if filters is None:
+        filters = {}
+
+    params = {
+        'page': filters.get('page', 1),
+        'limit': filters.get('limit', 50),
+        **{k: v for k, v in filters.items() if k not in ['page', 'limit']}
+    }
+
+    response = requests.get(
+        f'https://api.useiris.com/v1/calls?{urlencode(params)}',
+        headers={
+            'X-API-Key': 'YOUR_API_KEY'
+        }
+    )
+
+    if response.status_code == 200:
+        data = response.json()
+        print(f"Found {data['pagination']['total']} calls")
+        print(f"Page {data['pagination']['page']} of {data['pagination']['pages']}")
+        return data
+    else:
+        print(f"Error: {response.json()}")
+        return None
+
+# Examples
+list_calls({'status': 'completed'})
+list_calls({'direction': 'outbound', 'page': 2})
+```
+
+```php PHP
+<?php
+function listCalls($filters = []) {
+    $params = array_merge([
+        'page' => 1,
+        'limit' => 50
+    ], $filters);
+
+    $url = 'https://api.useiris.com/v1/calls?' . http_build_query($params);
+    $ch = curl_init($url);
+
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            'X-API-Key: YOUR_API_KEY'
+        ]
+    ]);
+
+    $response = curl_exec($ch);
+    $result = json_decode($response, true);
+
+    if ($result['calls']) {
+        echo "Found " . $result['pagination']['total'] . " calls\n";
+        echo "Page " . $result['pagination']['page'] . " of " . $result['pagination']['pages'] . "\n";
+        return $result;
+    } else {
+        echo "Error: " . $result['message'] . "\n";
+        return null;
+    }
+
+    curl_close($ch);
+}
+
+// Examples
+listCalls(['status' => 'completed']);
+listCalls(['direction' => 'outbound', 'page' => 2]);
+?>
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "calls": [
+    {
+      "uuid": "123e4567-e89b-12d3-a456-426614174000",
+      "tenant_id": 1,
+      "to": "+15551234567",
+      "from": "+15559876543",
+      "status": "completed",
+      "direction": "outbound",
+      "duration": 125,
+      "start_time": "2025-10-30T18:00:00Z",
+      "end_time": "2025-10-30T18:02:05Z",
+      "carrier_id": 2,
+      "cost": 0.015,
+      "recording_url": "https://recordings.useiris.com/abc123.mp3",
+      "metadata": {
+        "customer_id": "12345"
+      },
+      "created_at": "2025-10-30T17:59:55Z",
+      "updated_at": "2025-10-30T18:02:05Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 237,
+    "pages": 5
+  }
+}
+```
+
+</ResponseExample>
+
+## Filtering Examples
+
+### Get today's completed calls
+
+```javascript
+const today = new Date().toISOString().split('T')[0];
+listCalls({
+  status: 'completed',
+  start_date: `${today}T00:00:00Z`,
+  end_date: `${today}T23:59:59Z`
+});
+```
+
+### Get failed calls for a specific number
+
+```javascript
+listCalls({
+  status: 'failed',
+  from: '+15559876543'
+});
+```
+
+### Get all outbound calls this month
+
+```javascript
+const startOfMonth = new Date();
+startOfMonth.setDate(1);
+startOfMonth.setHours(0, 0, 0, 0);
+
+listCalls({
+  direction: 'outbound',
+  start_date: startOfMonth.toISOString()
+});
+```
+
+## Pagination
+
+Navigate through large result sets:
+
+```javascript
+async function getAllCalls() {
+  const allCalls = [];
+  let page = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await listCalls({ page, limit: 100 });
+    allCalls.push(...response.calls);
+
+    hasMore = page < response.pagination.pages;
+    page++;
+  }
+
+  return allCalls;
+}
+```
+
+<Warning>
+  Be careful when fetching all pages - large accounts may have thousands of calls. Consider using date filters to limit results.
+</Warning>
+
+## Export to CSV
+
+```javascript
+async function exportCallsToCSV(filters) {
+  const calls = await getAllCalls(filters);
+
+  const csv = [
+    // Header
+    ['UUID', 'To', 'From', 'Status', 'Duration', 'Cost', 'Created At'].join(','),
+    // Rows
+    ...calls.map(call => [
+      call.uuid,
+      call.to,
+      call.from,
+      call.status,
+      call.duration || 0,
+      call.cost || 0,
+      call.created_at
+    ].join(','))
+  ].join('\n');
+
+  return csv;
+}
+```
+
+## Analytics Example
+
+Calculate total cost and duration:
+
+```javascript
+async function calculateCallStats(filters) {
+  const response = await listCalls({ ...filters, limit: 100 });
+  const { calls } = response;
+
+  const stats = {
+    totalCalls: calls.length,
+    totalDuration: calls.reduce((sum, call) => sum + (call.duration || 0), 0),
+    totalCost: calls.reduce((sum, call) => sum + (call.cost || 0), 0),
+    completedCalls: calls.filter(c => c.status === 'completed').length,
+    failedCalls: calls.filter(c => c.status === 'failed').length
+  };
+
+  console.log('Call Statistics:', stats);
+  return stats;
+}
+```
+
+## Rate Limits
+
+- **1000 requests per minute** for read operations
+- Consider caching results for frequently accessed data
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Create Call" icon="phone-plus" href="/api-reference/calls/create">
+    Initiate outbound call
+  </Card>
+  <Card title="Get Call" icon="phone" href="/api-reference/calls/get">
+    Get specific call details
+  </Card>
+  <Card title="Analytics" icon="chart-line" href="/api-reference/analytics/calls">
+    View call analytics
+  </Card>
+</CardGroup>

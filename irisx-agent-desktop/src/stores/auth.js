@@ -21,6 +21,30 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
+      // DEMO MODE: Allow demo@irisx.com / demo123 to login without backend
+      if (email === 'demo@irisx.com' && password === 'demo123') {
+        console.log('🎮 DEMO LOGIN: Using mock credentials')
+
+        // Mock token and user data
+        const authToken = 'demo-token-' + Date.now()
+        const userData = {
+          id: 'demo-user-1',
+          email: 'demo@irisx.com',
+          first_name: 'Demo',
+          last_name: 'Agent',
+          role: 'agent',
+          company_name: 'Demo Company'
+        }
+
+        // Store token and user data
+        token.value = authToken
+        user.value = userData
+        localStorage.setItem('token', authToken)
+
+        return { success: true }
+      }
+
+      // Real API login
       const response = await apiClient.post('/v1/auth/login', {
         email,
         password
@@ -35,7 +59,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { success: true }
     } catch (err) {
-      error.value = err.response?.data?.message || 'Login failed'
+      error.value = err.response?.data?.message || 'Login failed. Try demo@irisx.com / demo123 for DEMO mode'
       return { success: false, error: error.value }
     } finally {
       isLoading.value = false

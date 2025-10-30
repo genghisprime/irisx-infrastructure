@@ -1,0 +1,392 @@
+---
+title: '5-Minute Quickstart'
+description: 'Make your first call with IRISX in under 5 minutes'
+---
+
+## Get Your API Key
+
+First, sign up for an IRISX account and get your API key:
+
+<Steps>
+  <Step title="Sign Up">
+    Create your account at [portal.useiris.com](https://portal.useiris.com/signup)
+  </Step>
+  <Step title="Get API Key">
+    Navigate to **Settings → API Keys** and copy your key
+  </Step>
+  <Step title="Purchase a Phone Number">
+    Go to **Phone Numbers → Buy Number** to get your first number
+  </Step>
+</Steps>
+
+<Note>
+  Beta users get $100 in free credits - no credit card required!
+</Note>
+
+## Make Your First Call
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const apiKey = 'your_api_key_here';
+const apiUrl = 'https://api.useiris.com';
+
+async function makeCall() {
+  try {
+    const response = await axios.post(
+      `${apiUrl}/v1/calls`,
+      {
+        to: '+15551234567',      // Destination number
+        from: '+15559876543',    // Your IRISX number
+        webhook_url: 'https://yourapp.com/webhooks/calls',
+        record: true             // Record the call
+      },
+      {
+        headers: {
+          'X-API-Key': apiKey,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    console.log('Call initiated:', response.data.call.uuid);
+    console.log('Status:', response.data.call.status);
+  } catch (error) {
+    console.error('Error:', error.response?.data || error.message);
+  }
+}
+
+makeCall();
+```
+
+```python Python
+import requests
+
+api_key = 'your_api_key_here'
+api_url = 'https://api.useiris.com'
+
+def make_call():
+    response = requests.post(
+        f'{api_url}/v1/calls',
+        json={
+            'to': '+15551234567',      # Destination number
+            'from': '+15559876543',    # Your IRISX number
+            'webhook_url': 'https://yourapp.com/webhooks/calls',
+            'record': True             # Record the call
+        },
+        headers={
+            'X-API-Key': api_key,
+            'Content-Type': 'application/json'
+        }
+    )
+
+    if response.status_code == 201:
+        call = response.json()['call']
+        print(f"Call initiated: {call['uuid']}")
+        print(f"Status: {call['status']}")
+    else:
+        print(f"Error: {response.json()}")
+
+make_call()
+```
+
+```bash cURL
+curl -X POST https://api.useiris.com/v1/calls \
+  -H "X-API-Key: your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "+15551234567",
+    "from": "+15559876543",
+    "webhook_url": "https://yourapp.com/webhooks/calls",
+    "record": true
+  }'
+```
+
+```php PHP
+<?php
+$apiKey = 'your_api_key_here';
+$apiUrl = 'https://api.useiris.com';
+
+$ch = curl_init("$apiUrl/v1/calls");
+
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER => [
+        "X-API-Key: $apiKey",
+        "Content-Type: application/json"
+    ],
+    CURLOPT_POSTFIELDS => json_encode([
+        'to' => '+15551234567',
+        'from' => '+15559876543',
+        'webhook_url' => 'https://yourapp.com/webhooks/calls',
+        'record' => true
+    ])
+]);
+
+$response = curl_exec($ch);
+$result = json_decode($response, true);
+
+if ($result['call']) {
+    echo "Call initiated: " . $result['call']['uuid'] . "\n";
+    echo "Status: " . $result['call']['status'] . "\n";
+} else {
+    echo "Error: " . $result['message'] . "\n";
+}
+
+curl_close($ch);
+?>
+```
+
+</CodeGroup>
+
+## Understanding the Response
+
+When you make a call, you'll receive a response like this:
+
+```json
+{
+  "call": {
+    "uuid": "123e4567-e89b-12d3-a456-426614174000",
+    "tenant_id": 1,
+    "to": "+15551234567",
+    "from": "+15559876543",
+    "status": "initiated",
+    "direction": "outbound",
+    "duration": null,
+    "start_time": null,
+    "end_time": null,
+    "cost": null,
+    "recording_url": null,
+    "created_at": "2025-10-30T18:00:00Z",
+    "updated_at": "2025-10-30T18:00:00Z"
+  }
+}
+```
+
+<ResponseField name="uuid" type="string">
+  Unique identifier for the call - use this to track status
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current call status: `initiated`, `ringing`, `in-progress`, `completed`, or `failed`
+</ResponseField>
+
+<ResponseField name="cost" type="number">
+  Final call cost in USD (populated after call completes)
+</ResponseField>
+
+## Track Call Status
+
+You have two ways to track your call:
+
+### 1. Webhooks (Recommended)
+
+Receive real-time updates via webhooks:
+
+```javascript
+// Express.js webhook handler
+app.post('/webhooks/calls', (req, res) => {
+  const event = req.body;
+
+  console.log(`Call ${event.data.uuid} is now ${event.data.status}`);
+
+  if (event.event === 'call.completed') {
+    console.log(`Duration: ${event.data.duration} seconds`);
+    console.log(`Cost: $${event.data.cost}`);
+  }
+
+  res.status(200).send('OK');
+});
+```
+
+<Note>
+  Learn more about [Webhook Security](/concepts/webhooks) and signature verification.
+</Note>
+
+### 2. Polling (Simple)
+
+Poll the API for call status:
+
+```javascript
+async function getCallStatus(callUuid) {
+  const response = await axios.get(
+    `${apiUrl}/v1/calls/${callUuid}`,
+    {
+      headers: { 'X-API-Key': apiKey }
+    }
+  );
+
+  return response.data.call;
+}
+
+// Check every 2 seconds
+const interval = setInterval(async () => {
+  const call = await getCallStatus('123e4567-e89b-12d3-a456-426614174000');
+  console.log('Status:', call.status);
+
+  if (['completed', 'failed', 'no-answer'].includes(call.status)) {
+    clearInterval(interval);
+    console.log('Call finished!');
+  }
+}, 2000);
+```
+
+## Send Your First SMS
+
+Sending SMS is just as easy:
+
+```javascript
+async function sendSMS() {
+  const response = await axios.post(
+    `${apiUrl}/v1/sms/send`,
+    {
+      to: '+15551234567',
+      from: '+15559876543',  // Your IRISX number
+      body: 'Hello from IRISX! This is a test message.'
+    },
+    {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  console.log('Message sent:', response.data.message.id);
+  console.log('Status:', response.data.message.status);
+}
+```
+
+## Rate Limits
+
+IRISX implements fair usage rate limits:
+
+- **Calls:** 10 requests/minute
+- **SMS/Email:** 100 requests/minute
+- **Read Operations:** 1000 requests/minute
+
+Rate limit headers are included in responses:
+
+```
+X-RateLimit-Limit: 10
+X-RateLimit-Remaining: 9
+X-RateLimit-Reset: 1698765432
+```
+
+<Warning>
+  If you exceed rate limits, you'll receive a `429 Too Many Requests` response. Wait until the reset time before retrying.
+</Warning>
+
+## Error Handling
+
+Always handle errors gracefully:
+
+```javascript
+try {
+  const response = await makeCall();
+  console.log('Success:', response.data);
+} catch (error) {
+  if (error.response) {
+    // API returned an error
+    console.error('API Error:', error.response.data.message);
+    console.error('Status:', error.response.status);
+
+    if (error.response.status === 429) {
+      console.log('Rate limited - wait and retry');
+    } else if (error.response.status === 401) {
+      console.log('Invalid API key');
+    }
+  } else {
+    // Network error
+    console.error('Network Error:', error.message);
+  }
+}
+```
+
+Common error codes:
+
+- `400` - Bad Request (invalid parameters)
+- `401` - Unauthorized (invalid API key)
+- `403` - Forbidden (insufficient permissions)
+- `404` - Not Found
+- `429` - Too Many Requests (rate limited)
+- `500` - Internal Server Error
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Advanced Calling"
+    icon="phone-volume"
+    href="/guides/making-calls"
+  >
+    Learn about IVR, recording, and call control
+  </Card>
+  <Card
+    title="Webhooks"
+    icon="webhook"
+    href="/concepts/webhooks"
+  >
+    Set up real-time event notifications
+  </Card>
+  <Card
+    title="Phone Numbers"
+    icon="hashtag"
+    href="/concepts/phone-numbers"
+  >
+    Purchase and configure numbers
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api-reference"
+  >
+    Explore all API endpoints
+  </Card>
+</CardGroup>
+
+## Use Our SDKs
+
+Skip the HTTP client setup and use our official SDKs:
+
+<CodeGroup>
+
+```bash Node.js
+npm install @irisx/sdk
+```
+
+```bash Python
+pip install irisx
+```
+
+```bash PHP
+composer require irisx/sdk
+```
+
+```bash Ruby
+gem install irisx
+```
+
+</CodeGroup>
+
+<Card
+  title="SDK Documentation"
+  icon="cube"
+  href="/sdks"
+>
+  Learn more about using our SDKs
+</Card>
+
+## Get Help
+
+Need assistance? We're here to help:
+
+- 💬 [Join our Discord](https://discord.gg/irisx)
+- 📧 Email: support@useiris.com
+- 📚 Browse our [guides](/guides)
+- 🎥 Watch [video tutorials](https://youtube.com/@irisx)
+
+Happy building! 🚀

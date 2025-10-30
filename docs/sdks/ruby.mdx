@@ -1,0 +1,495 @@
+---
+title: 'Ruby SDK'
+description: 'Official IRISX Ruby SDK for seamless integration'
+---
+
+## Installation
+
+Install the IRISX SDK via Gemfile:
+
+```ruby
+gem 'irisx-sdk'
+```
+
+Or install directly:
+
+```bash
+gem install irisx-sdk
+```
+
+## Quick Start
+
+```ruby
+require 'irisx'
+
+# Initialize with API key
+irisx = Irisx::Client.new(api_key: 'your_api_key_here')
+
+# Make your first call
+call = irisx.calls.create(
+  to: '+15551234567',
+  from: '+15559876543',
+  record: true
+)
+
+puts "Call initiated: #{call.uuid}"
+```
+
+## Authentication
+
+### API Key (Recommended)
+
+```ruby
+require 'irisx'
+
+irisx = Irisx::Client.new(api_key: 'your_api_key_here')
+```
+
+### JWT Token (For User Auth)
+
+```ruby
+require 'irisx'
+
+irisx = Irisx::Client.new(token: 'your_jwt_token_here')
+
+# Handle token refresh
+irisx.on_token_refresh do |new_token|
+  puts "Token refreshed: #{new_token}"
+  # Save new token to secure storage
+end
+```
+
+## Making Calls
+
+### Create Outbound Call
+
+```ruby
+call = irisx.calls.create(
+  to: '+15551234567',
+  from: '+15559876543',
+  webhook_url: 'https://yourapp.com/webhooks',
+  record: true,
+  timeout: 60,
+  metadata: {
+    customer_id: 'cust_123',
+    order_id: 'order_456'
+  }
+)
+
+puts "Call UUID: #{call.uuid}"
+```
+
+### Get Call Details
+
+```ruby
+call = irisx.calls.get('123e4567-e89b-12d3-a456-426614174000')
+
+puts "Status: #{call.status}"
+puts "Duration: #{call.duration}s"
+puts "Cost: $#{call.cost}"
+```
+
+### List Calls
+
+```ruby
+calls = irisx.calls.list(
+  status: 'completed',
+  direction: 'outbound',
+  start_date: '2025-10-01',
+  end_date: '2025-10-31',
+  page: 1,
+  limit: 50
+)
+
+puts "Found #{calls.pagination.total} calls"
+
+calls.data.each do |call|
+  puts "#{call.uuid}: #{call.status}"
+end
+```
+
+## Sending SMS
+
+### Send Single Message
+
+```ruby
+message = irisx.sms.send(
+  to: '+15551234567',
+  from: '+15559876543',
+  body: 'Hello! This is a test message.',
+  webhook_url: 'https://yourapp.com/webhooks/sms'
+)
+
+puts "Message ID: #{message.id}"
+```
+
+### Send MMS with Media
+
+```ruby
+message = irisx.sms.send(
+  to: '+15551234567',
+  from: '+15559876543',
+  body: 'Check out this image!',
+  media_urls: [
+    'https://example.com/image.jpg'
+  ]
+)
+```
+
+### Bulk SMS
+
+```ruby
+result = irisx.sms.send_bulk(
+  from: '+15559876543',
+  recipients: [
+    { to: '+15551111111', body: 'Message 1' },
+    { to: '+15552222222', body: 'Message 2' },
+    { to: '+15553333333', body: 'Message 3' }
+  ]
+)
+
+puts "Sent: #{result.successful}, Failed: #{result.failed}"
+```
+
+### Using Templates
+
+```ruby
+# Create template
+template = irisx.sms.create_template(
+  name: 'welcome',
+  body: 'Hi {{name}}, welcome to {{company}}!'
+)
+
+# Send with template
+message = irisx.sms.send_template(
+  to: '+15551234567',
+  from: '+15559876543',
+  template_id: template.id,
+  variables: {
+    name: 'John',
+    company: 'IRISX'
+  }
+)
+```
+
+## Sending Email
+
+```ruby
+email = irisx.email.send(
+  to: 'customer@example.com',
+  from: 'noreply@yourcompany.com',
+  subject: 'Welcome to Our Service',
+  body_html: '<h1>Welcome!</h1><p>Thanks for signing up!</p>',
+  body_text: 'Welcome! Thanks for signing up!',
+  track_opens: true,
+  track_clicks: true
+)
+
+puts "Email sent: #{email.id}"
+```
+
+## Webhooks
+
+### Create Webhook
+
+```ruby
+webhook = irisx.webhooks.create(
+  url: 'https://yourapp.com/webhooks/irisx',
+  events: [
+    'call.completed',
+    'call.failed',
+    'sms.delivered',
+    'sms.failed'
+  ],
+  description: 'Production webhook'
+)
+
+puts "Webhook ID: #{webhook.id}"
+puts "Secret: #{webhook.secret}"  # Save this!
+```
+
+### List Webhooks
+
+```ruby
+webhooks = irisx.webhooks.list
+
+webhooks.each do |webhook|
+  puts "#{webhook.id}: #{webhook.url}"
+end
+```
+
+### Verify Webhook Signature
+
+```ruby
+require 'openssl'
+
+def verify_webhook_signature(payload, signature, secret)
+  expected_signature = OpenSSL::HMAC.hexdigest(
+    'SHA256',
+    secret,
+    payload.to_json
+  )
+
+  OpenSSL::HMAC.secure_compare(expected_signature, signature)
+end
+
+# With Rails
+class WebhooksController < ApplicationController
+  skip_verification_before_action :verify_authenticity_token, only: :irisx
+
+  def irisx
+    signature = request.headers['X-IRISX-Signature']
+    payload = request.body.read
+
+    unless verify_webhook_signature(JSON.parse(payload), signature, ENV['IRISX_WEBHOOK_SECRET'])
+      head :unauthorized
+      return
+    end
+
+    # Process webhook
+    event_data = JSON.parse(payload)
+    event = event_data['event']
+    data = event_data['data']
+
+    head :ok
+  end
+
+  private
+
+  def verify_webhook_signature(payload, signature, secret)
+    expected_signature = OpenSSL::HMAC.hexdigest(
+      'SHA256',
+      secret,
+      payload.to_json
+    )
+
+    OpenSSL::HMAC.secure_compare(expected_signature, signature)
+  end
+end
+```
+
+## Phone Numbers
+
+### Search Available Numbers
+
+```ruby
+numbers = irisx.phone_numbers.search(
+  country: 'US',
+  area_code: '415',
+  type: 'local',
+  limit: 10
+)
+
+numbers.each do |number|
+  puts "#{number.number} - $#{number.monthly_cost}/mo"
+end
+```
+
+### Purchase Number
+
+```ruby
+number = irisx.phone_numbers.purchase(
+  phone_number: '+14155551234',
+  friendly_name: 'Support Line'
+)
+
+puts "Purchased: #{number.number}"
+```
+
+### Configure Number
+
+```ruby
+irisx.phone_numbers.update(
+  number_id,
+  voice_webhook_url: 'https://yourapp.com/webhooks/voice',
+  sms_webhook_url: 'https://yourapp.com/webhooks/sms',
+  friendly_name: 'Main Support Line'
+)
+```
+
+## Analytics
+
+### Get Dashboard Stats
+
+```ruby
+stats = irisx.analytics.dashboard(
+  start_date: '2025-10-01',
+  end_date: '2025-10-31'
+)
+
+puts "Total Calls: #{stats.calls.total}"
+puts "Total SMS: #{stats.sms.total}"
+puts "Total Cost: $#{stats.calls.total_cost + stats.sms.total_cost}"
+```
+
+### Call Analytics
+
+```ruby
+analytics = irisx.analytics.calls(
+  start_date: '2025-10-01',
+  end_date: '2025-10-31',
+  group_by: 'day'
+)
+
+analytics.data.each do |day|
+  puts "#{day.date}: #{day.total_calls} calls"
+end
+```
+
+## Error Handling
+
+```ruby
+require 'irisx'
+require 'irisx/errors'
+
+begin
+  call = irisx.calls.create(
+    to: '+15551234567',
+    from: '+15559876543'
+  )
+rescue Irisx::RateLimitError => e
+  puts "Rate limited - retry after: #{e.retry_after}s"
+  # Wait and retry
+  sleep(e.retry_after)
+rescue Irisx::ValidationError => e
+  puts "Validation error: #{e.message}"
+  puts "Details: #{e.details.inspect}"
+rescue Irisx::Error => e
+  puts "API Error: #{e.message}"
+  puts "Code: #{e.code}"
+
+  if e.code == 'INSUFFICIENT_FUNDS'
+    puts "Low balance - add credits"
+  end
+rescue StandardError => e
+  puts "Unexpected error: #{e.message}"
+end
+```
+
+### Exception Types
+
+Ruby SDK includes specific exception classes:
+
+```ruby
+require 'irisx/errors'
+
+begin
+  number = irisx.phone_numbers.get('invalid_id')
+rescue Irisx::NotFoundError
+  puts "Phone number not found"
+rescue Irisx::AuthenticationError
+  puts "Authentication failed - check your API key"
+rescue Irisx::Error => e
+  puts "Error: #{e.message}"
+end
+```
+
+## Advanced Features
+
+### Automatic Retry with Exponential Backoff
+
+```ruby
+irisx = Irisx::Client.new(
+  api_key: 'your_api_key_here',
+  retry: {
+    enabled: true,
+    max_retries: 3,
+    base_delay: 1,      # 1 second
+    max_delay: 30       # 30 seconds
+  }
+)
+```
+
+### Custom Timeout
+
+```ruby
+irisx = Irisx::Client.new(
+  api_key: 'your_api_key_here',
+  timeout: 60  # 60 seconds
+)
+```
+
+### Logging
+
+```ruby
+require 'logger'
+
+logger = Logger.new(STDOUT)
+logger.level = Logger::DEBUG
+
+irisx = Irisx::Client.new(
+  api_key: 'your_api_key_here',
+  logger: logger
+)
+```
+
+## Environment Variables
+
+```bash
+# .env file
+IRISX_API_KEY=your_api_key_here
+IRISX_API_URL=https://api.useiris.com
+IRISX_WEBHOOK_SECRET=your_webhook_secret
+```
+
+```ruby
+require 'dotenv/load'
+require 'irisx'
+
+irisx = Irisx::Client.new(
+  api_key: ENV['IRISX_API_KEY'],
+  base_url: ENV['IRISX_API_URL']
+)
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Environment Variables" icon="key">
+    Store credentials in ENV, never in version control
+  </Card>
+  <Card title="Handle Exceptions" icon="triangle-exclamation">
+    Always rescue specific exceptions first, then general
+  </Card>
+  <Card title="Enable Retries" icon="rotate">
+    Use automatic retry for transient network issues
+  </Card>
+  <Card title="Verify Webhooks" icon="shield-check">
+    Always verify webhook signatures with OpenSSL
+  </Card>
+  <Card title="Use Ruby Conventions" icon="code">
+    Follow Ruby style guide for naming and formatting
+  </Card>
+  <Card title="Log Events" icon="file-lines">
+    Use Logger for tracking API calls and errors
+  </Card>
+</CardGroup>
+
+## Examples
+
+Full working examples available at [github.com/irisx/examples](https://github.com/irisx/examples):
+
+- Simple outbound call
+- IVR menu with DTMF handling
+- SMS campaign with templates
+- Webhook handler with Rails
+- Call recording and transcription
+- Sidekiq background jobs
+
+## Support
+
+- 📚 [Full API Reference](/api-reference)
+- 💬 [Discord Community](https://discord.gg/irisx)
+- 🐛 [GitHub Issues](https://github.com/irisx/sdk-ruby/issues)
+- 📧 Email: support@useiris.com
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/api-reference">
+    Explore all endpoints
+  </Card>
+  <Card title="Code Examples" icon="code" href="https://github.com/irisx/examples">
+    See working examples
+  </Card>
+</CardGroup>

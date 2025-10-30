@@ -1,0 +1,358 @@
+---
+title: 'Update Call'
+api: 'PATCH /v1/calls/{uuid}'
+description: 'Update call metadata'
+---
+
+## Overview
+
+Update the metadata of an existing call. This endpoint allows you to add or modify custom metadata after the call has been created.
+
+<Note>
+  You can only update the `metadata` field. Other call properties (status, duration, cost) are read-only and managed by the system.
+</Note>
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Path Parameters
+
+<ParamField path="uuid" type="string" required>
+  Call UUID
+</ParamField>
+
+## Request Body
+
+<ParamField body="metadata" type="object" required>
+  Custom metadata to attach to the call. Replaces existing metadata completely.
+</ParamField>
+
+## Response
+
+<ResponseField name="call" type="object">
+  Updated call object with new metadata
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl -X PATCH https://api.useiris.com/v1/calls/123e4567-e89b-12d3-a456-426614174000 \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "metadata": {
+      "customer_id": "12345",
+      "order_id": "ORD-789",
+      "notes": "Customer requested callback",
+      "priority": "high"
+    }
+  }'
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function updateCallMetadata(uuid, metadata) {
+  try {
+    const response = await axios.patch(
+      `https://api.useiris.com/v1/calls/${uuid}`,
+      {
+        metadata
+      },
+      {
+        headers: {
+          'X-API-Key': 'YOUR_API_KEY',
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    console.log('Call metadata updated');
+    return response.data.call;
+
+  } catch (error) {
+    console.error('Update failed:', error.response?.data);
+    throw error;
+  }
+}
+
+// Example usage
+updateCallMetadata('123e4567-e89b-12d3-a456-426614174000', {
+  customer_id: '12345',
+  order_id: 'ORD-789',
+  notes: 'Customer requested callback',
+  priority: 'high'
+});
+```
+
+```python Python
+import requests
+
+def update_call_metadata(uuid, metadata):
+    response = requests.patch(
+        f'https://api.useiris.com/v1/calls/{uuid}',
+        json={
+            'metadata': metadata
+        },
+        headers={
+            'X-API-Key': 'YOUR_API_KEY',
+            'Content-Type': 'application/json'
+        }
+    )
+
+    if response.status_code == 200:
+        print('Call metadata updated')
+        return response.json()['call']
+    else:
+        print(f"Update failed: {response.json()}")
+        return None
+
+# Example usage
+update_call_metadata('123e4567-e89b-12d3-a456-426614174000', {
+    'customer_id': '12345',
+    'order_id': 'ORD-789',
+    'notes': 'Customer requested callback',
+    'priority': 'high'
+})
+```
+
+```php PHP
+<?php
+function updateCallMetadata($uuid, $metadata) {
+    $ch = curl_init("https://api.useiris.com/v1/calls/$uuid");
+
+    curl_setopt_array($ch, [
+        CURLOPT_CUSTOMREQUEST => 'PATCH',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            'X-API-Key: YOUR_API_KEY',
+            'Content-Type: application/json'
+        ],
+        CURLOPT_POSTFIELDS => json_encode([
+            'metadata' => $metadata
+        ])
+    ]);
+
+    $response = curl_exec($ch);
+    $result = json_decode($response, true);
+
+    if ($result['call']) {
+        echo "Call metadata updated\n";
+        return $result['call'];
+    } else {
+        echo "Update failed: " . $result['message'] . "\n";
+        return null;
+    }
+
+    curl_close($ch);
+}
+
+// Example usage
+updateCallMetadata('123e4567-e89b-12d3-a456-426614174000', [
+    'customer_id' => '12345',
+    'order_id' => 'ORD-789',
+    'notes' => 'Customer requested callback',
+    'priority' => 'high'
+]);
+?>
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "call": {
+    "uuid": "123e4567-e89b-12d3-a456-426614174000",
+    "tenant_id": 1,
+    "to": "+15551234567",
+    "from": "+15559876543",
+    "status": "completed",
+    "direction": "outbound",
+    "duration": 125,
+    "cost": 0.015,
+    "recording_url": "https://recordings.useiris.com/abc123.mp3",
+    "metadata": {
+      "customer_id": "12345",
+      "order_id": "ORD-789",
+      "notes": "Customer requested callback",
+      "priority": "high"
+    },
+    "created_at": "2025-10-30T17:59:55Z",
+    "updated_at": "2025-10-30T18:15:30Z"
+  }
+}
+```
+
+```json Error Response (404)
+{
+  "error": "NOT_FOUND",
+  "message": "Call not found"
+}
+```
+
+</ResponseExample>
+
+## Use Cases
+
+### Add CRM Data
+
+Link calls to your CRM records:
+
+```javascript
+async function linkCallToCRM(callUuid, customerId, dealId) {
+  await updateCallMetadata(callUuid, {
+    crm_customer_id: customerId,
+    crm_deal_id: dealId,
+    synced_to_crm: true,
+    sync_timestamp: new Date().toISOString()
+  });
+}
+```
+
+### Add Agent Notes
+
+Add notes after a call completes:
+
+```javascript
+async function addAgentNotes(callUuid, agentId, notes) {
+  const call = await getCall(callUuid);
+
+  await updateCallMetadata(callUuid, {
+    ...call.metadata,
+    agent_id: agentId,
+    agent_notes: notes,
+    notes_timestamp: new Date().toISOString()
+  });
+}
+```
+
+### Tag Calls
+
+Add tags for organization:
+
+```javascript
+async function tagCall(callUuid, tags) {
+  const call = await getCall(callUuid);
+
+  await updateCallMetadata(callUuid, {
+    ...call.metadata,
+    tags: tags
+  });
+}
+
+tagCall('123e4567-...', ['sales', 'follow-up-required', 'high-value']);
+```
+
+### Track Call Outcomes
+
+Record call results:
+
+```javascript
+async function recordCallOutcome(callUuid, outcome) {
+  await updateCallMetadata(callUuid, {
+    outcome: outcome, // 'sale', 'no-answer', 'callback', 'not-interested'
+    outcome_timestamp: new Date().toISOString(),
+    follow_up_required: outcome === 'callback'
+  });
+}
+```
+
+## Metadata Best Practices
+
+<Tip>
+  Use consistent key names across all calls for easier filtering and reporting.
+</Tip>
+
+### Recommended Metadata Structure
+
+```javascript
+{
+  // Identifiers
+  customer_id: '12345',
+  order_id: 'ORD-789',
+  agent_id: 'agent-42',
+
+  // Campaign tracking
+  campaign: 'summer_sale',
+  source: 'email_blast',
+
+  // Call outcome
+  outcome: 'sale',
+  notes: 'Customer purchased premium plan',
+
+  // Follow-up
+  follow_up_required: true,
+  follow_up_date: '2025-11-05',
+
+  // Custom fields
+  priority: 'high',
+  language: 'es',
+  timezone: 'America/New_York'
+}
+```
+
+## Merging Metadata
+
+To add fields without replacing existing metadata:
+
+```javascript
+async function addMetadataFields(callUuid, newFields) {
+  // Get current call
+  const call = await getCall(callUuid);
+
+  // Merge with existing metadata
+  const updatedMetadata = {
+    ...call.metadata,
+    ...newFields
+  };
+
+  // Update
+  await updateCallMetadata(callUuid, updatedMetadata);
+}
+
+// Example: Add outcome without losing other metadata
+addMetadataFields('123e4567-...', {
+  outcome: 'sale',
+  sale_amount: 99.99
+});
+```
+
+## Error Codes
+
+| Code | Error | Description |
+|------|-------|-------------|
+| 400 | VALIDATION_ERROR | Invalid metadata format |
+| 401 | UNAUTHORIZED | Invalid API key or token |
+| 404 | NOT_FOUND | Call UUID not found |
+| 403 | FORBIDDEN | Call belongs to different tenant |
+
+## Limitations
+
+<Warning>
+  - Metadata is limited to 16KB per call
+  - Only JSON-serializable values are allowed
+  - Updating metadata replaces all existing metadata - merge manually if needed
+</Warning>
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Get Call" icon="phone" href="/api-reference/calls/get">
+    Retrieve current metadata
+  </Card>
+  <Card title="List Calls" icon="list" href="/api-reference/calls/list">
+    View all calls
+  </Card>
+  <Card title="Create Call" icon="phone-plus" href="/api-reference/calls/create">
+    Initiate new call
+  </Card>
+</CardGroup>

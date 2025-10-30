@@ -1,0 +1,312 @@
+---
+title: 'Get Current User'
+api: 'GET /v1/auth/me'
+description: 'Get authenticated user information'
+---
+
+## Overview
+
+Retrieve information about the currently authenticated user. Use this endpoint to verify JWT tokens and get user details.
+
+## Authentication
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token obtained from `/v1/auth/login` or `/v1/auth/register`
+</ParamField>
+
+## Response
+
+<ResponseField name="user" type="object">
+  Current user object
+
+  <Expandable title="User properties">
+    <ResponseField name="id" type="integer">
+      User ID
+    </ResponseField>
+    <ResponseField name="tenant_id" type="integer">
+      Tenant ID that the user belongs to
+    </ResponseField>
+    <ResponseField name="email" type="string">
+      User email address
+    </ResponseField>
+    <ResponseField name="first_name" type="string">
+      User's first name
+    </ResponseField>
+    <ResponseField name="last_name" type="string">
+      User's last name
+    </ResponseField>
+    <ResponseField name="role" type="string">
+      User role: `admin`, `agent`, or `user`
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      Account creation timestamp (ISO 8601)
+    </ResponseField>
+    <ResponseField name="updated_at" type="string">
+      Last update timestamp (ISO 8601)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl https://api.useiris.com/v1/auth/me \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function getCurrentUser(token) {
+  try {
+    const response = await axios.get(
+      'https://api.useiris.com/v1/auth/me',
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    const user = response.data.user;
+    console.log('Current user:', user.email);
+    console.log('Role:', user.role);
+    console.log('Tenant ID:', user.tenant_id);
+
+    return user;
+
+  } catch (error) {
+    if (error.response?.status === 401) {
+      console.error('Token expired or invalid');
+      // Redirect to login
+    } else {
+      console.error('Error:', error.response?.data);
+    }
+    throw error;
+  }
+}
+
+// Use stored token
+const token = localStorage.getItem('token');
+getCurrentUser(token);
+```
+
+```python Python
+import requests
+
+def get_current_user(token):
+    response = requests.get(
+        'https://api.useiris.com/v1/auth/me',
+        headers={
+            'Authorization': f'Bearer {token}'
+        }
+    )
+
+    if response.status_code == 200:
+        user = response.json()['user']
+        print(f"Current user: {user['email']}")
+        print(f"Role: {user['role']}")
+        print(f"Tenant ID: {user['tenant_id']}")
+        return user
+    elif response.status_code == 401:
+        print('Token expired or invalid')
+        # Redirect to login
+    else:
+        print(f"Error: {response.json()}")
+
+    return None
+
+# Use stored token
+get_current_user('YOUR_JWT_TOKEN')
+```
+
+```php PHP
+<?php
+function getCurrentUser($token) {
+    $ch = curl_init('https://api.useiris.com/v1/auth/me');
+
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            "Authorization: Bearer $token"
+        ]
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $result = json_decode($response, true);
+
+    if ($httpCode === 200) {
+        $user = $result['user'];
+        echo "Current user: " . $user['email'] . "\n";
+        echo "Role: " . $user['role'] . "\n";
+        echo "Tenant ID: " . $user['tenant_id'] . "\n";
+        return $user;
+    } elseif ($httpCode === 401) {
+        echo "Token expired or invalid\n";
+        // Redirect to login
+    } else {
+        echo "Error: " . $result['message'] . "\n";
+    }
+
+    curl_close($ch);
+    return null;
+}
+
+// Use stored token
+$token = $_SESSION['token'];
+getCurrentUser($token);
+?>
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "user": {
+    "id": 1,
+    "tenant_id": 1,
+    "email": "admin@acme.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "role": "admin",
+    "created_at": "2025-10-30T18:00:00Z",
+    "updated_at": "2025-10-30T18:00:00Z"
+  }
+}
+```
+
+```json Error Response (401)
+{
+  "error": "UNAUTHORIZED",
+  "message": "Invalid or expired token"
+}
+```
+
+</ResponseExample>
+
+## Use Cases
+
+### Token Verification
+
+Use this endpoint to verify that a JWT token is still valid:
+
+```javascript
+async function isTokenValid(token) {
+  try {
+    await axios.get('https://api.useiris.com/v1/auth/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+```
+
+### User Profile Display
+
+Fetch user information to display in your application:
+
+```javascript
+async function loadUserProfile() {
+  const user = await getCurrentUser(token);
+
+  document.getElementById('user-name').textContent =
+    `${user.first_name} ${user.last_name}`;
+  document.getElementById('user-email').textContent = user.email;
+  document.getElementById('user-role').textContent = user.role;
+}
+```
+
+### Role-Based Access Control
+
+Check user roles to control access to features:
+
+```javascript
+async function checkAdminAccess(token) {
+  const user = await getCurrentUser(token);
+
+  if (user.role !== 'admin') {
+    throw new Error('Admin access required');
+  }
+
+  return user;
+}
+```
+
+## User Roles
+
+| Role | Description | Permissions |
+|------|-------------|-------------|
+| `admin` | Administrator | Full access to all features and settings |
+| `agent` | Call center agent | Access to calls, SMS, and customer interactions |
+| `user` | Regular user | Limited access to view data only |
+
+## Error Codes
+
+| Code | Error | Description |
+|------|-------|-------------|
+| 401 | UNAUTHORIZED | Missing or invalid token |
+| 401 | TOKEN_EXPIRED | JWT token has expired |
+| 403 | ACCOUNT_SUSPENDED | User account suspended |
+| 500 | INTERNAL_ERROR | Server error |
+
+## Best Practices
+
+<Tip>
+  Call this endpoint on app startup to verify the user is still authenticated and load their profile information.
+</Tip>
+
+<Warning>
+  If you receive a 401 error, the token has expired. Use the refresh token to obtain a new access token, or redirect the user to login.
+</Warning>
+
+## Token Refresh Flow
+
+```javascript
+async function apiRequest(endpoint, options = {}) {
+  try {
+    // Try with current token
+    return await axios.get(endpoint, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+  } catch (error) {
+    if (error.response?.status === 401) {
+      // Token expired - refresh it
+      const refreshToken = localStorage.getItem('refresh_token');
+      const newToken = await refreshAccessToken(refreshToken);
+
+      // Retry with new token
+      return await axios.get(endpoint, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${newToken}`
+        }
+      });
+    }
+    throw error;
+  }
+}
+```
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Login" icon="right-to-bracket" href="/api-reference/auth/login">
+    Authenticate users
+  </Card>
+  <Card title="Refresh Token" icon="arrows-rotate" href="/api-reference/auth/refresh">
+    Get new access token
+  </Card>
+  <Card title="Logout" icon="right-from-bracket" href="/api-reference/auth/logout">
+    End user session
+  </Card>
+</CardGroup>

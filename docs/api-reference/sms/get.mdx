@@ -1,0 +1,194 @@
+---
+title: 'Get SMS Message'
+api: 'GET /v1/sms/{id}'
+description: 'Get details of a specific SMS message'
+---
+
+## Overview
+
+Retrieve detailed information about a specific SMS message by its ID.
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Path Parameters
+
+<ParamField path="id" type="integer" required>
+  SMS message ID
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="object">
+  SMS message object with full details
+
+  <Expandable title="Message properties">
+    <ResponseField name="id" type="integer">
+      Message ID
+    </ResponseField>
+    <ResponseField name="to" type="string">
+      Recipient number (E.164)
+    </ResponseField>
+    <ResponseField name="from" type="string">
+      Sender number (E.164)
+    </ResponseField>
+    <ResponseField name="body" type="string">
+      Message text content
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Status: `queued`, `sending`, `sent`, `delivered`, `failed`, `undelivered`
+    </ResponseField>
+    <ResponseField name="direction" type="string">
+      Direction: `inbound` or `outbound`
+    </ResponseField>
+    <ResponseField name="cost" type="number">
+      Message cost in USD
+    </ResponseField>
+    <ResponseField name="segments" type="integer">
+      Number of SMS segments
+    </ResponseField>
+    <ResponseField name="error_code" type="string">
+      Error code if failed
+    </ResponseField>
+    <ResponseField name="error_message" type="string">
+      Error message if failed
+    </ResponseField>
+    <ResponseField name="media_urls" type="array">
+      MMS media URLs
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl https://api.useiris.com/v1/sms/12345 \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function getSMS(id) {
+  const response = await axios.get(
+    `https://api.useiris.com/v1/sms/${id}`,
+    {
+      headers: { 'X-API-Key': 'YOUR_API_KEY' }
+    }
+  );
+
+  const message = response.data.message;
+  console.log('Status:', message.status);
+  console.log('Cost:', message.cost);
+  console.log('Segments:', message.segments);
+
+  return message;
+}
+
+getSMS(12345);
+```
+
+```python Python
+import requests
+
+def get_sms(message_id):
+    response = requests.get(
+        f'https://api.useiris.com/v1/sms/{message_id}',
+        headers={'X-API-Key': 'YOUR_API_KEY'}
+    )
+
+    if response.status_code == 200:
+        message = response.json()['message']
+        print(f"Status: {message['status']}")
+        print(f"Cost: ${message['cost']}")
+        print(f"Segments: {message['segments']}")
+        return message
+
+get_sms(12345)
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "message": {
+    "id": 12345,
+    "tenant_id": 1,
+    "to": "+15551234567",
+    "from": "+15559876543",
+    "body": "Hello! This is a test message from IRISX.",
+    "status": "delivered",
+    "direction": "outbound",
+    "cost": 0.0075,
+    "segments": 1,
+    "error_code": null,
+    "error_message": null,
+    "media_urls": null,
+    "created_at": "2025-10-30T18:00:00Z",
+    "updated_at": "2025-10-30T18:00:05Z"
+  }
+}
+```
+
+```json Error Response (404)
+{
+  "error": "NOT_FOUND",
+  "message": "SMS message not found"
+}
+```
+
+</ResponseExample>
+
+## Polling for Delivery
+
+Poll this endpoint to track delivery status:
+
+```javascript
+async function waitForDelivery(messageId, maxWaitSeconds = 60) {
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < maxWaitSeconds * 1000) {
+    const message = await getSMS(messageId);
+
+    if (['delivered', 'failed', 'undelivered'].includes(message.status)) {
+      return message;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+
+  throw new Error('Timeout waiting for delivery');
+}
+```
+
+<Tip>
+  Use webhooks instead of polling for better efficiency and real-time updates.
+</Tip>
+
+## Error Codes
+
+| Code | Error | Description |
+|------|-------|-------------|
+| 404 | NOT_FOUND | Message ID not found |
+| 401 | UNAUTHORIZED | Invalid API key |
+| 403 | FORBIDDEN | Message belongs to different tenant |
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Send SMS" icon="paper-plane" href="/api-reference/sms/send">
+    Send new message
+  </Card>
+  <Card title="List SMS" icon="list" href="/api-reference/sms/list">
+    View message history
+  </Card>
+</CardGroup>

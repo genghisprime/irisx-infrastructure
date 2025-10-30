@@ -1,0 +1,277 @@
+---
+title: 'Register New Tenant'
+api: 'POST /v1/auth/register'
+description: 'Create a new tenant account with admin user'
+---
+
+## Overview
+
+Register a new tenant account and receive authentication tokens. This endpoint creates both a tenant (company) account and an admin user in a single request.
+
+<Note>
+  This endpoint does not require authentication. New accounts receive $100 in free credits during beta.
+</Note>
+
+## Request Body
+
+<ParamField body="company_name" type="string" required>
+  Company or organization name
+</ParamField>
+
+<ParamField body="email" type="string" required>
+  Admin user email address
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  Password for the admin user (minimum 8 characters)
+</ParamField>
+
+<ParamField body="first_name" type="string" required>
+  Admin user's first name
+</ParamField>
+
+<ParamField body="last_name" type="string" required>
+  Admin user's last name
+</ParamField>
+
+## Response
+
+<ResponseField name="token" type="string">
+  JWT access token for immediate API access (expires in 24 hours)
+</ResponseField>
+
+<ResponseField name="refresh_token" type="string">
+  Refresh token for obtaining new access tokens (expires in 30 days)
+</ResponseField>
+
+<ResponseField name="user" type="object">
+  Admin user object
+
+  <Expandable title="User properties">
+    <ResponseField name="id" type="integer">
+      User ID
+    </ResponseField>
+    <ResponseField name="tenant_id" type="integer">
+      Tenant ID
+    </ResponseField>
+    <ResponseField name="email" type="string">
+      User email address
+    </ResponseField>
+    <ResponseField name="first_name" type="string">
+      First name
+    </ResponseField>
+    <ResponseField name="last_name" type="string">
+      Last name
+    </ResponseField>
+    <ResponseField name="role" type="string">
+      User role (admin, agent, or user)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="tenant" type="object">
+  Tenant account object
+
+  <Expandable title="Tenant properties">
+    <ResponseField name="id" type="integer">
+      Tenant ID
+    </ResponseField>
+    <ResponseField name="company_name" type="string">
+      Company name
+    </ResponseField>
+    <ResponseField name="api_key" type="string">
+      API key for server-to-server authentication (store securely!)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST https://api.useiris.com/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "company_name": "Acme Corporation",
+    "email": "admin@acme.com",
+    "password": "securepassword123",
+    "first_name": "John",
+    "last_name": "Doe"
+  }'
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function register() {
+  try {
+    const response = await axios.post(
+      'https://api.useiris.com/v1/auth/register',
+      {
+        company_name: 'Acme Corporation',
+        email: 'admin@acme.com',
+        password: 'securepassword123',
+        first_name: 'John',
+        last_name: 'Doe'
+      }
+    );
+
+    console.log('Registration successful!');
+    console.log('Token:', response.data.token);
+    console.log('API Key:', response.data.tenant.api_key);
+
+    // Store tokens securely
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('refresh_token', response.data.refresh_token);
+
+  } catch (error) {
+    console.error('Registration failed:', error.response?.data);
+  }
+}
+
+register();
+```
+
+```python Python
+import requests
+
+def register():
+    response = requests.post(
+        'https://api.useiris.com/v1/auth/register',
+        json={
+            'company_name': 'Acme Corporation',
+            'email': 'admin@acme.com',
+            'password': 'securepassword123',
+            'first_name': 'John',
+            'last_name': 'Doe'
+        }
+    )
+
+    if response.status_code == 201:
+        data = response.json()
+        print('Registration successful!')
+        print(f"Token: {data['token']}")
+        print(f"API Key: {data['tenant']['api_key']}")
+
+        # Store tokens securely
+        return data
+    else:
+        print(f"Registration failed: {response.json()}")
+
+register()
+```
+
+```php PHP
+<?php
+$ch = curl_init('https://api.useiris.com/v1/auth/register');
+
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+    CURLOPT_POSTFIELDS => json_encode([
+        'company_name' => 'Acme Corporation',
+        'email' => 'admin@acme.com',
+        'password' => 'securepassword123',
+        'first_name' => 'John',
+        'last_name' => 'Doe'
+    ])
+]);
+
+$response = curl_exec($ch);
+$result = json_decode($response, true);
+
+if ($result['token']) {
+    echo "Registration successful!\n";
+    echo "Token: " . $result['token'] . "\n";
+    echo "API Key: " . $result['tenant']['api_key'] . "\n";
+
+    // Store tokens securely
+} else {
+    echo "Registration failed: " . $result['message'] . "\n";
+}
+
+curl_close($ch);
+?>
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (201)
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "rt_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+  "user": {
+    "id": 1,
+    "tenant_id": 1,
+    "email": "admin@acme.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "role": "admin",
+    "created_at": "2025-10-30T18:00:00Z",
+    "updated_at": "2025-10-30T18:00:00Z"
+  },
+  "tenant": {
+    "id": 1,
+    "company_name": "Acme Corporation",
+    "api_key": "sk_live_a1b2c3d4e5f6g7h8i9j0"
+  }
+}
+```
+
+```json Error Response (400)
+{
+  "error": "VALIDATION_ERROR",
+  "message": "Email already exists",
+  "details": {
+    "field": "email",
+    "code": "DUPLICATE_EMAIL"
+  }
+}
+```
+
+</ResponseExample>
+
+## Error Codes
+
+| Code | Error | Description |
+|------|-------|-------------|
+| 400 | VALIDATION_ERROR | Invalid or missing required fields |
+| 400 | DUPLICATE_EMAIL | Email address already registered |
+| 400 | WEAK_PASSWORD | Password doesn't meet minimum requirements |
+| 500 | INTERNAL_ERROR | Server error during registration |
+
+## Security Notes
+
+<Warning>
+  **Store credentials securely!** The API key is only returned once during registration. Store it in a secure location (environment variables, secrets manager).
+</Warning>
+
+<Tip>
+  Use the JWT token for user-facing applications (customer portal, agent desktop) and the API key for server-to-server communication.
+</Tip>
+
+## Next Steps
+
+After registration:
+
+1. Store your API key and tokens securely
+2. Purchase a phone number at `/v1/phone-numbers/purchase`
+3. Make your first call at `/v1/calls`
+4. Set up webhooks at `/v1/webhooks/endpoints`
+
+<Card title="Quickstart Guide" icon="rocket" href="/quickstart">
+  Follow our 5-minute quickstart to make your first call
+</Card>
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Login" icon="right-to-bracket" href="/api-reference/auth/login">
+    Authenticate existing users
+  </Card>
+  <Card title="Get Current User" icon="user" href="/api-reference/auth/me">
+    Retrieve authenticated user info
+  </Card>
+</CardGroup>

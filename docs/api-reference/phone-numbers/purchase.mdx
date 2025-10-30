@@ -1,0 +1,192 @@
+---
+title: 'Purchase Phone Number'
+api: 'POST /v1/phone-numbers/purchase'
+description: 'Purchase a phone number for your account'
+---
+
+## Overview
+
+Purchase a phone number from the available inventory. The number will be immediately provisioned and ready for use.
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Request Body
+
+<ParamField body="number" type="string" required>
+  Phone number to purchase in E.164 format (from search results)
+</ParamField>
+
+<ParamField body="friendly_name" type="string">
+  User-friendly name for the number (e.g., "Support Line")
+</ParamField>
+
+## Response
+
+<ResponseField name="phone_number" type="object">
+  Purchased phone number object
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST https://api.useiris.com/v1/phone-numbers/purchase \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "number": "+14155551234",
+    "friendly_name": "Customer Support Line"
+  }'
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function purchasePhoneNumber(number, friendlyName) {
+  const response = await axios.post(
+    'https://api.useiris.com/v1/phone-numbers/purchase',
+    {
+      number,
+      friendly_name: friendlyName
+    },
+    {
+      headers: {
+        'X-API-Key': 'YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  const phoneNumber = response.data.phone_number;
+  console.log('Number purchased:', phoneNumber.number);
+  console.log('Monthly cost: $', phoneNumber.monthly_cost);
+
+  return phoneNumber;
+}
+
+purchasePhoneNumber('+14155551234', 'Customer Support Line');
+```
+
+```python Python
+import requests
+
+def purchase_phone_number(number, friendly_name=None):
+    response = requests.post(
+        'https://api.useiris.com/v1/phone-numbers/purchase',
+        json={
+            'number': number,
+            'friendly_name': friendly_name
+        },
+        headers={'X-API-Key': 'YOUR_API_KEY'}
+    )
+
+    if response.status_code == 201:
+        phone_number = response.json()['phone_number']
+        print(f"Number purchased: {phone_number['number']}")
+        print(f"Monthly cost: ${phone_number['monthly_cost']}")
+        return phone_number
+
+purchase_phone_number('+14155551234', 'Customer Support Line')
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (201)
+{
+  "phone_number": {
+    "id": 1,
+    "tenant_id": 1,
+    "number": "+14155551234",
+    "friendly_name": "Customer Support Line",
+    "country": "US",
+    "type": "local",
+    "capabilities": {
+      "voice": true,
+      "sms": true,
+      "mms": true
+    },
+    "status": "active",
+    "monthly_cost": 1.00,
+    "webhook_url": null,
+    "created_at": "2025-10-30T18:00:00Z"
+  }
+}
+```
+
+```json Error Response (400)
+{
+  "error": "NUMBER_UNAVAILABLE",
+  "message": "Phone number is no longer available"
+}
+```
+
+```json Error Response (403)
+{
+  "error": "INSUFFICIENT_BALANCE",
+  "message": "Insufficient account balance",
+  "details": {
+    "required": 1.00,
+    "available": 0.50
+  }
+}
+```
+
+</ResponseExample>
+
+## Billing
+
+- Numbers are billed monthly at the time of purchase
+- Prorated refunds available within 7 days of purchase
+- Monthly charges auto-renew on the purchase anniversary
+
+## Using Your Number
+
+Once purchased, use your number immediately:
+
+```javascript
+// Make a call
+await makeCall('+15551234567', '+14155551234');
+
+// Send SMS
+await sendSMS('+15551234567', '+14155551234', 'Hello!');
+```
+
+## Configure Webhook
+
+Set up webhooks for inbound messages:
+
+```javascript
+// Update number to handle inbound calls/SMS
+await updatePhoneNumber('+14155551234', {
+  webhook_url: 'https://yourapp.com/webhooks/inbound'
+});
+```
+
+## Error Codes
+
+| Code | Error | Description |
+|------|-------|-------------|
+| 400 | NUMBER_UNAVAILABLE | Number already purchased or unavailable |
+| 400 | INVALID_NUMBER | Invalid phone number format |
+| 403 | INSUFFICIENT_BALANCE | Not enough account balance |
+| 429 | RATE_LIMITED | Too many purchase attempts |
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Search Numbers" icon="magnifying-glass" href="/api-reference/phone-numbers/search">
+    Find available numbers
+  </Card>
+  <Card title="List Numbers" icon="list" href="/api-reference/phone-numbers/list">
+    View your numbers
+  </Card>
+</CardGroup>

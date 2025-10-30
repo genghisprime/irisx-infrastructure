@@ -1,0 +1,500 @@
+---
+title: 'Authentication'
+description: 'Learn how to authenticate with the IRISX API'
+---
+
+## Overview
+
+IRISX supports two authentication methods:
+
+1. **API Keys** - For server-to-server communication (recommended)
+2. **JWT Tokens** - For user-based authentication (customer portal, agent desktop)
+
+## API Key Authentication
+
+API keys are the recommended way to authenticate server-to-server API requests.
+
+### Getting Your API Key
+
+<Steps>
+  <Step title="Login to Portal">
+    Visit [portal.useiris.com](https://portal.useiris.com)
+  </Step>
+  <Step title="Navigate to API Keys">
+    Go to **Settings → API Keys**
+  </Step>
+  <Step title="Create New Key">
+    Click **Create API Key** and copy it immediately
+  </Step>
+</Steps>
+
+<Warning>
+  **Important:** API keys are shown only once. Store them securely (environment variables, secrets manager).
+</Warning>
+
+### Using API Keys
+
+Include your API key in the `X-API-Key` header:
+
+```bash cURL
+curl https://api.useiris.com/v1/calls \
+  -H "X-API-Key: your_api_key_here" \
+  -H "Content-Type: application/json"
+```
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const client = axios.create({
+  baseURL: 'https://api.useiris.com',
+  headers: {
+    'X-API-Key': process.env.IRISX_API_KEY,
+    'Content-Type': 'application/json'
+  }
+});
+
+// Make requests
+const response = await client.post('/v1/calls', { /* ... */ });
+```
+
+```python Python
+import os
+import requests
+
+class IRISXClient:
+    def __init__(self, api_key=None):
+        self.api_key = api_key or os.getenv('IRISX_API_KEY')
+        self.base_url = 'https://api.useiris.com'
+        self.headers = {
+            'X-API-Key': self.api_key,
+            'Content-Type': 'application/json'
+        }
+
+    def post(self, endpoint, data):
+        url = f'{self.base_url}{endpoint}'
+        return requests.post(url, json=data, headers=self.headers)
+
+# Usage
+client = IRISXClient()
+response = client.post('/v1/calls', { /* ... */ })
+```
+
+```php PHP
+<?php
+
+class IRISXClient {
+    private $apiKey;
+    private $baseUrl = 'https://api.useiris.com';
+
+    public function __construct($apiKey = null) {
+        $this->apiKey = $apiKey ?: getenv('IRISX_API_KEY');
+    }
+
+    public function post($endpoint, $data) {
+        $ch = curl_init($this->baseUrl . $endpoint);
+
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                "X-API-Key: {$this->apiKey}",
+                "Content-Type: application/json"
+            ],
+            CURLOPT_POSTFIELDS => json_encode($data)
+        ]);
+
+        return json_decode(curl_exec($ch), true);
+    }
+}
+
+// Usage
+$client = new IRISXClient();
+$response = $client->post('/v1/calls', [/* ... */]);
+?>
+```
+
+</CodeGroup>
+
+### API Key Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Environment Variables">
+    Never hardcode API keys in your source code. Use environment variables:
+
+    ```bash
+    # .env file
+    IRISX_API_KEY=your_api_key_here
+    ```
+
+    Load them in your application:
+    ```javascript
+    require('dotenv').config();
+    const apiKey = process.env.IRISX_API_KEY;
+    ```
+  </Accordion>
+
+  <Accordion title="Rotate Keys Regularly">
+    Create new API keys periodically and revoke old ones:
+    - **Production:** Rotate every 90 days
+    - **Development:** Rotate monthly
+    - **Immediately** if compromised
+  </Accordion>
+
+  <Accordion title="Use Different Keys Per Environment">
+    Create separate keys for each environment:
+    - `IRISX_API_KEY_PRODUCTION`
+    - `IRISX_API_KEY_STAGING`
+    - `IRISX_API_KEY_DEVELOPMENT`
+  </Accordion>
+
+  <Accordion title="Restrict Key Permissions">
+    When creating keys, limit permissions to only what's needed:
+    - Read-only keys for analytics
+    - Write-only keys for sending messages
+    - Full access only when required
+  </Accordion>
+</AccordionGroup>
+
+## JWT Token Authentication
+
+JWT (JSON Web Token) authentication is used for user-based access in customer portals and agent desktops.
+
+### Login Flow
+
+<Steps>
+  <Step title="Register or Login">
+    Call `/v1/auth/login` with email and password
+  </Step>
+  <Step title="Receive Tokens">
+    Get `access_token` and `refresh_token`
+  </Step>
+  <Step title="Use Access Token">
+    Include token in `Authorization: Bearer {token}` header
+  </Step>
+  <Step title="Refresh When Expired">
+    Use refresh token to get new access token
+  </Step>
+</Steps>
+
+### User Registration
+
+Create a new tenant account:
+
+```javascript
+const response = await axios.post('https://api.useiris.com/v1/auth/register', {
+  company_name: 'Acme Corp',
+  email: 'admin@acme.com',
+  password: 'SecurePassword123!',
+  first_name: 'John',
+  last_name: 'Doe'
+});
+
+const { token, refresh_token, user, tenant } = response.data;
+
+// Store tokens securely
+localStorage.setItem('access_token', token);
+localStorage.setItem('refresh_token', refresh_token);
+```
+
+### User Login
+
+Authenticate existing user:
+
+```javascript
+const response = await axios.post('https://api.useiris.com/v1/auth/login', {
+  email: 'admin@acme.com',
+  password: 'SecurePassword123!'
+});
+
+const { token, refresh_token, user } = response.data;
+
+// Store tokens
+localStorage.setItem('access_token', token);
+localStorage.setItem('refresh_token', refresh_token);
+```
+
+### Making Authenticated Requests
+
+Include JWT token in Authorization header:
+
+```javascript
+const token = localStorage.getItem('access_token');
+
+const response = await axios.get('https://api.useiris.com/v1/auth/me', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+
+console.log('Current user:', response.data.user);
+```
+
+### Token Refresh
+
+Access tokens expire after 1 hour. Use refresh token to get a new one:
+
+```javascript
+async function refreshAccessToken() {
+  const refreshToken = localStorage.getItem('refresh_token');
+
+  try {
+    const response = await axios.post(
+      'https://api.useiris.com/v1/auth/refresh',
+      { refresh_token: refreshToken }
+    );
+
+    const { token } = response.data;
+
+    // Store new access token
+    localStorage.setItem('access_token', token);
+
+    return token;
+  } catch (error) {
+    // Refresh token expired - redirect to login
+    window.location.href = '/login';
+  }
+}
+```
+
+### Automatic Token Refresh
+
+Implement automatic token refresh using Axios interceptors:
+
+```javascript
+import axios from 'axios';
+
+// Create Axios instance
+const apiClient = axios.create({
+  baseURL: 'https://api.useiris.com'
+});
+
+// Add token to requests
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle 401 errors and refresh token
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If 401 and haven't retried yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Refresh token
+        const newToken = await refreshAccessToken();
+
+        // Retry original request with new token
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed - redirect to login
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;
+```
+
+### Logout
+
+Revoke refresh token when logging out:
+
+```javascript
+async function logout() {
+  const refreshToken = localStorage.getItem('refresh_token');
+
+  await axios.post('https://api.useiris.com/v1/auth/logout', {
+    refresh_token: refreshToken
+  });
+
+  // Clear local storage
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+
+  // Redirect to login
+  window.location.href = '/login';
+}
+```
+
+## Security Best Practices
+
+<CardGroup cols={2}>
+  <Card title="HTTPS Only" icon="lock">
+    Always use HTTPS in production. Never send credentials over HTTP.
+  </Card>
+  <Card title="Store Securely" icon="shield">
+    Use secure storage for tokens (HttpOnly cookies, encrypted storage).
+  </Card>
+  <Card title="Rotate Credentials" icon="rotate">
+    Rotate API keys and passwords regularly.
+  </Card>
+  <Card title="Monitor Usage" icon="chart-line">
+    Watch for unusual API activity in your dashboard.
+  </Card>
+</CardGroup>
+
+### Token Storage
+
+<Warning>
+  **Security Risk:** Don't store tokens in localStorage if XSS is a concern. Use HttpOnly cookies instead.
+</Warning>
+
+Secure token storage options:
+
+```javascript
+// Option 1: HttpOnly Cookies (Most Secure)
+// Set by server with Set-Cookie header
+// Cannot be accessed by JavaScript
+// Automatic sending with requests
+
+// Option 2: SessionStorage (Better than LocalStorage)
+sessionStorage.setItem('access_token', token);
+
+// Option 3: In-Memory Only (Best for SPAs)
+let accessToken = null;
+
+function setToken(token) {
+  accessToken = token;
+}
+
+function getToken() {
+  return accessToken;
+}
+```
+
+### Rate Limiting
+
+All authentication endpoints are rate-limited:
+
+- **Login:** 5 attempts per 15 minutes per IP
+- **Register:** 3 attempts per hour per IP
+- **Password Reset:** 3 attempts per hour per email
+
+<Info>
+  Failed login attempts are logged and monitored. Multiple failed attempts may trigger account lockouts.
+</Info>
+
+## Testing Authentication
+
+Test your authentication setup:
+
+```bash
+# Test API Key
+curl https://api.useiris.com/v1/auth/health \
+  -H "X-API-Key: your_api_key_here"
+
+# Test JWT Token
+curl https://api.useiris.com/v1/auth/me \
+  -H "Authorization: Bearer your_jwt_token_here"
+```
+
+Expected responses:
+
+```json
+// API Key Test (Health Check)
+{
+  "status": "ok",
+  "authenticated": true,
+  "tenant_id": 1
+}
+
+// JWT Token Test (Get Current User)
+{
+  "user": {
+    "id": 123,
+    "email": "admin@acme.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "role": "admin",
+    "tenant_id": 1
+  }
+}
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized">
+    **Possible causes:**
+    - Invalid or expired API key
+    - Expired JWT token
+    - Missing Authorization header
+    - API key for wrong environment
+
+    **Solutions:**
+    - Verify API key is correct
+    - Refresh JWT token
+    - Check header format: `X-API-Key: key` or `Authorization: Bearer token`
+  </Accordion>
+
+  <Accordion title="403 Forbidden">
+    **Possible causes:**
+    - API key lacks required permissions
+    - User role doesn't have access
+    - Tenant suspended
+
+    **Solutions:**
+    - Check API key permissions in dashboard
+    - Verify user role has required access
+    - Contact support if tenant is suspended
+  </Accordion>
+
+  <Accordion title="429 Too Many Requests">
+    **Possible causes:**
+    - Too many login attempts
+    - Rate limit exceeded
+
+    **Solutions:**
+    - Wait for rate limit window to reset
+    - Implement exponential backoff
+    - Check `X-RateLimit-Reset` header for reset time
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Make Your First Call"
+    icon="phone"
+    href="/quickstart"
+  >
+    Try the API with your new credentials
+  </Card>
+  <Card
+    title="Webhooks"
+    icon="webhook"
+    href="/concepts/webhooks"
+  >
+    Secure your webhook endpoints
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api-reference"
+  >
+    Explore all authenticated endpoints
+  </Card>
+  <Card
+    title="SDKs"
+    icon="cube"
+    href="/sdks"
+  >
+    Use our SDKs with built-in auth
+  </Card>
+</CardGroup>

@@ -1,0 +1,820 @@
+---
+title: 'Error Tracking with Sentry'
+description: 'Monitor and debug production errors across IRISX platform'
+---
+
+## Overview
+
+IRISX uses Sentry for real-time error tracking and performance monitoring across all applications. This guide covers setup, integration, and best practices.
+
+## Why Sentry?
+
+- **Real-time Alerts**: Get notified when errors occur
+- **Stack Traces**: See exactly where errors happen
+- **User Context**: Know which customers are affected
+- **Performance Monitoring**: Track slow API calls and queries
+- **Release Tracking**: Identify which deployment caused issues
+- **Breadcrumbs**: See user actions leading to errors
+
+## Sentry Projects
+
+| Project | DSN Environment Variable | Purpose |
+|---------|-------------------------|---------|
+| irisx-api | `SENTRY_DSN_API` | Backend API errors |
+| irisx-customer-portal | `SENTRY_DSN_PORTAL` | Customer dashboard errors |
+| irisx-agent-desktop | `SENTRY_DSN_AGENT` | Agent interface errors |
+
+## API Backend Integration
+
+### Installation
+
+```bash
+npm install @sentry/node @sentry/profiling-node
+```
+
+### Configuration
+
+**src/lib/sentry.js**
+
+```javascript
+import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
+
+export function initSentry() {
+  if (!process.env.SENTRY_DSN_API) {
+    console.warn('⚠️  Sentry DSN not configured, error tracking disabled');
+    return;
+  }
+
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN_API,
+    environment: process.env.NODE_ENV || 'development',
+
+    // Release tracking
+    release: `irisx-api@${process.env.npm_package_version || 'unknown'}`,
+
+    // Performance monitoring
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+
+    integrations: [
+      nodeProfilingIntegration(),
+
+      // Prisma tracing
+      new Sentry.Integrations.Prisma({ client: prisma }),
+
+      // HTTP tracing
+      new Sentry.Integrations.Http({ tracing: true }),
+    ],
+
+    // Filter sensitive data
+    beforeSend(event, hint) {
+      // Remove API keys from breadcrumbs and context
+      if (event.request?.headers) {
+        delete event.request.headers['x-api-key'];
+        delete event.request.headers['authorization'];
+      }
+
+      // Scrub phone numbers from URLs
+      if (event.request?.url) {
+        event.request.url = event.request.url.replace(
+          /\+?\d{10,15}/g,
+          '[PHONE]'
+        );
+      }
+
+      return event;
+    },
+
+    // Ignore expected errors
+    ignoreErrors: [
+      'UnauthorizedError',
+      'ValidationError',
+      'RateLimitError',
+    ],
+  });
+
+  console.log('✅ Sentry initialized');
+}
+
+export { Sentry };
+```
+
+### Hono.js Middleware
+
+**src/middleware/sentry.js**
+
+```javascript
+import { Sentry } from '../lib/sentry.js';
+
+export function sentryMiddleware() {
+  return async (c, next) => {
+    const transaction = Sentry.startTransaction({
+      op: 'http.server',
+      name: `${c.req.method} ${c.req.path}`,
+    });
+
+    // Set context
+    Sentry.setContext('request', {
+      method: c.req.method,
+      url: c.req.url,
+      headers: {
+        'user-agent': c.req.header('user-agent'),
+        'x-forwarded-for': c.req.header('x-forwarded-for'),
+      },
+    });
+
+    // Set user context (if authenticated)
+    if (c.get('user')) {
+      Sentry.setUser({
+        id: c.get('user').id,
+        email: c.get('user').email,
+        ip_address: c.req.header('x-forwarded-for') || c.req.header('x-real-ip'),
+      });
+    }
+
+    try {
+      await next();
+    } catch (error) {
+      // Capture error
+      Sentry.captureException(error, {
+        tags: {
+          route: c.req.path,
+          method: c.req.method,
+        },
+        extra: {
+          body: c.req.body,
+          params: c.req.param(),
+          query: c.req.query(),
+        },
+      });
+
+      throw error;
+    } finally {
+      transaction.finish();
+    }
+  };
+}
+
+export function sentryErrorHandler() {
+  return async (err, c) => {
+    // Let Sentry middleware handle the capture
+    console.error('Unhandled error:', err);
+
+    return c.json(
+      {
+        error: {
+          message: process.env.NODE_ENV === 'production'
+            ? 'Internal server error'
+            : err.message,
+          code: 'INTERNAL_ERROR',
+        },
+      },
+      500
+    );
+  };
+}
+```
+
+### Integration in Main App
+
+**src/index.js**
+
+```javascript
+import { Hono } from 'hono';
+import { initSentry } from './lib/sentry.js';
+import { sentryMiddleware, sentryErrorHandler } from './middleware/sentry.js';
+
+// Initialize Sentry FIRST
+initSentry();
+
+const app = new Hono();
+
+// Add Sentry middleware EARLY
+app.use('*', sentryMiddleware());
+
+// Your routes...
+app.route('/v1/calls', callsRouter);
+app.route('/v1/sms', smsRouter);
+
+// Error handler LAST
+app.onError(sentryErrorHandler());
+
+export default app;
+```
+
+### Manual Error Capture
+
+```javascript
+import { Sentry } from '../lib/sentry.js';
+
+// Capture exception with context
+try {
+  await placeCall(callData);
+} catch (error) {
+  Sentry.captureException(error, {
+    tags: {
+      call_uuid: callData.uuid,
+      carrier: callData.carrier,
+    },
+    extra: {
+      callData,
+      dialplanResult,
+    },
+  });
+  throw error;
+}
+
+// Capture message (non-error events)
+Sentry.captureMessage('Call exceeded max duration', {
+  level: 'warning',
+  tags: {
+    call_uuid: call.uuid,
+  },
+  extra: {
+    duration: call.duration,
+    max_duration: MAX_CALL_DURATION,
+  },
+});
+
+// Add breadcrumb
+Sentry.addBreadcrumb({
+  category: 'call',
+  message: 'Call routing started',
+  level: 'info',
+  data: {
+    from: call.from,
+    to: call.to,
+    carrier: selectedCarrier,
+  },
+});
+```
+
+## Customer Portal Integration
+
+### Installation
+
+```bash
+npm install @sentry/vue
+```
+
+### Configuration
+
+**src/plugins/sentry.js**
+
+```javascript
+import * as Sentry from '@sentry/vue';
+
+export function initSentry(app, router) {
+  if (!import.meta.env.VITE_SENTRY_DSN_PORTAL) {
+    console.warn('⚠️  Sentry DSN not configured');
+    return;
+  }
+
+  Sentry.init({
+    app,
+    dsn: import.meta.env.VITE_SENTRY_DSN_PORTAL,
+    environment: import.meta.env.MODE,
+
+    // Release tracking
+    release: `irisx-customer-portal@${import.meta.env.VITE_APP_VERSION}`,
+
+    integrations: [
+      Sentry.browserTracingIntegration({ router }),
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+    ],
+
+    // Performance monitoring
+    tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+
+    // Session replay (captures user interactions)
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+
+    // Filter sensitive data
+    beforeSend(event, hint) {
+      // Remove tokens from breadcrumbs
+      if (event.breadcrumbs) {
+        event.breadcrumbs = event.breadcrumbs.map(breadcrumb => {
+          if (breadcrumb.data?.token) {
+            breadcrumb.data.token = '[FILTERED]';
+          }
+          return breadcrumb;
+        });
+      }
+
+      return event;
+    },
+
+    ignoreErrors: [
+      // Browser extensions
+      'ResizeObserver loop limit exceeded',
+      'Non-Error promise rejection captured',
+    ],
+  });
+
+  console.log('✅ Sentry initialized');
+}
+```
+
+**main.js**
+
+```javascript
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import { createRouter } from './router';
+import { initSentry } from './plugins/sentry';
+import App from './App.vue';
+
+const app = createApp(App);
+const pinia = createPinia();
+const router = createRouter();
+
+app.use(pinia);
+app.use(router);
+
+// Initialize Sentry
+initSentry(app, router);
+
+app.mount('#app');
+```
+
+### Vue Error Boundaries
+
+**components/ErrorBoundary.vue**
+
+```vue
+<script setup>
+import { ref, onErrorCaptured } from 'vue';
+import * as Sentry from '@sentry/vue';
+
+const error = ref(null);
+
+onErrorCaptured((err, instance, info) => {
+  error.value = err;
+
+  // Report to Sentry
+  Sentry.captureException(err, {
+    contexts: {
+      vue: {
+        componentName: instance?.$options?.name,
+        propsData: instance?.$props,
+        info,
+      },
+    },
+  });
+
+  // Prevent propagation
+  return false;
+});
+
+function reload() {
+  error.value = null;
+  window.location.reload();
+}
+</script>
+
+<template>
+  <div v-if="error" class="error-boundary">
+    <div class="error-content">
+      <h2>Something went wrong</h2>
+      <p>We've been notified and are looking into it.</p>
+      <button @click="reload">Reload Page</button>
+    </div>
+  </div>
+  <slot v-else />
+</template>
+
+<style scoped>
+.error-boundary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 2rem;
+}
+
+.error-content {
+  text-align: center;
+  max-width: 500px;
+}
+
+.error-content h2 {
+  color: #dc2626;
+  margin-bottom: 1rem;
+}
+
+.error-content button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+</style>
+```
+
+### Manual Capture in Vue Components
+
+```vue
+<script setup>
+import * as Sentry from '@sentry/vue';
+
+async function sendMessage() {
+  try {
+    await irisx.sms.send({
+      to: phoneNumber.value,
+      from: selectedNumber.value,
+      body: message.value,
+    });
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'sms-send',
+      },
+      extra: {
+        phoneNumber: phoneNumber.value,
+        messageLength: message.value.length,
+      },
+    });
+
+    // Show user-friendly error
+    toast.error('Failed to send message');
+  }
+}
+
+// Add breadcrumb for user actions
+function onNumberSelected(number) {
+  Sentry.addBreadcrumb({
+    category: 'user-action',
+    message: 'Selected phone number',
+    data: { number },
+  });
+
+  selectedNumber.value = number;
+}
+</script>
+```
+
+## Agent Desktop Integration
+
+Same setup as Customer Portal, but with different DSN:
+
+**.env**
+
+```bash
+VITE_SENTRY_DSN_AGENT=https://your-dsn@sentry.io/agent-desktop
+VITE_APP_VERSION=1.0.0
+```
+
+**src/plugins/sentry.js**
+
+```javascript
+// Same as Customer Portal, but use VITE_SENTRY_DSN_AGENT
+Sentry.init({
+  dsn: import.meta.env.VITE_SENTRY_DSN_AGENT,
+  // ... rest of config
+});
+```
+
+## Environment Variables
+
+Add to `.env` files:
+
+**Backend API**
+
+```bash
+SENTRY_DSN_API=https://xxx@sentry.io/api
+NODE_ENV=production
+```
+
+**Customer Portal**
+
+```bash
+VITE_SENTRY_DSN_PORTAL=https://xxx@sentry.io/portal
+VITE_APP_VERSION=1.0.0
+```
+
+**Agent Desktop**
+
+```bash
+VITE_SENTRY_DSN_AGENT=https://xxx@sentry.io/agent
+VITE_APP_VERSION=1.0.0
+```
+
+## Source Maps
+
+Enable source maps for better debugging:
+
+**Vite (Frontend)**
+
+```javascript
+// vite.config.js
+export default defineConfig({
+  build: {
+    sourcemap: true,
+  },
+  plugins: [
+    vue(),
+    sentryVitePlugin({
+      org: 'irisx',
+      project: 'customer-portal',
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      sourcemaps: {
+        assets: './dist/**',
+      },
+    }),
+  ],
+});
+```
+
+**Node.js (Backend)**
+
+```javascript
+// Add to package.json scripts
+{
+  "scripts": {
+    "build": "tsc && sentry-cli sourcemaps upload --org=irisx --project=api ./dist"
+  }
+}
+```
+
+## Monitoring Dashboard
+
+### Key Metrics to Watch
+
+1. **Error Rate**: Errors per minute
+2. **Affected Users**: Unique users experiencing errors
+3. **Performance**: P95/P99 response times
+4. **Crash-Free Sessions**: % of sessions without errors
+
+### Alerts Setup
+
+**High Error Rate**
+
+```
+When error count is above 50 in 5 minutes
+→ Notify #engineering on Slack
+→ Page on-call engineer
+```
+
+**API Performance Degradation**
+
+```
+When p95(transaction.duration) > 2000ms for 10 minutes
+→ Notify #devops on Slack
+```
+
+**Critical Error**
+
+```
+When error has tag "severity:critical"
+→ Immediately page on-call engineer
+→ Create incident in PagerDuty
+```
+
+## Best Practices
+
+### 1. Set User Context
+
+Always identify users to track which customers are affected:
+
+```javascript
+Sentry.setUser({
+  id: user.id,
+  email: user.email,
+  username: user.company_name,
+});
+```
+
+### 2. Use Tags for Filtering
+
+```javascript
+Sentry.setTag('environment', 'production');
+Sentry.setTag('feature', 'call-routing');
+Sentry.setTag('carrier', 'twilio');
+```
+
+### 3. Add Breadcrumbs
+
+Track user flow leading to errors:
+
+```javascript
+Sentry.addBreadcrumb({
+  category: 'ui',
+  message: 'User clicked dial button',
+  level: 'info',
+});
+```
+
+### 4. Set Context
+
+Add additional data:
+
+```javascript
+Sentry.setContext('call', {
+  uuid: call.uuid,
+  duration: call.duration,
+  carrier: call.carrier,
+  cost: call.cost,
+});
+```
+
+### 5. Use Severity Levels
+
+```javascript
+// info, warning, error, fatal
+Sentry.captureMessage('User exceeded rate limit', 'warning');
+```
+
+### 6. Group Similar Errors
+
+Use fingerprinting to group related errors:
+
+```javascript
+Sentry.captureException(error, {
+  fingerprint: ['database-connection-timeout', databaseHost],
+});
+```
+
+## Testing Error Tracking
+
+### Backend Test
+
+```javascript
+// Add test endpoint
+app.get('/debug/sentry-test', (c) => {
+  throw new Error('Sentry test error');
+});
+```
+
+```bash
+curl http://localhost:3000/debug/sentry-test
+# Check Sentry dashboard for error
+```
+
+### Frontend Test
+
+```javascript
+// Add button to test page
+function testSentry() {
+  Sentry.captureException(new Error('Frontend Sentry test'));
+}
+```
+
+## Performance Monitoring
+
+### Track Slow API Calls
+
+```javascript
+const transaction = Sentry.startTransaction({
+  op: 'function',
+  name: 'processCallQueue',
+});
+
+const span = transaction.startChild({
+  op: 'db',
+  description: 'Fetch pending calls',
+});
+
+const calls = await prisma.call.findMany({
+  where: { status: 'queued' },
+});
+
+span.finish();
+
+for (const call of calls) {
+  const callSpan = transaction.startChild({
+    op: 'call.process',
+    description: `Process call ${call.uuid}`,
+  });
+
+  await processCall(call);
+
+  callSpan.finish();
+}
+
+transaction.finish();
+```
+
+### Track Vue Component Performance
+
+```vue
+<script setup>
+import * as Sentry from '@sentry/vue';
+
+onMounted(() => {
+  const span = Sentry.startSpan(
+    { name: 'CallHistoryComponent.load' },
+    async () => {
+      await loadCallHistory();
+    }
+  );
+});
+</script>
+```
+
+## Privacy & Compliance
+
+### PII Scrubbing
+
+Sentry automatically scrubs:
+- Credit card numbers
+- Social security numbers
+- Passwords (fields named `password`, `passwd`, etc.)
+
+Custom scrubbing:
+
+```javascript
+beforeSend(event) {
+  // Remove phone numbers
+  if (event.message) {
+    event.message = event.message.replace(/\+?\d{10,15}/g, '[PHONE]');
+  }
+
+  // Remove emails
+  if (event.user?.email) {
+    event.user.email = event.user.email.replace(/^(.{2}).*(@.*)$/, '$1***$2');
+  }
+
+  return event;
+}
+```
+
+### Data Retention
+
+Configure in Sentry project settings:
+- **Events**: 90 days
+- **Session Replays**: 30 days
+- **Performance Data**: 90 days
+
+### GDPR Compliance
+
+Users can request deletion:
+
+```bash
+# Delete all data for user
+sentry-cli data-management delete-user --email user@example.com
+```
+
+## Troubleshooting
+
+### Errors Not Appearing
+
+1. Check DSN is configured: `console.log(process.env.SENTRY_DSN_API)`
+2. Verify network: Check browser DevTools for Sentry requests
+3. Check sample rates: Set to 1.0 for testing
+4. Look for `beforeSend` filters blocking events
+
+### Too Many Errors
+
+1. Increase `ignoreErrors` list
+2. Use fingerprinting to group similar errors
+3. Set up rate limiting per error type
+4. Filter by environment (ignore dev/staging)
+
+### Source Maps Not Working
+
+1. Verify `sourcemap: true` in build config
+2. Check `release` matches between app and uploaded maps
+3. Ensure Sentry CLI auth token is valid
+4. Verify artifact upload in Sentry dashboard
+
+## Cost Optimization
+
+### Reduce Event Volume
+
+1. **Sample transactions**: `tracesSampleRate: 0.1` (10%)
+2. **Filter noise**: Add common errors to `ignoreErrors`
+3. **Group similar errors**: Use fingerprinting
+4. **Limit breadcrumbs**: `maxBreadcrumbs: 50`
+
+### Reduce Replay Volume
+
+```javascript
+replaysSessionSampleRate: 0.05,  // Only 5% of sessions
+replaysOnErrorSampleRate: 0.5,   // Only 50% of errors
+```
+
+## Resources
+
+- [Sentry Node.js Docs](https://docs.sentry.io/platforms/node/)
+- [Sentry Vue Docs](https://docs.sentry.io/platforms/javascript/guides/vue/)
+- [Performance Monitoring](https://docs.sentry.io/product/performance/)
+- [Session Replay](https://docs.sentry.io/product/session-replay/)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Set Up Alerts" icon="bell" href="#monitoring-dashboard">
+    Configure Slack/PagerDuty notifications
+  </Card>
+  <Card title="Enable Session Replay" icon="video" href="#customer-portal-integration">
+    See exactly what users experienced
+  </Card>
+</CardGroup>

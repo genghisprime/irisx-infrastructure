@@ -1,0 +1,498 @@
+---
+title: 'Python SDK'
+description: 'Official IRISX Python SDK for seamless integration'
+---
+
+## Installation
+
+Install the IRISX SDK via pip:
+
+```bash
+pip install irisx-sdk
+```
+
+Or with Poetry:
+
+```bash
+poetry add irisx-sdk
+```
+
+## Quick Start
+
+```python
+from irisx import IRISX
+
+# Initialize with API key
+irisx = IRISX(api_key='your_api_key_here')
+
+# Make your first call
+def make_call():
+    call = irisx.calls.create(
+        to='+15551234567',
+        from_='+15559876543',
+        record=True
+    )
+    print(f"Call initiated: {call.uuid}")
+
+make_call()
+```
+
+## Authentication
+
+### API Key (Recommended)
+
+```python
+from irisx import IRISX
+
+irisx = IRISX(api_key='your_api_key_here')
+```
+
+### JWT Token (For User Auth)
+
+```python
+from irisx import IRISX
+
+irisx = IRISX(token='your_jwt_token_here')
+
+# Handle token refresh
+def on_token_refresh(new_token: str):
+    print(f'Token refreshed: {new_token}')
+    # Save new token to secure storage
+
+irisx.on_token_refresh = on_token_refresh
+```
+
+## Making Calls
+
+### Create Outbound Call
+
+```python
+call = irisx.calls.create(
+    to='+15551234567',
+    from_='+15559876543',
+    webhook_url='https://yourapp.com/webhooks',
+    record=True,
+    timeout=60,
+    metadata={
+        'customer_id': 'cust_123',
+        'order_id': 'order_456'
+    }
+)
+```
+
+### Get Call Details
+
+```python
+call = irisx.calls.get('123e4567-e89b-12d3-a456-426614174000')
+
+print(f"Status: {call.status}")
+print(f"Duration: {call.duration}s")
+print(f"Cost: ${call.cost}")
+```
+
+### List Calls
+
+```python
+calls = irisx.calls.list(
+    status='completed',
+    direction='outbound',
+    start_date='2025-10-01',
+    end_date='2025-10-31',
+    page=1,
+    limit=50
+)
+
+print(f"Found {calls.pagination.total} calls")
+
+for call in calls.data:
+    print(f"{call.uuid}: {call.status}")
+```
+
+## Sending SMS
+
+### Send Single Message
+
+```python
+message = irisx.sms.send(
+    to='+15551234567',
+    from_='+15559876543',
+    body='Hello! This is a test message.',
+    webhook_url='https://yourapp.com/webhooks/sms'
+)
+
+print(f"Message ID: {message.id}")
+```
+
+### Send MMS with Media
+
+```python
+message = irisx.sms.send(
+    to='+15551234567',
+    from_='+15559876543',
+    body='Check out this image!',
+    media_urls=[
+        'https://example.com/image.jpg'
+    ]
+)
+```
+
+### Bulk SMS
+
+```python
+result = irisx.sms.send_bulk(
+    from_='+15559876543',
+    recipients=[
+        {'to': '+15551111111', 'body': 'Message 1'},
+        {'to': '+15552222222', 'body': 'Message 2'},
+        {'to': '+15553333333', 'body': 'Message 3'}
+    ]
+)
+
+print(f"Sent: {result.successful}, Failed: {result.failed}")
+```
+
+### Using Templates
+
+```python
+# Create template
+template = irisx.sms.create_template(
+    name='welcome',
+    body='Hi {{name}}, welcome to {{company}}!'
+)
+
+# Send with template
+message = irisx.sms.send_template(
+    to='+15551234567',
+    from_='+15559876543',
+    template_id=template.id,
+    variables={
+        'name': 'John',
+        'company': 'IRISX'
+    }
+)
+```
+
+## Sending Email
+
+```python
+email = irisx.email.send(
+    to='customer@example.com',
+    from_='noreply@yourcompany.com',
+    subject='Welcome to Our Service',
+    body_html='<h1>Welcome!</h1><p>Thanks for signing up!</p>',
+    body_text='Welcome! Thanks for signing up!',
+    track_opens=True,
+    track_clicks=True
+)
+
+print(f"Email sent: {email.id}")
+```
+
+## Webhooks
+
+### Create Webhook
+
+```python
+webhook = irisx.webhooks.create(
+    url='https://yourapp.com/webhooks/irisx',
+    events=[
+        'call.completed',
+        'call.failed',
+        'sms.delivered',
+        'sms.failed'
+    ],
+    description='Production webhook'
+)
+
+print(f"Webhook ID: {webhook.id}")
+print(f"Secret: {webhook.secret}")  # Save this!
+```
+
+### List Webhooks
+
+```python
+webhooks = irisx.webhooks.list()
+
+for webhook in webhooks:
+    print(f"{webhook.id}: {webhook.url}")
+```
+
+### Verify Webhook Signature
+
+```python
+import hmac
+import hashlib
+import json
+
+def verify_webhook(payload: dict, signature: str, secret: str) -> bool:
+    """Verify webhook signature using HMAC-SHA256"""
+    expected_signature = hmac.new(
+        secret.encode(),
+        json.dumps(payload).encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+    return hmac.compare_digest(signature, expected_signature)
+
+# With Flask
+from flask import Flask, request
+
+app = Flask(__name__)
+
+@app.route('/webhooks/irisx', methods=['POST'])
+def handle_webhook():
+    signature = request.headers.get('X-IRISX-Signature')
+    payload = request.get_json()
+
+    if not verify_webhook(payload, signature, webhook_secret):
+        return 'Invalid signature', 401
+
+    # Process webhook
+    event = payload.get('event')
+    data = payload.get('data')
+
+    return 'OK', 200
+```
+
+## Phone Numbers
+
+### Search Available Numbers
+
+```python
+numbers = irisx.phone_numbers.search(
+    country='US',
+    area_code='415',
+    type='local',
+    limit=10
+)
+
+for number in numbers:
+    print(f"{number.number} - ${number.monthly_cost}/mo")
+```
+
+### Purchase Number
+
+```python
+number = irisx.phone_numbers.purchase(
+    phone_number='+14155551234',
+    friendly_name='Support Line'
+)
+
+print(f"Purchased: {number.number}")
+```
+
+### Configure Number
+
+```python
+irisx.phone_numbers.update(
+    number_id,
+    voice_webhook_url='https://yourapp.com/webhooks/voice',
+    sms_webhook_url='https://yourapp.com/webhooks/sms',
+    friendly_name='Main Support Line'
+)
+```
+
+## Analytics
+
+### Get Dashboard Stats
+
+```python
+stats = irisx.analytics.dashboard(
+    start_date='2025-10-01',
+    end_date='2025-10-31'
+)
+
+print(f"Total Calls: {stats.calls.total}")
+print(f"Total SMS: {stats.sms.total}")
+print(f"Total Cost: ${stats.calls.total_cost + stats.sms.total_cost}")
+```
+
+### Call Analytics
+
+```python
+analytics = irisx.analytics.calls(
+    start_date='2025-10-01',
+    end_date='2025-10-31',
+    group_by='day'
+)
+
+for day in analytics.data:
+    print(f"{day.date}: {day.total_calls} calls")
+```
+
+## Error Handling
+
+```python
+from irisx.exceptions import IRISXError, RateLimitError, ValidationError
+
+try:
+    call = irisx.calls.create(
+        to='+15551234567',
+        from_='+15559876543'
+    )
+except RateLimitError as e:
+    print(f'Rate limited - retry after: {e.retry_after}s')
+    # Wait and retry
+    import time
+    time.sleep(e.retry_after)
+except ValidationError as e:
+    print(f'Validation error: {e.message}')
+    print(f'Details: {e.details}')
+except IRISXError as e:
+    print(f'API Error: {e.message}')
+    if e.code == 'INSUFFICIENT_FUNDS':
+        print('Low balance - add credits')
+except Exception as e:
+    print(f'Unexpected error: {e}')
+```
+
+### Error Types
+
+The SDK provides specific error classes:
+
+```python
+from irisx.exceptions import (
+    IRISXError,
+    RateLimitError,
+    ValidationError,
+    AuthenticationError,
+    NotFoundError
+)
+
+try:
+    number = irisx.phone_numbers.get('invalid_id')
+except NotFoundError:
+    print('Phone number not found')
+except AuthenticationError:
+    print('Authentication failed - check your API key')
+except Exception as e:
+    print(f'Error: {e}')
+```
+
+## Advanced Features
+
+### Automatic Retry with Exponential Backoff
+
+```python
+irisx = IRISX(
+    api_key='your_api_key_here',
+    retry=True,
+    max_retries=3,
+    retry_delay=1.0,  # 1 second
+    max_retry_delay=30.0  # 30 seconds
+)
+```
+
+### Custom Timeout
+
+```python
+irisx = IRISX(
+    api_key='your_api_key_here',
+    timeout=60  # 60 seconds
+)
+```
+
+### Logging
+
+```python
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+irisx = IRISX(
+    api_key='your_api_key_here',
+    logger=logging.getLogger('irisx')
+)
+```
+
+## Type Hints
+
+The SDK includes full type hints for IDE autocomplete:
+
+```python
+from typing import Dict, List
+from irisx.types import Call, SMS, Email
+
+def process_call(call: Call) -> None:
+    """Process a completed call with full type safety"""
+    print(f"Call UUID: {call.uuid}")
+    print(f"Status: {call.status}")
+    print(f"Duration: {call.duration}")
+
+# IDE provides full autocomplete
+call: Call = irisx.calls.get('123e4567-e89b-12d3-a456-426614174000')
+process_call(call)
+```
+
+## Environment Variables
+
+```bash
+# .env file
+IRISX_API_KEY=your_api_key_here
+IRISX_API_URL=https://api.useiris.com
+IRISX_WEBHOOK_SECRET=your_webhook_secret
+```
+
+```python
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+irisx = IRISX(
+    api_key=os.getenv('IRISX_API_KEY'),
+    base_url=os.getenv('IRISX_API_URL')
+)
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Environment Variables" icon="key">
+    Store credentials in environment variables, never in code
+  </Card>
+  <Card title="Handle Errors Gracefully" icon="triangle-exclamation">
+    Always use try/except blocks for API calls
+  </Card>
+  <Card title="Enable Retries" icon="rotate">
+    Use automatic retry for transient network failures
+  </Card>
+  <Card title="Verify Webhooks" icon="shield-check">
+    Always verify webhook signatures for security
+  </Card>
+  <Card title="Use Type Hints" icon="code">
+    Leverage type hints for safer code development
+  </Card>
+  <Card title="Log Important Events" icon="file-lines">
+    Track API calls and errors for debugging
+  </Card>
+</CardGroup>
+
+## Examples
+
+Full working examples available at [github.com/irisx/examples](https://github.com/irisx/examples):
+
+- Simple outbound call
+- IVR menu system with DTMF
+- SMS campaign with templates
+- Webhook handler with Flask
+- Call recording and transcription
+- Async operations with asyncio
+
+## Support
+
+- 📚 [Full API Reference](/api-reference)
+- 💬 [Discord Community](https://discord.gg/irisx)
+- 🐛 [GitHub Issues](https://github.com/irisx/sdk-python/issues)
+- 📧 Email: support@useiris.com
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/api-reference">
+    Explore all endpoints
+  </Card>
+  <Card title="Code Examples" icon="code" href="https://github.com/irisx/examples">
+    See working examples
+  </Card>
+</CardGroup>

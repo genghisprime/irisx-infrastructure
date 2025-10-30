@@ -1,0 +1,244 @@
+---
+title: 'Send SMS'
+api: 'POST /v1/sms/send'
+description: 'Send a single SMS message'
+---
+
+## Overview
+
+Send an SMS or MMS message with automatic delivery tracking. IRISX supports long messages (up to 1600 characters) with automatic segmentation and MMS for media attachments.
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Request Body
+
+<ParamField body="to" type="string" required>
+  Recipient phone number in E.164 format
+</ParamField>
+
+<ParamField body="from" type="string" required>
+  Sender phone number from your purchased numbers
+</ParamField>
+
+<ParamField body="body" type="string" required>
+  Message text content (max 1600 characters)
+</ParamField>
+
+<ParamField body="media_urls" type="array">
+  Array of media URLs for MMS (up to 10 files)
+</ParamField>
+
+<ParamField body="webhook_url" type="string">
+  URL to receive delivery status updates
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="object">
+  SMS message object
+
+  <Expandable title="Message properties">
+    <ResponseField name="id" type="integer">
+      Message ID
+    </ResponseField>
+    <ResponseField name="to" type="string">
+      Recipient number
+    </ResponseField>
+    <ResponseField name="from" type="string">
+      Sender number
+    </ResponseField>
+    <ResponseField name="body" type="string">
+      Message text
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Status: `queued`, `sending`, `sent`, `delivered`, `failed`, `undelivered`
+    </ResponseField>
+    <ResponseField name="direction" type="string">
+      Direction: `outbound`
+    </ResponseField>
+    <ResponseField name="segments" type="integer">
+      Number of SMS segments
+    </ResponseField>
+    <ResponseField name="cost" type="number">
+      Message cost in USD
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST https://api.useiris.com/v1/sms/send \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "+15551234567",
+    "from": "+15559876543",
+    "body": "Hello! This is a test message from IRISX."
+  }'
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function sendSMS(to, from, body) {
+  const response = await axios.post(
+    'https://api.useiris.com/v1/sms/send',
+    { to, from, body },
+    {
+      headers: {
+        'X-API-Key': 'YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  const message = response.data.message;
+  console.log('SMS sent:', message.id);
+  console.log('Status:', message.status);
+  console.log('Segments:', message.segments);
+
+  return message;
+}
+
+sendSMS('+15551234567', '+15559876543', 'Hello from IRISX!');
+```
+
+```python Python
+import requests
+
+def send_sms(to, from_number, body):
+    response = requests.post(
+        'https://api.useiris.com/v1/sms/send',
+        json={
+            'to': to,
+            'from': from_number,
+            'body': body
+        },
+        headers={
+            'X-API-Key': 'YOUR_API_KEY'
+        }
+    )
+
+    if response.status_code == 201:
+        message = response.json()['message']
+        print(f"SMS sent: {message['id']}")
+        print(f"Status: {message['status']}")
+        print(f"Segments: {message['segments']}")
+        return message
+
+send_sms('+15551234567', '+15559876543', 'Hello from IRISX!')
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (201)
+{
+  "message": {
+    "id": 12345,
+    "tenant_id": 1,
+    "to": "+15551234567",
+    "from": "+15559876543",
+    "body": "Hello! This is a test message from IRISX.",
+    "status": "queued",
+    "direction": "outbound",
+    "cost": 0.0075,
+    "segments": 1,
+    "media_urls": null,
+    "created_at": "2025-10-30T18:00:00Z",
+    "updated_at": "2025-10-30T18:00:00Z"
+  }
+}
+```
+
+```json Error Response (400)
+{
+  "error": "VALIDATION_ERROR",
+  "message": "Message body exceeds maximum length",
+  "details": {
+    "field": "body",
+    "max_length": 1600
+  }
+}
+```
+
+</ResponseExample>
+
+## Message Segmentation
+
+SMS messages over 160 characters are split into segments:
+
+- **Standard SMS:** 160 characters per segment
+- **Unicode SMS:** 70 characters per segment (for emoji, non-Latin characters)
+- **Cost:** Each segment is billed separately
+
+```javascript
+const message = "A".repeat(320); // 2 segments
+const cost = segments * 0.0075; // $0.015 total
+```
+
+## Sending MMS
+
+Include media URLs to send MMS:
+
+```javascript
+await sendSMS('+15551234567', '+15559876543', 'Check out this image!', {
+  media_urls: [
+    'https://example.com/image.jpg',
+    'https://example.com/document.pdf'
+  ]
+});
+```
+
+Supported formats: JPG, PNG, GIF, PDF (up to 5MB per file)
+
+## Rate Limits
+
+- **100 SMS per minute** per account
+- Headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+
+## Delivery Tracking
+
+Track delivery via webhooks:
+
+```json
+{
+  "event": "sms.delivered",
+  "timestamp": "2025-10-30T18:00:05Z",
+  "data": {
+    "id": 12345,
+    "status": "delivered",
+    "to": "+15551234567"
+  }
+}
+```
+
+## Error Codes
+
+| Code | Error | Description |
+|------|-------|-------------|
+| 400 | VALIDATION_ERROR | Invalid parameters |
+| 400 | INVALID_PHONE_NUMBER | Invalid number format |
+| 403 | NUMBER_NOT_OWNED | Sender number not owned |
+| 429 | RATE_LIMITED | Too many requests |
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="List SMS" icon="list" href="/api-reference/sms/list">
+    View message history
+  </Card>
+  <Card title="Get SMS" icon="message" href="/api-reference/sms/get">
+    Get message details
+  </Card>
+</CardGroup>

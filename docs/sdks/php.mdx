@@ -1,0 +1,526 @@
+---
+title: 'PHP SDK'
+description: 'Official IRISX PHP SDK for seamless integration'
+---
+
+## Installation
+
+Install the IRISX SDK via Composer:
+
+```bash
+composer require irisx/sdk
+```
+
+## Quick Start
+
+```php
+<?php
+use IRISX\Client;
+
+// Initialize with API key
+$irisx = new Client([
+    'api_key' => 'your_api_key_here'
+]);
+
+// Make your first call
+$call = $irisx->calls->create([
+    'to' => '+15551234567',
+    'from' => '+15559876543',
+    'record' => true
+]);
+
+echo "Call initiated: " . $call->uuid . "\n";
+```
+
+## Authentication
+
+### API Key (Recommended)
+
+```php
+<?php
+use IRISX\Client;
+
+$irisx = new Client([
+    'api_key' => 'your_api_key_here'
+]);
+```
+
+### JWT Token (For User Auth)
+
+```php
+<?php
+use IRISX\Client;
+
+$irisx = new Client([
+    'token' => 'your_jwt_token_here'
+]);
+
+// Handle token refresh
+$irisx->onTokenRefresh(function($newToken) {
+    echo 'Token refreshed: ' . $newToken . "\n";
+    // Save new token to secure storage
+});
+```
+
+## Making Calls
+
+### Create Outbound Call
+
+```php
+<?php
+$call = $irisx->calls->create([
+    'to' => '+15551234567',
+    'from' => '+15559876543',
+    'webhook_url' => 'https://yourapp.com/webhooks',
+    'record' => true,
+    'timeout' => 60,
+    'metadata' => [
+        'customer_id' => 'cust_123',
+        'order_id' => 'order_456'
+    ]
+]);
+
+echo "Call UUID: " . $call->uuid . "\n";
+```
+
+### Get Call Details
+
+```php
+<?php
+$call = $irisx->calls->get('123e4567-e89b-12d3-a456-426614174000');
+
+echo "Status: " . $call->status . "\n";
+echo "Duration: " . $call->duration . "s\n";
+echo "Cost: $" . $call->cost . "\n";
+```
+
+### List Calls
+
+```php
+<?php
+$calls = $irisx->calls->list([
+    'status' => 'completed',
+    'direction' => 'outbound',
+    'start_date' => '2025-10-01',
+    'end_date' => '2025-10-31',
+    'page' => 1,
+    'limit' => 50
+]);
+
+echo "Found " . $calls->pagination->total . " calls\n";
+
+foreach ($calls->data as $call) {
+    echo $call->uuid . ": " . $call->status . "\n";
+}
+```
+
+## Sending SMS
+
+### Send Single Message
+
+```php
+<?php
+$message = $irisx->sms->send([
+    'to' => '+15551234567',
+    'from' => '+15559876543',
+    'body' => 'Hello! This is a test message.',
+    'webhook_url' => 'https://yourapp.com/webhooks/sms'
+]);
+
+echo "Message ID: " . $message->id . "\n";
+```
+
+### Send MMS with Media
+
+```php
+<?php
+$message = $irisx->sms->send([
+    'to' => '+15551234567',
+    'from' => '+15559876543',
+    'body' => 'Check out this image!',
+    'media_urls' => [
+        'https://example.com/image.jpg'
+    ]
+]);
+```
+
+### Bulk SMS
+
+```php
+<?php
+$result = $irisx->sms->sendBulk([
+    'from' => '+15559876543',
+    'recipients' => [
+        ['to' => '+15551111111', 'body' => 'Message 1'],
+        ['to' => '+15552222222', 'body' => 'Message 2'],
+        ['to' => '+15553333333', 'body' => 'Message 3']
+    ]
+]);
+
+echo "Sent: " . $result->successful . ", Failed: " . $result->failed . "\n";
+```
+
+### Using Templates
+
+```php
+<?php
+// Create template
+$template = $irisx->sms->createTemplate([
+    'name' => 'welcome',
+    'body' => 'Hi {{name}}, welcome to {{company}}!'
+]);
+
+// Send with template
+$message = $irisx->sms->sendTemplate([
+    'to' => '+15551234567',
+    'from' => '+15559876543',
+    'template_id' => $template->id,
+    'variables' => [
+        'name' => 'John',
+        'company' => 'IRISX'
+    ]
+]);
+```
+
+## Sending Email
+
+```php
+<?php
+$email = $irisx->email->send([
+    'to' => 'customer@example.com',
+    'from' => 'noreply@yourcompany.com',
+    'subject' => 'Welcome to Our Service',
+    'body_html' => '<h1>Welcome!</h1><p>Thanks for signing up!</p>',
+    'body_text' => 'Welcome! Thanks for signing up!',
+    'track_opens' => true,
+    'track_clicks' => true
+]);
+
+echo "Email sent: " . $email->id . "\n";
+```
+
+## Webhooks
+
+### Create Webhook
+
+```php
+<?php
+$webhook = $irisx->webhooks->create([
+    'url' => 'https://yourapp.com/webhooks/irisx',
+    'events' => [
+        'call.completed',
+        'call.failed',
+        'sms.delivered',
+        'sms.failed'
+    ],
+    'description' => 'Production webhook'
+]);
+
+echo "Webhook ID: " . $webhook->id . "\n";
+echo "Secret: " . $webhook->secret . "\n";  // Save this!
+```
+
+### List Webhooks
+
+```php
+<?php
+$webhooks = $irisx->webhooks->list();
+
+foreach ($webhooks as $webhook) {
+    echo $webhook->id . ": " . $webhook->url . "\n";
+}
+```
+
+### Verify Webhook Signature
+
+```php
+<?php
+function verifyWebhookSignature($payload, $signature, $secret) {
+    $expectedSignature = hash_hmac(
+        'sha256',
+        json_encode($payload),
+        $secret,
+        false
+    );
+
+    return hash_equals($expectedSignature, $signature);
+}
+
+// With Laravel
+Route::post('/webhooks/irisx', function (Request $request) {
+    $signature = $request->header('X-IRISX-Signature');
+    $payload = $request->json()->all();
+
+    if (!verifyWebhookSignature($payload, $signature, env('IRISX_WEBHOOK_SECRET'))) {
+        return response('Invalid signature', 401);
+    }
+
+    // Process webhook
+    $event = $payload['event'] ?? null;
+    $data = $payload['data'] ?? null;
+
+    return response('OK', 200);
+});
+
+// With Symfony
+#[Route('/webhooks/irisx', name: 'webhook_irisx', methods: ['POST'])]
+public function handleWebhook(Request $request): Response
+{
+    $signature = $request->headers->get('X-IRISX-Signature');
+    $payload = json_decode($request->getContent(), true);
+
+    if (!verifyWebhookSignature($payload, $signature, $_ENV['IRISX_WEBHOOK_SECRET'])) {
+        return new Response('Invalid signature', 401);
+    }
+
+    // Process webhook
+    return new Response('OK', 200);
+}
+```
+
+## Phone Numbers
+
+### Search Available Numbers
+
+```php
+<?php
+$numbers = $irisx->phoneNumbers->search([
+    'country' => 'US',
+    'area_code' => '415',
+    'type' => 'local',
+    'limit' => 10
+]);
+
+foreach ($numbers as $number) {
+    echo $number->number . " - $" . $number->monthly_cost . "/mo\n";
+}
+```
+
+### Purchase Number
+
+```php
+<?php
+$number = $irisx->phoneNumbers->purchase([
+    'phone_number' => '+14155551234',
+    'friendly_name' => 'Support Line'
+]);
+
+echo "Purchased: " . $number->number . "\n";
+```
+
+### Configure Number
+
+```php
+<?php
+$irisx->phoneNumbers->update($numberId, [
+    'voice_webhook_url' => 'https://yourapp.com/webhooks/voice',
+    'sms_webhook_url' => 'https://yourapp.com/webhooks/sms',
+    'friendly_name' => 'Main Support Line'
+]);
+```
+
+## Analytics
+
+### Get Dashboard Stats
+
+```php
+<?php
+$stats = $irisx->analytics->dashboard([
+    'start_date' => '2025-10-01',
+    'end_date' => '2025-10-31'
+]);
+
+echo "Total Calls: " . $stats->calls->total . "\n";
+echo "Total SMS: " . $stats->sms->total . "\n";
+echo "Total Cost: $" . ($stats->calls->total_cost + $stats->sms->total_cost) . "\n";
+```
+
+### Call Analytics
+
+```php
+<?php
+$analytics = $irisx->analytics->calls([
+    'start_date' => '2025-10-01',
+    'end_date' => '2025-10-31',
+    'group_by' => 'day'
+]);
+
+foreach ($analytics->data as $day) {
+    echo $day->date . ": " . $day->total_calls . " calls\n";
+}
+```
+
+## Error Handling
+
+```php
+<?php
+use IRISX\Exceptions\IRISXException;
+use IRISX\Exceptions\RateLimitException;
+use IRISX\Exceptions\ValidationException;
+
+try {
+    $call = $irisx->calls->create([
+        'to' => '+15551234567',
+        'from' => '+15559876543'
+    ]);
+} catch (RateLimitException $e) {
+    echo "Rate limited - retry after: " . $e->getRetryAfter() . "s\n";
+    // Wait and retry
+    sleep($e->getRetryAfter());
+} catch (ValidationException $e) {
+    echo "Validation error: " . $e->getMessage() . "\n";
+    echo "Details: " . json_encode($e->getDetails()) . "\n";
+} catch (IRISXException $e) {
+    echo "API Error: " . $e->getMessage() . "\n";
+    echo "Code: " . $e->getCode() . "\n";
+
+    if ($e->getCode() === 'INSUFFICIENT_FUNDS') {
+        echo "Low balance - add credits\n";
+    }
+} catch (Exception $e) {
+    echo "Unexpected error: " . $e->getMessage() . "\n";
+}
+```
+
+### Exception Hierarchy
+
+```php
+<?php
+use IRISX\Exceptions\{
+    IRISXException,
+    RateLimitException,
+    ValidationException,
+    AuthenticationException,
+    NotFoundException
+};
+
+try {
+    $number = $irisx->phoneNumbers->get('invalid_id');
+} catch (NotFoundException $e) {
+    echo "Phone number not found\n";
+} catch (AuthenticationException $e) {
+    echo "Authentication failed - check your API key\n";
+} catch (IRISXException $e) {
+    echo "Error: " . $e->getMessage() . "\n";
+}
+```
+
+## Advanced Features
+
+### Automatic Retry with Exponential Backoff
+
+```php
+<?php
+use IRISX\Client;
+
+$irisx = new Client([
+    'api_key' => 'your_api_key_here',
+    'retry' => [
+        'enabled' => true,
+        'max_retries' => 3,
+        'base_delay' => 1000,  // 1 second in ms
+        'max_delay' => 30000   // 30 seconds in ms
+    ]
+]);
+```
+
+### Custom Timeout
+
+```php
+<?php
+$irisx = new Client([
+    'api_key' => 'your_api_key_here',
+    'timeout' => 60  // 60 seconds
+]);
+```
+
+### Logging
+
+```php
+<?php
+use IRISX\Client;
+use Psr\Log\LoggerInterface;
+
+$irisx = new Client([
+    'api_key' => 'your_api_key_here',
+    'logger' => $monolog,  // PSR-3 compatible logger
+    'log_level' => 'debug'
+]);
+```
+
+## Environment Variables
+
+```bash
+# .env file
+IRISX_API_KEY=your_api_key_here
+IRISX_API_URL=https://api.useiris.com
+IRISX_WEBHOOK_SECRET=your_webhook_secret
+```
+
+```php
+<?php
+// With Laravel
+$irisx = new Client([
+    'api_key' => env('IRISX_API_KEY'),
+    'base_url' => env('IRISX_API_URL'),
+    'webhook_secret' => env('IRISX_WEBHOOK_SECRET')
+]);
+
+// With Symfony
+$irisx = new Client([
+    'api_key' => $_ENV['IRISX_API_KEY'],
+    'base_url' => $_ENV['IRISX_API_URL']
+]);
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Environment Variables" icon="key">
+    Never hardcode credentials in your source code
+  </Card>
+  <Card title="Handle Exceptions" icon="triangle-exclamation">
+    Always wrap API calls in try/catch blocks
+  </Card>
+  <Card title="Enable Retries" icon="rotate">
+    Use automatic retry for transient failures
+  </Card>
+  <Card title="Verify Webhooks" icon="shield-check">
+    Always verify webhook signatures using hash_hmac
+  </Card>
+  <Card title="Use PSR Standards" icon="code">
+    Follow PSR-3 for logging and PSR-4 for autoloading
+  </Card>
+  <Card title="Type Declarations" icon="list">
+    Use return type declarations for better code safety
+  </Card>
+</CardGroup>
+
+## Examples
+
+Full working examples available at [github.com/irisx/examples](https://github.com/irisx/examples):
+
+- Simple outbound call
+- IVR menu with DTMF detection
+- SMS campaign with templates
+- Webhook handler with Laravel
+- Call recording and transcription
+- AsyncIO operations
+
+## Support
+
+- 📚 [Full API Reference](/api-reference)
+- 💬 [Discord Community](https://discord.gg/irisx)
+- 🐛 [GitHub Issues](https://github.com/irisx/sdk-php/issues)
+- 📧 Email: support@useiris.com
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/api-reference">
+    Explore all endpoints
+  </Card>
+  <Card title="Code Examples" icon="code" href="https://github.com/irisx/examples">
+    See working examples
+  </Card>
+</CardGroup>

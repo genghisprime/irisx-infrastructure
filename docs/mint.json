@@ -1,0 +1,168 @@
+{
+  "name": "IRISX",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#6366f1",
+    "light": "#818cf8",
+    "dark": "#4f46e5",
+    "anchors": {
+      "from": "#6366f1",
+      "to": "#818cf8"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:support@useiris.com"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "https://portal.useiris.com"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    },
+    {
+      "name": "SDKs",
+      "url": "sdks"
+    },
+    {
+      "name": "Guides",
+      "url": "guides"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "Community",
+      "icon": "discord",
+      "url": "https://discord.gg/irisx"
+    },
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/irisx"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "authentication"
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        "concepts/calls",
+        "concepts/sms",
+        "concepts/email",
+        "concepts/webhooks",
+        "concepts/phone-numbers"
+      ]
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        "guides/making-calls",
+        "guides/sending-sms",
+        "guides/ivr-menus",
+        "guides/call-recording",
+        "guides/webhook-handlers",
+        "guides/error-handling"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/introduction"
+      ]
+    },
+    {
+      "group": "Authentication",
+      "pages": [
+        "api-reference/auth/register",
+        "api-reference/auth/login",
+        "api-reference/auth/me"
+      ]
+    },
+    {
+      "group": "Calls",
+      "pages": [
+        "api-reference/calls/create",
+        "api-reference/calls/list",
+        "api-reference/calls/get",
+        "api-reference/calls/update"
+      ]
+    },
+    {
+      "group": "SMS",
+      "pages": [
+        "api-reference/sms/send",
+        "api-reference/sms/list",
+        "api-reference/sms/get"
+      ]
+    },
+    {
+      "group": "Email",
+      "pages": [
+        "api-reference/email/send",
+        "api-reference/email/list"
+      ]
+    },
+    {
+      "group": "Webhooks",
+      "pages": [
+        "api-reference/webhooks/create",
+        "api-reference/webhooks/list",
+        "api-reference/webhooks/get",
+        "api-reference/webhooks/delete"
+      ]
+    },
+    {
+      "group": "Phone Numbers",
+      "pages": [
+        "api-reference/phone-numbers/search",
+        "api-reference/phone-numbers/purchase",
+        "api-reference/phone-numbers/list"
+      ]
+    },
+    {
+      "group": "Analytics",
+      "pages": [
+        "api-reference/analytics/dashboard",
+        "api-reference/analytics/calls",
+        "api-reference/analytics/sms"
+      ]
+    },
+    {
+      "group": "SDKs",
+      "pages": [
+        "sdks/nodejs",
+        "sdks/python",
+        "sdks/php",
+        "sdks/ruby"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "twitter": "https://twitter.com/irisx",
+    "github": "https://github.com/irisx",
+    "linkedin": "https://www.linkedin.com/company/irisx"
+  },
+  "api": {
+    "baseUrl": "https://api.useiris.com",
+    "auth": {
+      "method": "key",
+      "name": "X-API-Key"
+    }
+  }
+}

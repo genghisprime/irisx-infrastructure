@@ -1,0 +1,102 @@
+---
+title: 'Delete Webhook'
+api: 'DELETE /v1/webhooks/endpoints/{id}'
+description: 'Delete a webhook endpoint'
+---
+
+## Overview
+
+Permanently delete a webhook endpoint. You will no longer receive event notifications at this URL.
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Path Parameters
+
+<ParamField path="id" type="integer" required>
+  Webhook endpoint ID to delete
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="string">
+  Confirmation message
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl -X DELETE https://api.useiris.com/v1/webhooks/endpoints/1 \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function deleteWebhook(id) {
+  const response = await axios.delete(
+    `https://api.useiris.com/v1/webhooks/endpoints/${id}`,
+    {
+      headers: { 'X-API-Key': 'YOUR_API_KEY' }
+    }
+  );
+
+  console.log('Webhook deleted');
+  return response.data;
+}
+```
+
+```python Python
+import requests
+
+def delete_webhook(webhook_id):
+    response = requests.delete(
+        f'https://api.useiris.com/v1/webhooks/endpoints/{webhook_id}',
+        headers={'X-API-Key': 'YOUR_API_KEY'}
+    )
+
+    if response.status_code == 200:
+        print('Webhook deleted')
+        return response.json()
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "message": "Webhook endpoint deleted successfully"
+}
+```
+
+```json Error Response (404)
+{
+  "error": "NOT_FOUND",
+  "message": "Webhook endpoint not found"
+}
+```
+
+</ResponseExample>
+
+<Warning>
+  Deletion is permanent and cannot be undone. You will stop receiving event notifications immediately.
+</Warning>
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Create Webhook" icon="plus" href="/api-reference/webhooks/create">
+    Add new webhook
+  </Card>
+  <Card title="List Webhooks" icon="list" href="/api-reference/webhooks/list">
+    View all webhooks
+  </Card>
+</CardGroup>

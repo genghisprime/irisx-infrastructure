@@ -1,0 +1,825 @@
+---
+title: 'Call Recording'
+description: 'Complete guide to recording, storing, and managing call recordings with compliance best practices'
+---
+
+## Overview
+
+Call recording is essential for quality assurance, compliance, training, and dispute resolution. IRISX provides flexible recording options with secure storage and easy retrieval.
+
+<CardGroup cols={2}>
+  <Card title="Recording Setup" icon="record-vinyl" href="#enabling-recording">
+    Enable and configure call recording
+  </Card>
+  <Card title="Storage & Access" icon="database" href="#accessing-recordings">
+    Retrieve and manage recordings
+  </Card>
+  <Card title="Compliance" icon="shield-check" href="#compliance-requirements">
+    Legal requirements and consent
+  </Card>
+  <Card title="Transcription" icon="file-lines" href="#transcription">
+    Convert speech to text automatically
+  </Card>
+</CardGroup>
+
+## Enabling Recording
+
+### Record All Calls
+
+Enable recording when initiating a call:
+
+```javascript
+const axios = require('axios');
+
+const apiKey = 'your_api_key_here';
+const apiUrl = 'https://api.useiris.com';
+
+async function makeRecordedCall(to, from) {
+  const response = await axios.post(
+    `${apiUrl}/v1/calls`,
+    {
+      to: to,
+      from: from,
+      record: true,
+      recording_channels: 'dual', // 'mono' or 'dual'
+      recording_status_callback: 'https://yourapp.com/webhooks/recording-ready',
+      recording_status_callback_event: ['completed', 'failed']
+    },
+    {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  console.log('Call initiated with recording enabled');
+  console.log('Call UUID:', response.data.call.uuid);
+
+  return response.data.call;
+}
+
+// Make a recorded call
+await makeRecordedCall('+15551234567', '+15559876543');
+```
+
+<Note>
+  **Dual-channel recording** creates separate audio tracks for each party, enabling better analysis and quality control. **Mono recording** combines both parties into a single track.
+</Note>
+
+### Start Recording Mid-Call
+
+Begin recording an active call:
+
+```javascript
+async function startRecording(callUuid, options = {}) {
+  const response = await axios.post(
+    `${apiUrl}/v1/calls/${callUuid}/recordings`,
+    {
+      channels: options.channels || 'dual',
+      format: options.format || 'mp3', // 'mp3', 'wav', or 'ogg'
+      status_callback: options.statusCallback,
+      transcribe: options.transcribe || false
+    },
+    {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  console.log('Recording started:', response.data.recording.id);
+  return response.data.recording;
+}
+
+// Start recording with transcription
+await startRecording('call-uuid-123', {
+  channels: 'dual',
+  transcribe: true,
+  statusCallback: 'https://yourapp.com/webhooks/recording-ready'
+});
+```
+
+### Stop Recording
+
+Stop an active recording:
+
+```javascript
+async function stopRecording(callUuid, recordingId) {
+  const response = await axios.delete(
+    `${apiUrl}/v1/calls/${callUuid}/recordings/${recordingId}`,
+    {
+      headers: { 'X-API-Key': apiKey }
+    }
+  );
+
+  console.log('Recording stopped');
+  console.log('Duration:', response.data.recording.duration, 'seconds');
+  console.log('URL:', response.data.recording.url);
+
+  return response.data.recording;
+}
+```
+
+### Pause and Resume Recording
+
+Temporarily pause recording (e.g., for sensitive information):
+
+```javascript
+async function pauseRecording(callUuid, recordingId) {
+  await axios.post(
+    `${apiUrl}/v1/calls/${callUuid}/recordings/${recordingId}/pause`,
+    {},
+    {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  console.log('Recording paused');
+}
+
+async function resumeRecording(callUuid, recordingId) {
+  await axios.post(
+    `${apiUrl}/v1/calls/${callUuid}/recordings/${recordingId}/resume`,
+    {},
+    {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  console.log('Recording resumed');
+}
+
+// Pause during sensitive data entry
+await pauseRecording('call-uuid-123', 'rec-abc123');
+// Collect credit card information
+await collectPaymentInfo(callUuid);
+// Resume recording
+await resumeRecording('call-uuid-123', 'rec-abc123');
+```
+
+## Accessing Recordings
+
+### Retrieve Recording Details
+
+Get information about a specific recording:
+
+```javascript
+async function getRecording(recordingId) {
+  const response = await axios.get(
+    `${apiUrl}/v1/recordings/${recordingId}`,
+    {
+      headers: { 'X-API-Key': apiKey }
+    }
+  );
+
+  const recording = response.data.recording;
+
+  console.log('Recording URL:', recording.url);
+  console.log('Duration:', recording.duration, 'seconds');
+  console.log('Format:', recording.format);
+  console.log('Channels:', recording.channels);
+  console.log('File size:', recording.size, 'bytes');
+  console.log('Created:', recording.created_at);
+
+  return recording;
+}
+```
+
+### List Recordings
+
+Retrieve recordings with filtering:
+
+```javascript
+async function listRecordings(filters = {}) {
+  const response = await axios.get(
+    `${apiUrl}/v1/recordings`,
+    {
+      params: {
+        start_date: filters.startDate,
+        end_date: filters.endDate,
+        phone_number: filters.phoneNumber,
+        duration_min: filters.minDuration,
+        duration_max: filters.maxDuration,
+        page: filters.page || 1,
+        limit: filters.limit || 50
+      },
+      headers: { 'X-API-Key': apiKey }
+    }
+  );
+
+  console.log('Total recordings:', response.data.total);
+  console.log('Page:', response.data.page, 'of', response.data.total_pages);
+
+  return response.data.recordings;
+}
+
+// Get recordings from last week
+const oneWeekAgo = new Date();
+oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+const recordings = await listRecordings({
+  startDate: oneWeekAgo.toISOString(),
+  minDuration: 30 // Only calls longer than 30 seconds
+});
+```
+
+### Download Recording
+
+Download recording file to local storage:
+
+```javascript
+const fs = require('fs');
+const path = require('path');
+
+async function downloadRecording(recordingId, savePath) {
+  // Get recording details
+  const recording = await getRecording(recordingId);
+
+  // Download the audio file
+  const response = await axios.get(recording.url, {
+    responseType: 'arraybuffer'
+  });
+
+  // Determine file extension
+  const extension = recording.format || 'mp3';
+  const filename = `${recordingId}.${extension}`;
+  const fullPath = path.join(savePath, filename);
+
+  // Save to disk
+  fs.writeFileSync(fullPath, response.data);
+
+  console.log('Recording saved to:', fullPath);
+  console.log('File size:', response.data.length, 'bytes');
+
+  return fullPath;
+}
+
+// Download recording
+await downloadRecording('rec-abc123', '/path/to/recordings');
+```
+
+### Streaming Recording
+
+Stream recording for playback without downloading:
+
+```javascript
+async function streamRecording(recordingId, res) {
+  const recording = await getRecording(recordingId);
+
+  // Stream to HTTP response (Express.js)
+  const response = await axios.get(recording.url, {
+    responseType: 'stream'
+  });
+
+  res.setHeader('Content-Type', `audio/${recording.format}`);
+  res.setHeader('Content-Length', recording.size);
+  res.setHeader('Content-Disposition', `inline; filename="${recordingId}.${recording.format}"`);
+
+  response.data.pipe(res);
+}
+
+// Express.js route
+app.get('/recordings/:id/stream', async (req, res) => {
+  try {
+    await streamRecording(req.params.id, res);
+  } catch (error) {
+    res.status(404).json({ error: 'Recording not found' });
+  }
+});
+```
+
+## Recording Webhooks
+
+Handle recording events in real-time.
+
+### Recording Completed Webhook
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.post('/webhooks/recording-ready', express.json(), async (req, res) => {
+  const event = req.body;
+
+  console.log('Recording event:', event.event);
+  console.log('Recording ID:', event.data.recording_id);
+  console.log('Call UUID:', event.data.call_uuid);
+
+  if (event.event === 'recording.completed') {
+    const recording = event.data;
+
+    console.log('Recording URL:', recording.url);
+    console.log('Duration:', recording.duration, 'seconds');
+
+    // Store recording metadata in database
+    await storeRecordingMetadata({
+      recordingId: recording.id,
+      callUuid: recording.call_uuid,
+      url: recording.url,
+      duration: recording.duration,
+      channels: recording.channels,
+      format: recording.format,
+      createdAt: new Date(recording.created_at)
+    });
+
+    // Queue for transcription if not already done
+    if (!recording.transcription) {
+      await queueTranscription(recording.id);
+    }
+
+    // Send notification
+    await notifyRecordingReady(recording);
+  } else if (event.event === 'recording.failed') {
+    console.error('Recording failed:', event.data.error);
+    await handleRecordingFailure(event.data);
+  }
+
+  res.status(200).send('OK');
+});
+
+app.listen(3000);
+```
+
+## Storage Management
+
+### Retention Policies
+
+Configure automatic deletion of old recordings:
+
+```javascript
+async function setRetentionPolicy(days) {
+  const response = await axios.post(
+    `${apiUrl}/v1/recordings/retention`,
+    {
+      retention_days: days,
+      auto_delete: true,
+      notification_email: 'admin@yourcompany.com'
+    },
+    {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  console.log('Retention policy set:', days, 'days');
+  return response.data;
+}
+
+// Keep recordings for 90 days
+await setRetentionPolicy(90);
+```
+
+### Manual Deletion
+
+Delete specific recordings:
+
+```javascript
+async function deleteRecording(recordingId) {
+  await axios.delete(
+    `${apiUrl}/v1/recordings/${recordingId}`,
+    {
+      headers: { 'X-API-Key': apiKey }
+    }
+  );
+
+  console.log('Recording deleted:', recordingId);
+}
+
+// Bulk delete old recordings
+async function deleteOldRecordings(olderThanDays) {
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+
+  const recordings = await listRecordings({
+    endDate: cutoffDate.toISOString()
+  });
+
+  console.log(`Deleting ${recordings.length} recordings...`);
+
+  for (const recording of recordings) {
+    await deleteRecording(recording.id);
+  }
+
+  console.log('Deletion complete');
+}
+
+// Delete recordings older than 180 days
+await deleteOldRecordings(180);
+```
+
+### Export to External Storage
+
+Archive recordings to AWS S3 or other cloud storage:
+
+```javascript
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+
+async function archiveToS3(recordingId, bucketName) {
+  // Get recording
+  const recording = await getRecording(recordingId);
+
+  // Download recording
+  const response = await axios.get(recording.url, {
+    responseType: 'arraybuffer'
+  });
+
+  // Upload to S3
+  const s3Key = `recordings/${new Date().getFullYear()}/${recordingId}.${recording.format}`;
+
+  await s3.putObject({
+    Bucket: bucketName,
+    Key: s3Key,
+    Body: response.data,
+    ContentType: `audio/${recording.format}`,
+    Metadata: {
+      call_uuid: recording.call_uuid,
+      duration: recording.duration.toString(),
+      created_at: recording.created_at
+    }
+  }).promise();
+
+  console.log('Archived to S3:', s3Key);
+
+  // Optionally delete from IRISX
+  await deleteRecording(recordingId);
+
+  return s3Key;
+}
+```
+
+## Transcription
+
+Convert speech to text automatically.
+
+### Enable Transcription
+
+```javascript
+async function transcribeRecording(recordingId, options = {}) {
+  const response = await axios.post(
+    `${apiUrl}/v1/recordings/${recordingId}/transcribe`,
+    {
+      language: options.language || 'en-US',
+      speakers: options.speakers || 2, // Number of speakers
+      punctuation: options.punctuation !== false,
+      profanity_filter: options.profanityFilter || false,
+      callback_url: options.callbackUrl
+    },
+    {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  console.log('Transcription job started:', response.data.transcription.id);
+  return response.data.transcription;
+}
+
+// Transcribe with speaker diarization
+await transcribeRecording('rec-abc123', {
+  speakers: 2,
+  punctuation: true,
+  callbackUrl: 'https://yourapp.com/webhooks/transcription-ready'
+});
+```
+
+### Retrieve Transcription
+
+```javascript
+async function getTranscription(transcriptionId) {
+  const response = await axios.get(
+    `${apiUrl}/v1/transcriptions/${transcriptionId}`,
+    {
+      headers: { 'X-API-Key': apiKey }
+    }
+  );
+
+  const transcription = response.data.transcription;
+
+  console.log('Status:', transcription.status);
+  console.log('Confidence:', transcription.confidence);
+  console.log('Text:', transcription.text);
+
+  if (transcription.segments) {
+    console.log('\nSegments:');
+    transcription.segments.forEach(segment => {
+      console.log(`[${segment.start}s - ${segment.end}s] Speaker ${segment.speaker}: ${segment.text}`);
+    });
+  }
+
+  return transcription;
+}
+```
+
+### Transcription Webhook
+
+```javascript
+app.post('/webhooks/transcription-ready', express.json(), async (req, res) => {
+  const event = req.body;
+
+  if (event.event === 'transcription.completed') {
+    const transcription = event.data;
+
+    console.log('Transcription completed');
+    console.log('Recording ID:', transcription.recording_id);
+    console.log('Confidence:', transcription.confidence);
+    console.log('Full text:', transcription.text);
+
+    // Store transcription
+    await storeTranscription({
+      recordingId: transcription.recording_id,
+      text: transcription.text,
+      confidence: transcription.confidence,
+      segments: transcription.segments
+    });
+
+    // Perform sentiment analysis
+    await analyzeSentiment(transcription.text);
+
+    // Extract keywords
+    await extractKeywords(transcription.segments);
+
+    // Check for compliance issues
+    await checkCompliance(transcription.text);
+  }
+
+  res.status(200).send('OK');
+});
+```
+
+### Search Transcriptions
+
+```javascript
+async function searchTranscriptions(query, filters = {}) {
+  const response = await axios.get(
+    `${apiUrl}/v1/transcriptions/search`,
+    {
+      params: {
+        q: query,
+        start_date: filters.startDate,
+        end_date: filters.endDate,
+        min_confidence: filters.minConfidence || 0.8,
+        page: filters.page || 1,
+        limit: filters.limit || 50
+      },
+      headers: { 'X-API-Key': apiKey }
+    }
+  );
+
+  console.log('Found:', response.data.total, 'results');
+
+  response.data.results.forEach(result => {
+    console.log('\nRecording:', result.recording_id);
+    console.log('Match:', result.highlight);
+    console.log('Confidence:', result.confidence);
+  });
+
+  return response.data.results;
+}
+
+// Search for specific phrases
+await searchTranscriptions('refund request', {
+  startDate: '2025-10-01',
+  minConfidence: 0.9
+});
+```
+
+## Compliance Requirements
+
+### Recording Consent
+
+Always obtain consent before recording calls:
+
+```javascript
+async function playRecordingNotice(callUuid) {
+  await axios.post(
+    `${apiUrl}/v1/calls/${callUuid}/say`,
+    {
+      text: 'This call may be recorded for quality assurance and training purposes.',
+      voice: 'en-US-Neural2-F'
+    },
+    {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+}
+
+async function getRecordingConsent(callUuid) {
+  const response = await axios.post(
+    `${apiUrl}/v1/calls/${callUuid}/gather`,
+    {
+      num_digits: 1,
+      timeout: 10,
+      action_url: 'https://yourapp.com/webhooks/consent',
+      prompt: {
+        text: 'This call will be recorded. Press 1 to continue, or press 2 to decline.',
+        voice: 'en-US-Neural2-F'
+      }
+    },
+    {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  return response.data;
+}
+
+app.post('/webhooks/consent', express.json(), async (req, res) => {
+  const { digits, call_uuid } = req.body.data;
+
+  if (digits === '1') {
+    // Consent given - start recording
+    await startRecording(call_uuid);
+    await axios.post(
+      `${apiUrl}/v1/calls/${call_uuid}/say`,
+      {
+        text: 'Thank you. Recording has started.',
+        voice: 'en-US-Neural2-F'
+      },
+      { headers: { 'X-API-Key': apiKey, 'Content-Type': 'application/json' } }
+    );
+  } else {
+    // Consent declined
+    await axios.post(
+      `${apiUrl}/v1/calls/${call_uuid}/say`,
+      {
+        text: 'Understood. This call will not be recorded.',
+        voice: 'en-US-Neural2-F'
+      },
+      { headers: { 'X-API-Key': apiKey, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  res.status(200).send('OK');
+});
+```
+
+### Compliance by Region
+
+Different regions have different requirements:
+
+<AccordionGroup>
+  <Accordion title="United States">
+    - Federal law requires **one-party consent** (either party can record)
+    - **11 states** require **all-party consent**: CA, CT, FL, IL, MD, MA, MT, NH, PA, WA
+    - Always announce recording at call start
+    - Obtain explicit consent in two-party consent states
+    - Maintain records of consent
+  </Accordion>
+
+  <Accordion title="European Union (GDPR)">
+    - Requires **explicit consent** from all parties
+    - Must provide clear purpose for recording
+    - Allow access to recordings upon request
+    - Delete recordings when no longer needed
+    - Implement data protection measures
+    - Document lawful basis for processing
+  </Accordion>
+
+  <Accordion title="United Kingdom">
+    - Requires **consent from all parties**
+    - Must inform callers recording is taking place
+    - Comply with ICO guidance
+    - Limit retention to necessary period
+    - Secure storage required
+  </Accordion>
+
+  <Accordion title="Canada (PIPEDA)">
+    - Requires **consent from all parties**
+    - Must identify purpose of recording
+    - Limit collection to stated purpose
+    - Protect with security safeguards
+    - Allow access to personal information
+  </Accordion>
+</AccordionGroup>
+
+## Recording Analytics
+
+Analyze recordings for insights:
+
+```javascript
+async function getRecordingAnalytics(startDate, endDate) {
+  const response = await axios.get(
+    `${apiUrl}/v1/recordings/analytics`,
+    {
+      params: {
+        start_date: startDate,
+        end_date: endDate,
+        metrics: ['total_duration', 'average_duration', 'by_agent', 'by_outcome']
+      },
+      headers: { 'X-API-Key': apiKey }
+    }
+  );
+
+  const analytics = response.data.analytics;
+
+  console.log('Total recordings:', analytics.total_count);
+  console.log('Total duration:', analytics.total_duration, 'seconds');
+  console.log('Average duration:', analytics.average_duration, 'seconds');
+  console.log('By agent:', analytics.by_agent);
+  console.log('By outcome:', analytics.by_outcome);
+
+  return analytics;
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Legal Compliance">
+    - Research recording laws in your jurisdiction
+    - Announce recording at call start
+    - Obtain explicit consent when required
+    - Document consent in your system
+    - Provide opt-out mechanism
+    - Maintain audit logs
+  </Accordion>
+
+  <Accordion title="Storage Management">
+    - Implement retention policies based on legal requirements
+    - Encrypt recordings at rest and in transit
+    - Regular backups to external storage
+    - Archive old recordings to cold storage
+    - Delete when no longer needed
+    - Monitor storage usage and costs
+  </Accordion>
+
+  <Accordion title="Quality Assurance">
+    - Use dual-channel recording for better analysis
+    - Review sample recordings regularly
+    - Use transcriptions for keyword detection
+    - Implement quality scoring system
+    - Provide feedback to agents
+    - Track improvement over time
+  </Accordion>
+
+  <Accordion title="Performance">
+    - Use webhooks instead of polling
+    - Batch transcription jobs
+    - Stream recordings instead of downloading
+    - Implement caching for frequently accessed recordings
+    - Compress recordings for archival
+    - Monitor API usage and optimize
+  </Accordion>
+</AccordionGroup>
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card
+    title="Call Control"
+    icon="phone-volume"
+    href="/guides/making-calls"
+  >
+    Advanced call handling features
+  </Card>
+  <Card
+    title="Webhooks"
+    icon="webhook"
+    href="/guides/webhook-handlers"
+  >
+    Handle recording events
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api-reference/recordings"
+  >
+    Complete recordings API documentation
+  </Card>
+  <Card
+    title="Compliance"
+    icon="scale-balanced"
+    href="/concepts/compliance"
+  >
+    Legal requirements and guidelines
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+Enhance your recording implementation:
+
+- [Build webhook handlers](/guides/webhook-handlers) for recording events
+- [Implement error handling](/guides/error-handling) for failed recordings
+- [Create IVR menus](/guides/ivr-menus) with recording announcements
+
+Questions? Join our [Discord community](https://discord.gg/irisx) or email support@useiris.com.

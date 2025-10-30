@@ -1,0 +1,342 @@
+---
+title: 'Refresh Token'
+api: 'POST /v1/auth/refresh'
+description: 'Obtain a new access token using refresh token'
+---
+
+## Overview
+
+Exchange a refresh token for a new access token without requiring the user to log in again. Use this endpoint when the access token expires (after 24 hours).
+
+<Note>
+  This endpoint does not require the Authorization header. Pass the refresh token in the request body.
+</Note>
+
+## Request Body
+
+<ParamField body="refresh_token" type="string" required>
+  Refresh token obtained from `/v1/auth/login` or `/v1/auth/register`
+</ParamField>
+
+## Response
+
+<ResponseField name="token" type="string">
+  New JWT access token (expires in 24 hours)
+</ResponseField>
+
+<ResponseField name="refresh_token" type="string">
+  New refresh token (expires in 30 days). The old refresh token is invalidated.
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST https://api.useiris.com/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token": "rt_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+  }'
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function refreshAccessToken(refreshToken) {
+  try {
+    const response = await axios.post(
+      'https://api.useiris.com/v1/auth/refresh',
+      {
+        refresh_token: refreshToken
+      }
+    );
+
+    const { token, refresh_token } = response.data;
+
+    console.log('Token refreshed successfully');
+
+    // Store new tokens
+    localStorage.setItem('token', token);
+    localStorage.setItem('refresh_token', refresh_token);
+
+    return token;
+
+  } catch (error) {
+    if (error.response?.status === 401) {
+      console.error('Refresh token expired or invalid');
+      // Redirect to login
+      window.location.href = '/login';
+    } else {
+      console.error('Refresh failed:', error.response?.data);
+    }
+    throw error;
+  }
+}
+
+// Usage
+const refreshToken = localStorage.getItem('refresh_token');
+refreshAccessToken(refreshToken);
+```
+
+```python Python
+import requests
+
+def refresh_access_token(refresh_token):
+    response = requests.post(
+        'https://api.useiris.com/v1/auth/refresh',
+        json={
+            'refresh_token': refresh_token
+        }
+    )
+
+    if response.status_code == 200:
+        data = response.json()
+        print('Token refreshed successfully')
+
+        # Store new tokens
+        return {
+            'token': data['token'],
+            'refresh_token': data['refresh_token']
+        }
+    elif response.status_code == 401:
+        print('Refresh token expired or invalid')
+        # Redirect to login
+    else:
+        print(f"Refresh failed: {response.json()}")
+
+    return None
+
+# Usage
+refresh_access_token('rt_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6')
+```
+
+```php PHP
+<?php
+function refreshAccessToken($refreshToken) {
+    $ch = curl_init('https://api.useiris.com/v1/auth/refresh');
+
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        CURLOPT_POSTFIELDS => json_encode([
+            'refresh_token' => $refreshToken
+        ])
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $result = json_decode($response, true);
+
+    if ($httpCode === 200) {
+        echo "Token refreshed successfully\n";
+
+        // Store new tokens
+        $_SESSION['token'] = $result['token'];
+        $_SESSION['refresh_token'] = $result['refresh_token'];
+
+        return $result;
+    } elseif ($httpCode === 401) {
+        echo "Refresh token expired or invalid\n";
+        // Redirect to login
+    } else {
+        echo "Refresh failed: " . $result['message'] . "\n";
+    }
+
+    curl_close($ch);
+    return null;
+}
+
+// Usage
+$refreshToken = $_SESSION['refresh_token'];
+refreshAccessToken($refreshToken);
+?>
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "rt_x9y8z7w6v5u4t3s2r1q0p9o8n7m6l5k4"
+}
+```
+
+```json Error Response (401)
+{
+  "error": "UNAUTHORIZED",
+  "message": "Invalid or expired refresh token"
+}
+```
+
+</ResponseExample>
+
+## Token Rotation
+
+<Warning>
+  **Important:** When you refresh the access token, both the access token AND refresh token are rotated. The old refresh token becomes invalid.
+</Warning>
+
+Always update both tokens in your storage:
+
+```javascript
+const response = await refreshAccessToken(oldRefreshToken);
+
+// Update both tokens
+localStorage.setItem('token', response.token);
+localStorage.setItem('refresh_token', response.refresh_token);
+```
+
+## Automatic Token Refresh
+
+Implement automatic token refresh in your API client:
+
+```javascript
+class APIClient {
+  constructor() {
+    this.baseURL = 'https://api.useiris.com';
+    this.setupInterceptors();
+  }
+
+  setupInterceptors() {
+    // Add request interceptor to include auth header
+    axios.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      }
+    );
+
+    // Add response interceptor to handle 401 errors
+    axios.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+
+        // If 401 and haven't retried yet
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+
+          try {
+            // Refresh the token
+            const refreshToken = localStorage.getItem('refresh_token');
+            const response = await axios.post(
+              `${this.baseURL}/v1/auth/refresh`,
+              { refresh_token: refreshToken }
+            );
+
+            // Update tokens
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('refresh_token', response.data.refresh_token);
+
+            // Retry original request with new token
+            originalRequest.headers.Authorization =
+              `Bearer ${response.data.token}`;
+            return axios(originalRequest);
+
+          } catch (refreshError) {
+            // Refresh failed - redirect to login
+            localStorage.removeItem('token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login';
+            return Promise.reject(refreshError);
+          }
+        }
+
+        return Promise.reject(error);
+      }
+    );
+  }
+}
+
+// Usage
+const api = new APIClient();
+```
+
+## Token Expiration Timeline
+
+```
+Day 0: Login
+├─ Access Token: Valid for 24 hours
+└─ Refresh Token: Valid for 30 days
+
+Day 1: Access Token Expires
+├─ Use refresh token to get new tokens
+├─ New Access Token: Valid for 24 hours
+└─ New Refresh Token: Valid for 30 days (from Day 1)
+
+Day 31: Refresh Token Expires
+└─ User must login again
+```
+
+<Tip>
+  Proactively refresh the access token before it expires (e.g., after 23 hours) to avoid disrupting user experience.
+</Tip>
+
+## Error Codes
+
+| Code | Error | Description |
+|------|-------|-------------|
+| 400 | BAD_REQUEST | Missing refresh token |
+| 401 | UNAUTHORIZED | Invalid or expired refresh token |
+| 401 | TOKEN_REVOKED | Refresh token has been revoked |
+| 429 | RATE_LIMITED | Too many refresh attempts |
+| 500 | INTERNAL_ERROR | Server error |
+
+## Security Considerations
+
+<Warning>
+  **Store refresh tokens securely!** Refresh tokens are long-lived and provide ongoing access. Use secure storage mechanisms.
+</Warning>
+
+### Web Applications
+
+```javascript
+// Use httpOnly cookies (most secure)
+document.cookie = `refresh_token=${refreshToken}; Secure; HttpOnly; SameSite=Strict; Max-Age=2592000`;
+
+// Or localStorage (easier but less secure)
+localStorage.setItem('refresh_token', refreshToken);
+```
+
+### Mobile Applications
+
+```javascript
+// React Native - Use secure storage
+import * as SecureStore from 'expo-secure-store';
+
+await SecureStore.setItemAsync('refresh_token', refreshToken);
+```
+
+## Revocation
+
+To revoke a refresh token, simply log out the user. There is no server-side revocation endpoint - tokens expire automatically.
+
+```javascript
+function logout() {
+  // Clear tokens
+  localStorage.removeItem('token');
+  localStorage.removeItem('refresh_token');
+
+  // Redirect to login
+  window.location.href = '/login';
+}
+```
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Login" icon="right-to-bracket" href="/api-reference/auth/login">
+    Get initial tokens
+  </Card>
+  <Card title="Get Current User" icon="user" href="/api-reference/auth/me">
+    Verify token validity
+  </Card>
+  <Card title="Logout" icon="right-from-bracket" href="/api-reference/auth/logout">
+    End user session
+  </Card>
+</CardGroup>

@@ -1,0 +1,481 @@
+---
+title: 'Node.js SDK'
+description: 'Official IRISX Node.js SDK for seamless integration'
+---
+
+## Installation
+
+Install the IRISX SDK via npm:
+
+```bash
+npm install @irisx/sdk
+```
+
+Or with yarn:
+
+```bash
+yarn add @irisx/sdk
+```
+
+## Quick Start
+
+```javascript
+const IRISX = require('@irisx/sdk');
+
+// Initialize with API key
+const irisx = new IRISX({
+  apiKey: process.env.IRISX_API_KEY
+});
+
+// Make your first call
+async function makeCall() {
+  const call = await irisx.calls.create({
+    to: '+15551234567',
+    from: '+15559876543',
+    record: true
+  });
+
+  console.log(`Call initiated: ${call.uuid}`);
+}
+
+makeCall();
+```
+
+## Authentication
+
+### API Key (Recommended)
+
+```javascript
+const irisx = new IRISX({
+  apiKey: 'your_api_key_here'
+});
+```
+
+### JWT Token (For User Auth)
+
+```javascript
+const irisx = new IRISX({
+  token: 'your_jwt_token_here'
+});
+
+// Auto-refresh token
+irisx.onTokenRefresh((newToken) => {
+  console.log('Token refreshed:', newToken);
+  // Save new token
+});
+```
+
+## Making Calls
+
+### Create Outbound Call
+
+```javascript
+const call = await irisx.calls.create({
+  to: '+15551234567',
+  from: '+15559876543',
+  webhook_url: 'https://yourapp.com/webhooks',
+  record: true,
+  timeout: 60,
+  metadata: {
+    customer_id: 'cust_123',
+    order_id: 'order_456'
+  }
+});
+```
+
+### Get Call Details
+
+```javascript
+const call = await irisx.calls.get('123e4567-e89b-12d3-a456-426614174000');
+
+console.log(`Status: ${call.status}`);
+console.log(`Duration: ${call.duration}s`);
+console.log(`Cost: $${call.cost}`);
+```
+
+### List Calls
+
+```javascript
+const calls = await irisx.calls.list({
+  status: 'completed',
+  direction: 'outbound',
+  start_date: '2025-10-01',
+  end_date: '2025-10-31',
+  page: 1,
+  limit: 50
+});
+
+console.log(`Found ${calls.pagination.total} calls`);
+
+calls.data.forEach(call => {
+  console.log(`${call.uuid}: ${call.status}`);
+});
+```
+
+## Sending SMS
+
+### Send Single Message
+
+```javascript
+const message = await irisx.sms.send({
+  to: '+15551234567',
+  from: '+15559876543',
+  body: 'Hello! This is a test message.',
+  webhook_url: 'https://yourapp.com/webhooks/sms'
+});
+```
+
+### Send MMS with Media
+
+```javascript
+const message = await irisx.sms.send({
+  to: '+15551234567',
+  from: '+15559876543',
+  body: 'Check out this image!',
+  media_urls: [
+    'https://example.com/image.jpg'
+  ]
+});
+```
+
+### Bulk SMS
+
+```javascript
+const result = await irisx.sms.sendBulk({
+  from: '+15559876543',
+  recipients: [
+    { to: '+15551111111', body: 'Message 1' },
+    { to: '+15552222222', body: 'Message 2' },
+    { to: '+15553333333', body: 'Message 3' }
+  ]
+});
+
+console.log(`Sent: ${result.successful}, Failed: ${result.failed}`);
+```
+
+### Using Templates
+
+```javascript
+// Create template
+const template = await irisx.sms.createTemplate({
+  name: 'welcome',
+  body: 'Hi {{name}}, welcome to {{company}}!'
+});
+
+// Send with template
+const message = await irisx.sms.sendTemplate({
+  to: '+15551234567',
+  from: '+15559876543',
+  template_id: template.id,
+  variables: {
+    name: 'John',
+    company: 'IRISX'
+  }
+});
+```
+
+## Sending Email
+
+```javascript
+const email = await irisx.email.send({
+  to: 'customer@example.com',
+  from: 'noreply@yourcompany.com',
+  subject: 'Welcome to Our Service',
+  body_html: '<h1>Welcome!</h1><p>Thanks for signing up!</p>',
+  body_text: 'Welcome! Thanks for signing up!',
+  track_opens: true,
+  track_clicks: true
+});
+```
+
+## Webhooks
+
+### Create Webhook
+
+```javascript
+const webhook = await irisx.webhooks.create({
+  url: 'https://yourapp.com/webhooks/irisx',
+  events: [
+    'call.completed',
+    'call.failed',
+    'sms.delivered',
+    'sms.failed'
+  ],
+  description: 'Production webhook'
+});
+
+console.log(`Webhook ID: ${webhook.id}`);
+console.log(`Secret: ${webhook.secret}`); // Save this!
+```
+
+### List Webhooks
+
+```javascript
+const webhooks = await irisx.webhooks.list();
+
+webhooks.forEach(webhook => {
+  console.log(`${webhook.id}: ${webhook.url}`);
+});
+```
+
+### Verify Webhook Signature
+
+```javascript
+const crypto = require('crypto');
+
+function verifyWebhook(payload, signature, secret) {
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex');
+
+  return signature === expectedSignature;
+}
+
+// In Express.js
+app.post('/webhooks/irisx', (req, res) => {
+  const signature = req.headers['x-irisx-signature'];
+  const isValid = verifyWebhook(req.body, signature, webhookSecret);
+
+  if (!isValid) {
+    return res.status(401).send('Invalid signature');
+  }
+
+  // Process webhook
+  const { event, data } = req.body;
+  // ...
+
+  res.status(200).send('OK');
+});
+```
+
+## Phone Numbers
+
+### Search Available Numbers
+
+```javascript
+const numbers = await irisx.phoneNumbers.search({
+  country: 'US',
+  area_code: '415',
+  type: 'local',
+  limit: 10
+});
+
+numbers.forEach(number => {
+  console.log(`${number.number} - $${number.monthly_cost}/mo`);
+});
+```
+
+### Purchase Number
+
+```javascript
+const number = await irisx.phoneNumbers.purchase({
+  phone_number: '+14155551234',
+  friendly_name: 'Support Line'
+});
+
+console.log(`Purchased: ${number.number}`);
+```
+
+### Configure Number
+
+```javascript
+await irisx.phoneNumbers.update(numberId, {
+  voice_webhook_url: 'https://yourapp.com/webhooks/voice',
+  sms_webhook_url: 'https://yourapp.com/webhooks/sms',
+  friendly_name: 'Main Support Line'
+});
+```
+
+## Analytics
+
+### Get Dashboard Stats
+
+```javascript
+const stats = await irisx.analytics.dashboard({
+  start_date: '2025-10-01',
+  end_date: '2025-10-31'
+});
+
+console.log(`Total Calls: ${stats.calls.total}`);
+console.log(`Total SMS: ${stats.sms.total}`);
+console.log(`Total Cost: $${stats.calls.total_cost + stats.sms.total_cost}`);
+```
+
+### Call Analytics
+
+```javascript
+const analytics = await irisx.analytics.calls({
+  start_date: '2025-10-01',
+  end_date: '2025-10-31',
+  group_by: 'day'
+});
+
+analytics.data.forEach(day => {
+  console.log(`${day.date}: ${day.total_calls} calls`);
+});
+```
+
+## Error Handling
+
+```javascript
+try {
+  const call = await irisx.calls.create({ /* ... */ });
+} catch (error) {
+  if (error.code === 'RATE_LIMITED') {
+    console.log('Rate limited - retry after:', error.retry_after);
+  } else if (error.code === 'INVALID_NUMBER') {
+    console.log('Invalid phone number format');
+  } else if (error.code === 'INSUFFICIENT_FUNDS') {
+    console.log('Low balance - add credits');
+  } else {
+    console.error('API Error:', error.message);
+  }
+}
+```
+
+### Error Types
+
+All SDK errors extend `IRISXError`:
+
+```javascript
+const { IRISXError, RateLimitError, ValidationError } = require('@irisx/sdk');
+
+try {
+  // ...
+} catch (error) {
+  if (error instanceof RateLimitError) {
+    // Wait and retry
+    await sleep(error.retry_after * 1000);
+  } else if (error instanceof ValidationError) {
+    // Fix request parameters
+    console.log('Validation errors:', error.details);
+  } else if (error instanceof IRISXError) {
+    // Other API error
+    console.log('API Error:', error.message);
+  } else {
+    // Network or other error
+    throw error;
+  }
+}
+```
+
+## Advanced Features
+
+### Automatic Retry with Exponential Backoff
+
+```javascript
+const irisx = new IRISX({
+  apiKey: process.env.IRISX_API_KEY,
+  retry: {
+    enabled: true,
+    max_retries: 3,
+    base_delay: 1000, // 1 second
+    max_delay: 30000  // 30 seconds
+  }
+});
+```
+
+### Custom Timeout
+
+```javascript
+const irisx = new IRISX({
+  apiKey: process.env.IRISX_API_KEY,
+  timeout: 60000 // 60 seconds
+});
+```
+
+### Logging
+
+```javascript
+const irisx = new IRISX({
+  apiKey: process.env.IRISX_API_KEY,
+  logger: console, // or custom logger
+  logLevel: 'debug' // 'error', 'warn', 'info', 'debug'
+});
+```
+
+## TypeScript Support
+
+The SDK is written in TypeScript with full type definitions:
+
+```typescript
+import IRISX, { Call, SMS, Email } from '@irisx/sdk';
+
+const irisx = new IRISX({
+  apiKey: process.env.IRISX_API_KEY!
+});
+
+const call: Call = await irisx.calls.create({
+  to: '+15551234567',
+  from: '+15559876543',
+  record: true
+});
+
+// Full type safety
+console.log(call.uuid); // ✓ OK
+console.log(call.invalid); // ✗ TypeScript error
+```
+
+## Environment Variables
+
+```bash
+# .env file
+IRISX_API_KEY=your_api_key_here
+IRISX_API_URL=https://api.useiris.com
+IRISX_WEBHOOK_SECRET=your_webhook_secret
+```
+
+```javascript
+require('dotenv').config();
+
+const irisx = new IRISX({
+  apiKey: process.env.IRISX_API_KEY,
+  baseURL: process.env.IRISX_API_URL
+});
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Environment Variables" icon="key">
+    Never hardcode API keys in source code
+  </Card>
+  <Card title="Handle Errors Gracefully" icon="triangle-exclamation">
+    Always catch and handle SDK errors
+  </Card>
+  <Card title="Enable Retries" icon="rotate">
+    Use automatic retry for transient failures
+  </Card>
+  <Card title="Verify Webhooks" icon="shield-check">
+    Always verify webhook signatures
+  </Card>
+</CardGroup>
+
+## Examples
+
+Full working examples available at [github.com/irisx/examples](https://github.com/irisx/examples):
+
+- Simple outbound call
+- IVR menu system
+- SMS campaign with templates
+- Webhook handler with Express
+- Call recording and transcription
+
+## Support
+
+- 📚 [Full API Reference](/api-reference)
+- 💬 [Discord Community](https://discord.gg/irisx)
+- 🐛 [GitHub Issues](https://github.com/irisx/sdk-nodejs/issues)
+- 📧 Email: support@useiris.com
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/api-reference">
+    Explore all endpoints
+  </Card>
+  <Card title="Code Examples" icon="code" href="https://github.com/irisx/examples">
+    See working examples
+  </Card>
+</CardGroup>

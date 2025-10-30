@@ -1,0 +1,220 @@
+---
+title: 'Call Analytics'
+api: 'GET /v1/analytics/calls'
+description: 'Get detailed call analytics and metrics'
+---
+
+## Overview
+
+Retrieve detailed analytics for voice calls including volume trends, success rates, duration analysis, and cost breakdown.
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="start_date" type="string">
+  Start date for analytics (ISO 8601)
+</ParamField>
+
+<ParamField query="end_date" type="string">
+  End date for analytics (ISO 8601)
+</ParamField>
+
+<ParamField query="group_by" type="string">
+  Group results by: `day`, `week`, `month`, or `carrier`
+</ParamField>
+
+<ParamField query="direction" type="string">
+  Filter by direction: `inbound` or `outbound`
+</ParamField>
+
+## Response
+
+<ResponseField name="total_calls" type="integer">
+  Total number of calls in period
+</ResponseField>
+
+<ResponseField name="completed_calls" type="integer">
+  Successfully completed calls
+</ResponseField>
+
+<ResponseField name="failed_calls" type="integer">
+  Failed calls
+</ResponseField>
+
+<ResponseField name="avg_duration" type="number">
+  Average call duration in seconds
+</ResponseField>
+
+<ResponseField name="total_duration" type="integer">
+  Total call duration in seconds
+</ResponseField>
+
+<ResponseField name="total_cost" type="number">
+  Total cost in USD
+</ResponseField>
+
+<ResponseField name="success_rate" type="number">
+  Percentage of successful calls
+</ResponseField>
+
+<ResponseField name="by_status" type="object">
+  Breakdown by call status
+</ResponseField>
+
+<ResponseField name="timeline" type="array">
+  Time-series data (if group_by is specified)
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl "https://api.useiris.com/v1/analytics/calls?start_date=2025-10-01T00:00:00Z&group_by=day" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function getCallAnalytics(options = {}) {
+  const params = new URLSearchParams(options);
+
+  const response = await axios.get(
+    `https://api.useiris.com/v1/analytics/calls?${params}`,
+    {
+      headers: { 'X-API-Key': 'YOUR_API_KEY' }
+    }
+  );
+
+  const analytics = response.data;
+
+  console.log('Total calls:', analytics.total_calls);
+  console.log('Success rate:', analytics.success_rate.toFixed(2) + '%');
+  console.log('Avg duration:', (analytics.avg_duration / 60).toFixed(1) + ' min');
+  console.log('Total cost: $', analytics.total_cost.toFixed(2));
+
+  return analytics;
+}
+
+// Examples
+getCallAnalytics({ group_by: 'day' });
+getCallAnalytics({ direction: 'outbound' });
+```
+
+```python Python
+import requests
+
+def get_call_analytics(**options):
+    response = requests.get(
+        'https://api.useiris.com/v1/analytics/calls',
+        params=options,
+        headers={'X-API-Key': 'YOUR_API_KEY'}
+    )
+
+    if response.status_code == 200:
+        analytics = response.json()
+
+        print(f"Total calls: {analytics['total_calls']}")
+        print(f"Success rate: {analytics['success_rate']:.2f}%")
+        print(f"Avg duration: {analytics['avg_duration'] / 60:.1f} min")
+        print(f"Total cost: ${analytics['total_cost']:.2f}")
+
+        return analytics
+
+get_call_analytics(group_by='day')
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "total_calls": 1250,
+  "completed_calls": 1100,
+  "failed_calls": 150,
+  "avg_duration": 124.8,
+  "total_duration": 156000,
+  "total_cost": 18.75,
+  "success_rate": 88.0,
+  "by_status": {
+    "completed": 1100,
+    "failed": 80,
+    "no-answer": 50,
+    "busy": 20
+  },
+  "timeline": [
+    {
+      "date": "2025-10-01",
+      "calls": 45,
+      "completed": 40,
+      "cost": 0.60
+    },
+    {
+      "date": "2025-10-02",
+      "calls": 52,
+      "completed": 48,
+      "cost": 0.72
+    }
+  ]
+}
+```
+
+</ResponseExample>
+
+## Visualize Trends
+
+```javascript
+async function getCallTrends() {
+  const analytics = await getCallAnalytics({
+    start_date: '2025-10-01T00:00:00Z',
+    end_date: '2025-10-31T23:59:59Z',
+    group_by: 'day'
+  });
+
+  // Format for charting library
+  const chartData = analytics.timeline.map(day => ({
+    date: day.date,
+    calls: day.calls,
+    successRate: (day.completed / day.calls * 100).toFixed(2)
+  }));
+
+  return chartData;
+}
+```
+
+## Compare Carriers
+
+```javascript
+async function compareCarriers() {
+  const analytics = await getCallAnalytics({ group_by: 'carrier' });
+
+  const carrierStats = analytics.by_carrier.map(carrier => ({
+    id: carrier.carrier_id,
+    calls: carrier.calls,
+    successRate: carrier.success_rate,
+    avgCost: carrier.total_cost / carrier.calls
+  }));
+
+  return carrierStats;
+}
+```
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Dashboard" icon="chart-pie" href="/api-reference/analytics/dashboard">
+    Overview analytics
+  </Card>
+  <Card title="SMS Analytics" icon="message" href="/api-reference/analytics/sms">
+    SMS analytics
+  </Card>
+</CardGroup>

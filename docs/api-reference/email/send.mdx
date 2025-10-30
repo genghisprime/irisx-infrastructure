@@ -1,0 +1,163 @@
+---
+title: 'Send Email'
+api: 'POST /v1/email/send'
+description: 'Send an email with tracking'
+---
+
+## Overview
+
+Send transactional or marketing emails with delivery, open, and click tracking. IRISX supports both plain text and HTML emails.
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Request Body
+
+<ParamField body="to" type="string" required>
+  Recipient email address
+</ParamField>
+
+<ParamField body="from" type="string" required>
+  Sender email address (must be verified domain)
+</ParamField>
+
+<ParamField body="subject" type="string" required>
+  Email subject line
+</ParamField>
+
+<ParamField body="body_text" type="string">
+  Plain text email body
+</ParamField>
+
+<ParamField body="body_html" type="string">
+  HTML email body (recommended for rich content)
+</ParamField>
+
+<ParamField body="reply_to" type="string">
+  Reply-to email address
+</ParamField>
+
+<ParamField body="cc" type="array">
+  Carbon copy recipients
+</ParamField>
+
+<ParamField body="bcc" type="array">
+  Blind carbon copy recipients
+</ParamField>
+
+## Response
+
+<ResponseField name="email" type="object">
+  Email object with tracking ID
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST https://api.useiris.com/v1/email/send \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "customer@example.com",
+    "from": "noreply@useiris.com",
+    "subject": "Welcome to IRISX!",
+    "body_html": "<h1>Welcome!</h1><p>Thanks for signing up.</p>",
+    "body_text": "Welcome! Thanks for signing up."
+  }'
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function sendEmail(to, subject, bodyHtml, bodyText) {
+  const response = await axios.post(
+    'https://api.useiris.com/v1/email/send',
+    {
+      to,
+      from: 'noreply@useiris.com',
+      subject,
+      body_html: bodyHtml,
+      body_text: bodyText
+    },
+    {
+      headers: {
+        'X-API-Key': 'YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  console.log('Email sent:', response.data.email.id);
+  return response.data.email;
+}
+```
+
+```python Python
+import requests
+
+def send_email(to, subject, body_html, body_text):
+    response = requests.post(
+        'https://api.useiris.com/v1/email/send',
+        json={
+            'to': to,
+            'from': 'noreply@useiris.com',
+            'subject': subject,
+            'body_html': body_html,
+            'body_text': body_text
+        },
+        headers={'X-API-Key': 'YOUR_API_KEY'}
+    )
+
+    if response.status_code == 201:
+        email = response.json()['email']
+        print(f"Email sent: {email['id']}")
+        return email
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (201)
+{
+  "email": {
+    "id": 789,
+    "tenant_id": 1,
+    "to": "customer@example.com",
+    "from": "noreply@useiris.com",
+    "subject": "Welcome to IRISX!",
+    "status": "queued",
+    "created_at": "2025-10-30T18:00:00Z"
+  }
+}
+```
+
+</ResponseExample>
+
+## Email Tracking
+
+IRISX automatically tracks:
+- **Delivery** - Email successfully delivered
+- **Opens** - Recipient opened email (via tracking pixel)
+- **Clicks** - Recipient clicked links (via link wrapping)
+- **Bounces** - Email bounced (hard or soft)
+- **Complaints** - Marked as spam
+
+## Rate Limits
+
+- **100 emails per minute** per account
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="List Emails" icon="list" href="/api-reference/email/list">
+    View email history
+  </Card>
+</CardGroup>

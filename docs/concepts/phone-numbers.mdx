@@ -1,0 +1,275 @@
+---
+title: 'Phone Numbers'
+description: 'Purchase and manage phone numbers for voice and SMS'
+---
+
+## Overview
+
+IRISX allows you to purchase local, toll-free, and mobile phone numbers in 60+ countries for voice calls and SMS messaging.
+
+## Number Types
+
+### Local Numbers
+- **Format:** +1 (415) 555-1234
+- **Cost:** $1/month
+- **Best for:** Local presence, regional marketing
+- **SMS:** ✅ Supported
+- **Voice:** ✅ Supported
+
+### Toll-Free Numbers
+- **Format:** +1 (800) 555-1234
+- **Cost:** $2/month
+- **Best for:** Customer support, national campaigns
+- **SMS:** ✅ Supported (US/Canada only)
+- **Voice:** ✅ Supported
+
+### Mobile Numbers
+- **Format:** +1 (555) 123-4567
+- **Cost:** $3/month
+- **Best for:** Two-way SMS, A2P messaging
+- **SMS:** ✅ Best deliverability
+- **Voice:** ✅ Supported
+
+## Searching Numbers
+
+```javascript
+const available = await irisx.phoneNumbers.search({
+  country: 'US',
+  area_code: '415',
+  type: 'local',
+  limit: 10
+});
+
+available.forEach(number => {
+  console.log(`${number.number} - $${number.monthly_cost}/mo`);
+});
+```
+
+### Search Filters
+
+```javascript
+// Search by area code
+await irisx.phoneNumbers.search({
+  country: 'US',
+  area_code: '212'  // New York
+});
+
+// Search by pattern
+await irisx.phoneNumbers.search({
+  country: 'US',
+  contains: '1234'  // Numbers containing "1234"
+});
+
+// Toll-free only
+await irisx.phoneNumbers.search({
+  country: 'US',
+  type: 'toll-free'
+});
+
+// SMS-enabled only
+await irisx.phoneNumbers.search({
+  country: 'US',
+  sms_enabled: true
+});
+```
+
+## Purchasing Numbers
+
+```javascript
+const number = await irisx.phoneNumbers.purchase({
+  phone_number: '+14155551234',
+  friendly_name: 'Support Line'
+});
+
+console.log(`Purchased: ${number.number}`);
+console.log(`Cost: $${number.monthly_cost}/month`);
+```
+
+## Configuring Numbers
+
+### Set Webhook URLs
+
+```javascript
+await irisx.phoneNumbers.update(numberI, {
+  // Voice webhooks
+  voice_webhook_url: 'https://yourapp.com/webhooks/voice',
+
+  // SMS webhooks
+  sms_webhook_url: 'https://yourapp.com/webhooks/sms',
+
+  // Friendly name
+  friendly_name: 'Main Support Line'
+});
+```
+
+### Inbound Call Handling
+
+```javascript
+// Your webhook receives
+{
+  "event": "call.initiated",
+  "data": {
+    "direction": "inbound",
+    "to": "+14155551234",      // Your IRISX number
+    "from": "+15551234567",    // Caller
+    "caller_name": "John Doe"
+  }
+}
+
+// Options:
+// 1. Forward to agent
+// 2. Send to IVR menu
+// 3. Play greeting
+// 4. Voicemail
+```
+
+### Inbound SMS Handling
+
+```javascript
+// Your webhook receives
+{
+  "event": "sms.received",
+  "data": {
+    "direction": "inbound",
+    "to": "+14155551234",
+    "from": "+15551234567",
+    "body": "What are your hours?"
+  }
+}
+
+// Auto-reply
+await irisx.sms.send({
+  to: inboundSMS.from,
+  from: inboundSMS.to,
+  body: 'Our hours are 9am-5pm Monday-Friday.'
+});
+```
+
+## Number Capabilities
+
+Check what each number supports:
+
+```json
+{
+  "number": "+14155551234",
+  "capabilities": {
+    "voice": true,
+    "sms": true,
+    "mms": true,
+    "fax": false
+  }
+}
+```
+
+## Number Porting
+
+Port existing numbers to IRISX:
+
+1. **Submit LOA** (Letter of Authorization)
+2. **Verify ownership** (recent bill)
+3. **Processing time:** 7-14 business days
+4. **Cost:** $10 one-time fee
+
+```javascript
+const portRequest = await irisx.phoneNumbers.requestPort({
+  phone_number: '+14155551234',
+  current_carrier: 'Verizon',
+  account_number: '1234567890',
+  // ... additional info
+});
+
+// Check status
+const status = await irisx.phoneNumbers.getPortStatus(portRequest.id);
+```
+
+## Releasing Numbers
+
+```javascript
+// Release number (cancel)
+await irisx.phoneNumbers.release(numberId);
+
+// Number is released at end of billing cycle
+// No prorated refunds
+```
+
+<Warning>
+  Released numbers cannot be recovered. They return to the carrier pool.
+</Warning>
+
+## Number Pooling
+
+For high-volume SMS, use number pools:
+
+```javascript
+// Create pool
+const pool = await irisx.phoneNumbers.createPool({
+  name: 'Marketing Campaign',
+  size: 10,  // 10 numbers
+  area_code: '415'
+});
+
+// Send SMS from pool (rotates automatically)
+await irisx.sms.sendFromPool({
+  pool_id: pool.id,
+  to: '+15551234567',
+  body: 'Hello from our campaign!'
+});
+```
+
+## Pricing by Country
+
+| Country | Local | Toll-Free | Mobile |
+|---------|-------|-----------|--------|
+| US | $1/mo | $2/mo | $3/mo |
+| Canada | $1/mo | $2/mo | $3/mo |
+| UK | $1.50/mo | $3/mo | $4/mo |
+| Australia | $2/mo | $5/mo | $5/mo |
+
+<Note>
+  Prices vary by country. Check pricing page for full list.
+</Note>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Local Numbers" icon="location-dot">
+    Higher answer rates with local caller ID
+  </Card>
+  <Card title="Set Friendly Names" icon="tag">
+    Organize numbers with descriptive names
+  </Card>
+  <Card title="Monitor Usage" icon="chart-line">
+    Track inbound/outbound volume per number
+  </Card>
+  <Card title="Register A2P" icon="check-circle">
+    Register for high-volume SMS (US)
+  </Card>
+</CardGroup>
+
+## Compliance
+
+### STIR/SHAKEN (US)
+- Verifies caller ID authenticity
+- Reduces spam/spoofing
+- Automatically applied to your numbers
+
+### A2P 10DLC (US)
+- Required for high-volume SMS
+- Register brand + campaign
+- Increases throughput and deliverability
+
+### GDPR (EU)
+- Don't store phone numbers without consent
+- Provide opt-out mechanisms
+- Delete on request
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Buy Your First Number" icon="cart-shopping" href="/quickstart#purchase-phone-number">
+    Get started with phone numbers
+  </Card>
+  <Card title="Inbound Webhooks" icon="webhook" href="/guides/inbound-webhooks">
+    Handle inbound calls and SMS
+  </Card>
+</CardGroup>

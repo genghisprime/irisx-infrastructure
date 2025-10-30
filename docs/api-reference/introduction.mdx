@@ -1,0 +1,274 @@
+---
+title: 'API Reference'
+description: 'Complete reference for all IRISX API endpoints'
+---
+
+## Welcome to the IRISX API
+
+The IRISX API provides a comprehensive set of endpoints for managing voice calls, SMS, email, webhooks, phone numbers, and analytics. Our REST API uses standard HTTP methods, returns JSON responses, and follows predictable resource-oriented URLs.
+
+## Base URL
+
+All API requests should be made to:
+
+```
+https://api.useiris.com
+```
+
+For beta testing and staging:
+
+```
+http://54.160.220.243:3000
+```
+
+## Authentication
+
+IRISX supports two authentication methods:
+
+<CardGroup cols={2}>
+  <Card title="JWT Bearer Token" icon="key">
+    For user-based authentication (customer portal, agent desktop). Obtain via `/v1/auth/login`.
+  </Card>
+  <Card title="API Key" icon="lock">
+    For server-to-server authentication. Pass via `X-API-Key` header.
+  </Card>
+</CardGroup>
+
+### JWT Bearer Token Example
+
+```bash
+curl https://api.useiris.com/v1/calls \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### API Key Example
+
+```bash
+curl https://api.useiris.com/v1/calls \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+<Note>
+  Get your API key from **Settings → API Keys** in the IRISX portal after registering.
+</Note>
+
+## Rate Limits
+
+To ensure fair usage and system stability, IRISX implements the following rate limits:
+
+| Resource Type | Limit | Window |
+|--------------|-------|--------|
+| Calls | 10 requests | per minute |
+| SMS/Email | 100 requests | per minute |
+| Read Operations | 1000 requests | per minute |
+
+### Rate Limit Headers
+
+Every API response includes rate limit information:
+
+```
+X-RateLimit-Limit: 10
+X-RateLimit-Remaining: 9
+X-RateLimit-Reset: 1698765432
+```
+
+<Warning>
+  If you exceed rate limits, you'll receive a `429 Too Many Requests` response. Wait until the reset time before retrying.
+</Warning>
+
+## Request Format
+
+All POST, PATCH, and PUT requests must include:
+
+```
+Content-Type: application/json
+```
+
+Request bodies must be valid JSON:
+
+```json
+{
+  "to": "+15551234567",
+  "from": "+15559876543",
+  "body": "Hello from IRISX!"
+}
+```
+
+## Response Format
+
+All responses are returned in JSON format:
+
+### Success Response
+
+```json
+{
+  "call": {
+    "uuid": "123e4567-e89b-12d3-a456-426614174000",
+    "status": "initiated",
+    "to": "+15551234567",
+    "from": "+15559876543"
+  }
+}
+```
+
+### Error Response
+
+```json
+{
+  "error": "UNAUTHORIZED",
+  "message": "Invalid API key",
+  "details": {
+    "code": 401
+  }
+}
+```
+
+## HTTP Status Codes
+
+IRISX uses standard HTTP status codes:
+
+| Code | Description |
+|------|-------------|
+| `200` | Success - Request completed successfully |
+| `201` | Created - Resource created successfully |
+| `400` | Bad Request - Invalid parameters |
+| `401` | Unauthorized - Invalid authentication |
+| `403` | Forbidden - Insufficient permissions |
+| `404` | Not Found - Resource doesn't exist |
+| `429` | Too Many Requests - Rate limit exceeded |
+| `500` | Internal Server Error - Something went wrong |
+
+## Phone Number Format
+
+All phone numbers must be in E.164 format:
+
+<CodeGroup>
+
+```text Valid
++15551234567
++447700900123
++61412345678
+```
+
+```text Invalid
+555-123-4567
+(555) 123-4567
+5551234567
+```
+
+</CodeGroup>
+
+<Tip>
+  E.164 format: `+` followed by country code and subscriber number (no spaces or special characters).
+</Tip>
+
+## Pagination
+
+List endpoints support pagination via query parameters:
+
+```bash
+GET /v1/calls?page=2&limit=50
+```
+
+**Parameters:**
+- `page` - Page number (default: 1, min: 1)
+- `limit` - Results per page (default: 50, min: 1, max: 100)
+
+**Response:**
+
+```json
+{
+  "calls": [...],
+  "pagination": {
+    "page": 2,
+    "limit": 50,
+    "total": 237,
+    "pages": 5
+  }
+}
+```
+
+## Webhooks
+
+IRISX can notify your application of events via webhooks. All webhook payloads include:
+
+```json
+{
+  "event": "call.completed",
+  "timestamp": "2025-10-30T18:00:00Z",
+  "data": {
+    "uuid": "123e4567-e89b-12d3-a456-426614174000",
+    "status": "completed",
+    "duration": 125
+  }
+}
+```
+
+<Card title="Webhook Security" icon="shield" href="/concepts/webhooks">
+  Learn about HMAC signature verification and webhook best practices
+</Card>
+
+## API Sections
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="user-lock" href="/api-reference/auth/register">
+    User registration, login, and session management
+  </Card>
+  <Card title="Calls" icon="phone" href="/api-reference/calls/create">
+    Voice call management and control
+  </Card>
+  <Card title="SMS" icon="message" href="/api-reference/sms/send">
+    SMS messaging with delivery tracking
+  </Card>
+  <Card title="Email" icon="envelope" href="/api-reference/email/send">
+    Email sending with engagement tracking
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/api-reference/webhooks/create">
+    Real-time event notifications
+  </Card>
+  <Card title="Phone Numbers" icon="hashtag" href="/api-reference/phone-numbers/search">
+    Number provisioning and management
+  </Card>
+  <Card title="Analytics" icon="chart-line" href="/api-reference/analytics/dashboard">
+    Usage statistics and reporting
+  </Card>
+</CardGroup>
+
+## SDK Libraries
+
+Use our official SDKs for easier integration:
+
+<CodeGroup>
+
+```bash Node.js
+npm install @irisx/sdk
+```
+
+```bash Python
+pip install irisx
+```
+
+```bash PHP
+composer require irisx/sdk
+```
+
+```bash Ruby
+gem install irisx
+```
+
+</CodeGroup>
+
+<Card title="SDK Documentation" icon="cube" href="/sdks">
+  Detailed SDK guides and examples
+</Card>
+
+## Need Help?
+
+<CardGroup cols={2}>
+  <Card title="Discord Community" icon="discord" href="https://discord.gg/irisx">
+    Join our Discord for support
+  </Card>
+  <Card title="Email Support" icon="envelope" href="mailto:support@useiris.com">
+    support@useiris.com
+  </Card>
+</CardGroup>

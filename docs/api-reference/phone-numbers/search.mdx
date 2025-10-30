@@ -1,0 +1,224 @@
+---
+title: 'Search Available Numbers'
+api: 'GET /v1/phone-numbers/search'
+description: 'Search for phone numbers available for purchase'
+---
+
+## Overview
+
+Search for available phone numbers by country, area code, or specific digits. Find local, toll-free, or mobile numbers for your communication needs.
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="country" type="string" required>
+  Two-letter country code (ISO 3166-1 alpha-2)
+</ParamField>
+
+<ParamField query="area_code" type="string">
+  Area code to search in (e.g., "415" for San Francisco)
+</ParamField>
+
+<ParamField query="contains" type="string">
+  Number must contain these digits (e.g., "7777")
+</ParamField>
+
+<ParamField query="type" type="string">
+  Number type: `local`, `toll-free`, or `mobile`
+</ParamField>
+
+<ParamField query="limit" type="integer" default={10}>
+  Maximum results to return (max: 50)
+</ParamField>
+
+## Response
+
+<ResponseField name="numbers" type="array">
+  Array of available phone numbers
+
+  <Expandable title="Phone number properties">
+    <ResponseField name="number" type="string">
+      Phone number in E.164 format
+    </ResponseField>
+    <ResponseField name="country" type="string">
+      Country code
+    </ResponseField>
+    <ResponseField name="type" type="string">
+      Number type: `local`, `toll-free`, or `mobile`
+    </ResponseField>
+    <ResponseField name="capabilities" type="object">
+      Supported features (voice, SMS, MMS)
+    </ResponseField>
+    <ResponseField name="monthly_cost" type="number">
+      Monthly cost in USD
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl "https://api.useiris.com/v1/phone-numbers/search?country=US&area_code=415&limit=10" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function searchPhoneNumbers(country, areaCode, options = {}) {
+  const params = new URLSearchParams({
+    country,
+    area_code: areaCode,
+    limit: options.limit || 10,
+    ...options
+  });
+
+  const response = await axios.get(
+    `https://api.useiris.com/v1/phone-numbers/search?${params}`,
+    {
+      headers: { 'X-API-Key': 'YOUR_API_KEY' }
+    }
+  );
+
+  console.log('Found', response.data.numbers.length, 'numbers');
+  return response.data.numbers;
+}
+
+// Examples
+searchPhoneNumbers('US', '415');
+searchPhoneNumbers('US', '212', { type: 'local' });
+searchPhoneNumbers('US', '', { contains: '7777' });
+```
+
+```python Python
+import requests
+
+def search_phone_numbers(country, area_code=None, **options):
+    params = {
+        'country': country,
+        'limit': options.get('limit', 10)
+    }
+
+    if area_code:
+        params['area_code'] = area_code
+
+    if 'contains' in options:
+        params['contains'] = options['contains']
+
+    if 'type' in options:
+        params['type'] = options['type']
+
+    response = requests.get(
+        'https://api.useiris.com/v1/phone-numbers/search',
+        params=params,
+        headers={'X-API-Key': 'YOUR_API_KEY'}
+    )
+
+    if response.status_code == 200:
+        numbers = response.json()['numbers']
+        print(f"Found {len(numbers)} numbers")
+        return numbers
+
+# Examples
+search_phone_numbers('US', '415')
+search_phone_numbers('US', type='toll-free')
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "numbers": [
+    {
+      "number": "+14155551234",
+      "country": "US",
+      "type": "local",
+      "capabilities": {
+        "voice": true,
+        "sms": true,
+        "mms": true
+      },
+      "monthly_cost": 1.00
+    },
+    {
+      "number": "+14155555678",
+      "country": "US",
+      "type": "local",
+      "capabilities": {
+        "voice": true,
+        "sms": true,
+        "mms": true
+      },
+      "monthly_cost": 1.00
+    }
+  ]
+}
+```
+
+</ResponseExample>
+
+## Search Examples
+
+### Find vanity numbers
+
+```javascript
+// Search for numbers containing "7777"
+searchPhoneNumbers('US', '', { contains: '7777' });
+```
+
+### Find toll-free numbers
+
+```javascript
+// Search for 1-800 numbers
+searchPhoneNumbers('US', '800', { type: 'toll-free' });
+```
+
+### Find SMS-capable numbers
+
+```javascript
+const numbers = await searchPhoneNumbers('US', '415');
+const smsNumbers = numbers.filter(n => n.capabilities.sms);
+```
+
+## Number Types
+
+| Type | Description | Monthly Cost | Capabilities |
+|------|-------------|--------------|--------------|
+| `local` | Local numbers | $1.00 | Voice, SMS, MMS |
+| `toll-free` | 1-800 numbers | $2.00 | Voice, SMS |
+| `mobile` | Mobile numbers | $1.50 | Voice, SMS, MMS |
+
+## Country Codes
+
+Common country codes:
+- `US` - United States
+- `CA` - Canada
+- `GB` - United Kingdom
+- `AU` - Australia
+- `DE` - Germany
+
+<Card title="Full Country List" icon="globe" href="/concepts/phone-numbers">
+  View all supported countries
+</Card>
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Purchase Number" icon="cart-shopping" href="/api-reference/phone-numbers/purchase">
+    Buy a phone number
+  </Card>
+  <Card title="List Numbers" icon="list" href="/api-reference/phone-numbers/list">
+    View your numbers
+  </Card>
+</CardGroup>

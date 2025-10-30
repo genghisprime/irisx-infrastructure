@@ -1,0 +1,98 @@
+---
+title: 'Get Webhook'
+api: 'GET /v1/webhooks/endpoints/{id}'
+description: 'Get details of a specific webhook endpoint'
+---
+
+## Overview
+
+Retrieve detailed information about a specific webhook endpoint.
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Path Parameters
+
+<ParamField path="id" type="integer" required>
+  Webhook endpoint ID
+</ParamField>
+
+## Response
+
+<ResponseField name="webhook" type="object">
+  Webhook endpoint object with full details
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl https://api.useiris.com/v1/webhooks/endpoints/1 \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function getWebhook(id) {
+  const response = await axios.get(
+    `https://api.useiris.com/v1/webhooks/endpoints/${id}`,
+    {
+      headers: { 'X-API-Key': 'YOUR_API_KEY' }
+    }
+  );
+
+  return response.data.webhook;
+}
+```
+
+```python Python
+import requests
+
+def get_webhook(webhook_id):
+    response = requests.get(
+        f'https://api.useiris.com/v1/webhooks/endpoints/{webhook_id}',
+        headers={'X-API-Key': 'YOUR_API_KEY'}
+    )
+
+    if response.status_code == 200:
+        return response.json()['webhook']
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "webhook": {
+    "id": 1,
+    "tenant_id": 1,
+    "url": "https://yourapp.com/webhooks/irisx",
+    "events": ["call.completed", "sms.delivered"],
+    "enabled": true,
+    "secret": "whsec_a1b2c3d4e5f6g7h8i9j0",
+    "created_at": "2025-10-30T18:00:00Z",
+    "updated_at": "2025-10-30T18:00:00Z"
+  }
+}
+```
+
+</ResponseExample>
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="List Webhooks" icon="list" href="/api-reference/webhooks/list">
+    View all webhooks
+  </Card>
+  <Card title="Delete Webhook" icon="trash" href="/api-reference/webhooks/delete">
+    Remove webhook
+  </Card>
+</CardGroup>

@@ -1,0 +1,389 @@
+---
+title: 'Get Call'
+api: 'GET /v1/calls/{uuid}'
+description: 'Get details of a specific call'
+---
+
+## Overview
+
+Retrieve detailed information about a specific call by its UUID. Use this endpoint to check call status, get recording URLs, or view metadata.
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Path Parameters
+
+<ParamField path="uuid" type="string" required>
+  Call UUID (returned when creating the call)
+</ParamField>
+
+## Response
+
+<ResponseField name="call" type="object">
+  Call object with full details
+
+  <Expandable title="Call properties">
+    <ResponseField name="uuid" type="string">
+      Unique call identifier
+    </ResponseField>
+    <ResponseField name="tenant_id" type="integer">
+      Tenant ID
+    </ResponseField>
+    <ResponseField name="to" type="string">
+      Destination number (E.164)
+    </ResponseField>
+    <ResponseField name="from" type="string">
+      Caller ID (E.164)
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Current status: `initiated`, `ringing`, `in-progress`, `completed`, `failed`, `busy`, `no-answer`, `canceled`
+    </ResponseField>
+    <ResponseField name="direction" type="string">
+      `inbound` or `outbound`
+    </ResponseField>
+    <ResponseField name="duration" type="integer">
+      Call duration in seconds (null until completed)
+    </ResponseField>
+    <ResponseField name="start_time" type="string">
+      When call was answered (ISO 8601)
+    </ResponseField>
+    <ResponseField name="end_time" type="string">
+      When call ended (ISO 8601)
+    </ResponseField>
+    <ResponseField name="carrier_id" type="integer">
+      Carrier used for this call
+    </ResponseField>
+    <ResponseField name="cost" type="number">
+      Call cost in USD (null until completed)
+    </ResponseField>
+    <ResponseField name="recording_url" type="string">
+      Recording URL (if call was recorded)
+    </ResponseField>
+    <ResponseField name="metadata" type="object">
+      Custom metadata attached to call
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      When call was initiated (ISO 8601)
+    </ResponseField>
+    <ResponseField name="updated_at" type="string">
+      Last status update (ISO 8601)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl https://api.useiris.com/v1/calls/123e4567-e89b-12d3-a456-426614174000 \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function getCall(uuid) {
+  try {
+    const response = await axios.get(
+      `https://api.useiris.com/v1/calls/${uuid}`,
+      {
+        headers: {
+          'X-API-Key': 'YOUR_API_KEY'
+        }
+      }
+    );
+
+    const call = response.data.call;
+    console.log('Call status:', call.status);
+    console.log('Duration:', call.duration, 'seconds');
+    console.log('Cost: $', call.cost);
+
+    if (call.recording_url) {
+      console.log('Recording:', call.recording_url);
+    }
+
+    return call;
+
+  } catch (error) {
+    if (error.response?.status === 404) {
+      console.error('Call not found');
+    } else {
+      console.error('Error:', error.response?.data);
+    }
+    throw error;
+  }
+}
+
+getCall('123e4567-e89b-12d3-a456-426614174000');
+```
+
+```python Python
+import requests
+
+def get_call(uuid):
+    response = requests.get(
+        f'https://api.useiris.com/v1/calls/{uuid}',
+        headers={
+            'X-API-Key': 'YOUR_API_KEY'
+        }
+    )
+
+    if response.status_code == 200:
+        call = response.json()['call']
+        print(f"Call status: {call['status']}")
+        print(f"Duration: {call.get('duration', 0)} seconds")
+        print(f"Cost: ${call.get('cost', 0)}")
+
+        if call.get('recording_url'):
+            print(f"Recording: {call['recording_url']}")
+
+        return call
+    elif response.status_code == 404:
+        print('Call not found')
+    else:
+        print(f"Error: {response.json()}")
+
+    return None
+
+get_call('123e4567-e89b-12d3-a456-426614174000')
+```
+
+```php PHP
+<?php
+function getCall($uuid) {
+    $ch = curl_init("https://api.useiris.com/v1/calls/$uuid");
+
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            'X-API-Key: YOUR_API_KEY'
+        ]
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $result = json_decode($response, true);
+
+    if ($httpCode === 200) {
+        $call = $result['call'];
+        echo "Call status: " . $call['status'] . "\n";
+        echo "Duration: " . ($call['duration'] ?? 0) . " seconds\n";
+        echo "Cost: $" . ($call['cost'] ?? 0) . "\n";
+
+        if (!empty($call['recording_url'])) {
+            echo "Recording: " . $call['recording_url'] . "\n";
+        }
+
+        return $call;
+    } elseif ($httpCode === 404) {
+        echo "Call not found\n";
+    } else {
+        echo "Error: " . $result['message'] . "\n";
+    }
+
+    curl_close($ch);
+    return null;
+}
+
+getCall('123e4567-e89b-12d3-a456-426614174000');
+?>
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "call": {
+    "uuid": "123e4567-e89b-12d3-a456-426614174000",
+    "tenant_id": 1,
+    "to": "+15551234567",
+    "from": "+15559876543",
+    "status": "completed",
+    "direction": "outbound",
+    "duration": 125,
+    "start_time": "2025-10-30T18:00:00Z",
+    "end_time": "2025-10-30T18:02:05Z",
+    "carrier_id": 2,
+    "cost": 0.015,
+    "recording_url": "https://recordings.useiris.com/abc123.mp3",
+    "metadata": {
+      "customer_id": "12345",
+      "campaign": "summer_sale"
+    },
+    "created_at": "2025-10-30T17:59:55Z",
+    "updated_at": "2025-10-30T18:02:05Z"
+  }
+}
+```
+
+```json Error Response (404)
+{
+  "error": "NOT_FOUND",
+  "message": "Call not found"
+}
+```
+
+</ResponseExample>
+
+## Polling for Status
+
+Poll this endpoint to track call progress (webhooks are recommended instead):
+
+```javascript
+async function waitForCallCompletion(uuid, maxWaitSeconds = 300) {
+  const startTime = Date.now();
+  const interval = 2000; // Poll every 2 seconds
+
+  while (Date.now() - startTime < maxWaitSeconds * 1000) {
+    const call = await getCall(uuid);
+
+    console.log('Current status:', call.status);
+
+    if (['completed', 'failed', 'no-answer', 'busy'].includes(call.status)) {
+      console.log('Call finished!');
+      return call;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+
+  throw new Error('Timeout waiting for call completion');
+}
+```
+
+<Warning>
+  Polling generates unnecessary API calls. Use webhooks instead for real-time status updates.
+</Warning>
+
+## Download Recording
+
+If the call was recorded, download the audio file:
+
+```javascript
+async function downloadRecording(uuid, outputPath) {
+  const call = await getCall(uuid);
+
+  if (!call.recording_url) {
+    throw new Error('Call not recorded or recording not ready');
+  }
+
+  const response = await axios.get(call.recording_url, {
+    responseType: 'arraybuffer'
+  });
+
+  fs.writeFileSync(outputPath, response.data);
+  console.log('Recording saved to:', outputPath);
+}
+
+downloadRecording('123e4567-...', './recording.mp3');
+```
+
+## Calculate Call Metrics
+
+```javascript
+async function analyzeCall(uuid) {
+  const call = await getCall(uuid);
+
+  const metrics = {
+    uuid: call.uuid,
+    status: call.status,
+    duration: call.duration,
+    cost: call.cost,
+    costPerMinute: call.duration ? (call.cost / (call.duration / 60)).toFixed(4) : 0,
+    hasRecording: !!call.recording_url,
+    metadata: call.metadata
+  };
+
+  console.log('Call Metrics:', metrics);
+  return metrics;
+}
+```
+
+## Error Codes
+
+| Code | Error | Description |
+|------|-------|-------------|
+| 401 | UNAUTHORIZED | Invalid API key or token |
+| 404 | NOT_FOUND | Call UUID not found |
+| 403 | FORBIDDEN | Call belongs to different tenant |
+| 500 | INTERNAL_ERROR | Server error |
+
+## Use Cases
+
+### Customer Support Dashboard
+
+```javascript
+async function loadCallDetails(uuid) {
+  const call = await getCall(uuid);
+
+  // Display in UI
+  document.getElementById('call-status').textContent = call.status;
+  document.getElementById('call-duration').textContent = formatDuration(call.duration);
+  document.getElementById('call-cost').textContent = `$${call.cost}`;
+
+  if (call.recording_url) {
+    document.getElementById('play-recording').href = call.recording_url;
+  }
+}
+```
+
+### Billing Reconciliation
+
+```javascript
+async function verifyCallCost(uuid, expectedCost) {
+  const call = await getCall(uuid);
+
+  if (Math.abs(call.cost - expectedCost) > 0.001) {
+    console.warn('Cost mismatch!', {
+      expected: expectedCost,
+      actual: call.cost,
+      difference: call.cost - expectedCost
+    });
+  }
+
+  return call.cost;
+}
+```
+
+### Quality Monitoring
+
+```javascript
+async function monitorCallQuality(uuid) {
+  const call = await getCall(uuid);
+
+  const quality = {
+    completed: call.status === 'completed',
+    duration: call.duration,
+    carrier: call.carrier_id,
+    cost: call.cost,
+    recorded: !!call.recording_url
+  };
+
+  // Log to monitoring system
+  console.log('Call Quality:', quality);
+
+  return quality;
+}
+```
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Create Call" icon="phone-plus" href="/api-reference/calls/create">
+    Initiate new call
+  </Card>
+  <Card title="List Calls" icon="list" href="/api-reference/calls/list">
+    View call history
+  </Card>
+  <Card title="Update Call" icon="pen" href="/api-reference/calls/update">
+    Update call metadata
+  </Card>
+</CardGroup>

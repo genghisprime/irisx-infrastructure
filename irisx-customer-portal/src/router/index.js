@@ -17,6 +17,13 @@ import APIKeys from '../views/dashboard/APIKeys.vue'
 import CallLogs from '../views/dashboard/CallLogs.vue'
 import Messages from '../views/dashboard/Messages.vue'
 import EmailCampaigns from '../views/dashboard/EmailCampaigns.vue'
+import EmailTemplates from '../views/EmailTemplates.vue'
+import EmailCampaignBuilder from '../views/EmailCampaignBuilder.vue'
+import EmailAnalytics from '../views/EmailAnalytics.vue'
+import EmailAutomation from '../views/EmailAutomation.vue'
+import EmailDeliverability from '../views/EmailDeliverability.vue'
+import WhatsAppMessages from '../views/WhatsAppMessages.vue'
+import SocialMessages from '../views/SocialMessages.vue'
 import Webhooks from '../views/dashboard/Webhooks.vue'
 import Conversations from '../views/dashboard/Conversations.vue'
 
@@ -66,6 +73,41 @@ const routes = [
         path: 'emails',
         name: 'EmailCampaigns',
         component: EmailCampaigns
+      },
+      {
+        path: 'email-templates',
+        name: 'EmailTemplates',
+        component: EmailTemplates
+      },
+      {
+        path: 'email-campaign-builder',
+        name: 'EmailCampaignBuilder',
+        component: EmailCampaignBuilder
+      },
+      {
+        path: 'email-analytics',
+        name: 'EmailAnalytics',
+        component: EmailAnalytics
+      },
+      {
+        path: 'email-automation',
+        name: 'EmailAutomation',
+        component: EmailAutomation
+      },
+      {
+        path: 'email-deliverability',
+        name: 'EmailDeliverability',
+        component: EmailDeliverability
+      },
+      {
+        path: 'whatsapp',
+        name: 'WhatsAppMessages',
+        component: WhatsAppMessages
+      },
+      {
+        path: 'social',
+        name: 'SocialMessages',
+        component: SocialMessages
       },
       {
         path: 'webhooks',

@@ -1,0 +1,373 @@
+---
+title: 'Logout'
+api: 'POST /v1/auth/logout'
+description: 'End user session and invalidate tokens'
+---
+
+## Overview
+
+Logout the current user and invalidate their access and refresh tokens. After logout, the user must login again to access the API.
+
+<Note>
+  While this endpoint exists for completeness, client-side token deletion is often sufficient since JWT tokens are stateless and expire automatically.
+</Note>
+
+## Authentication
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token to be invalidated
+</ParamField>
+
+## Request Body
+
+<ParamField body="refresh_token" type="string">
+  Optional refresh token to invalidate
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="string">
+  Confirmation message
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST https://api.useiris.com/v1/auth/logout \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token": "rt_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+  }'
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function logout() {
+  try {
+    const token = localStorage.getItem('token');
+    const refreshToken = localStorage.getItem('refresh_token');
+
+    await axios.post(
+      'https://api.useiris.com/v1/auth/logout',
+      {
+        refresh_token: refreshToken
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    console.log('Logged out successfully');
+
+    // Clear tokens
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
+
+    // Redirect to login
+    window.location.href = '/login';
+
+  } catch (error) {
+    console.error('Logout error:', error.response?.data);
+
+    // Clear tokens anyway
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
+  }
+}
+
+logout();
+```
+
+```python Python
+import requests
+
+def logout(token, refresh_token):
+    try:
+        response = requests.post(
+            'https://api.useiris.com/v1/auth/logout',
+            json={
+                'refresh_token': refresh_token
+            },
+            headers={
+                'Authorization': f'Bearer {token}'
+            }
+        )
+
+        if response.status_code == 200:
+            print('Logged out successfully')
+        else:
+            print(f"Logout error: {response.json()}")
+
+    except Exception as e:
+        print(f"Logout error: {e}")
+
+    finally:
+        # Clear tokens regardless of response
+        # (implement token clearing for your framework)
+        pass
+
+# Usage
+logout('YOUR_JWT_TOKEN', 'rt_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6')
+```
+
+```php PHP
+<?php
+function logout($token, $refreshToken) {
+    $ch = curl_init('https://api.useiris.com/v1/auth/logout');
+
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            "Authorization: Bearer $token",
+            "Content-Type: application/json"
+        ],
+        CURLOPT_POSTFIELDS => json_encode([
+            'refresh_token' => $refreshToken
+        ])
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    if ($httpCode === 200) {
+        echo "Logged out successfully\n";
+    } else {
+        echo "Logout error\n";
+    }
+
+    curl_close($ch);
+
+    // Clear tokens
+    unset($_SESSION['token']);
+    unset($_SESSION['refresh_token']);
+    session_destroy();
+
+    // Redirect to login
+    header('Location: /login');
+}
+
+// Usage
+$token = $_SESSION['token'];
+$refreshToken = $_SESSION['refresh_token'];
+logout($token, $refreshToken);
+?>
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "message": "Logged out successfully"
+}
+```
+
+```json Error Response (401)
+{
+  "error": "UNAUTHORIZED",
+  "message": "Invalid token"
+}
+```
+
+</ResponseExample>
+
+## Client-Side Logout
+
+For most applications, client-side token deletion is sufficient:
+
+```javascript
+function logout() {
+  // Clear tokens
+  localStorage.removeItem('token');
+  localStorage.removeItem('refresh_token');
+
+  // Clear any cached user data
+  localStorage.removeItem('user');
+
+  // Redirect to login
+  window.location.href = '/login';
+}
+```
+
+<Tip>
+  Since JWT tokens are stateless and expire automatically (24 hours for access tokens, 30 days for refresh tokens), you don't need to call the logout endpoint unless you want to explicitly invalidate tokens server-side.
+</Tip>
+
+## Complete Logout Implementation
+
+### React Example
+
+```javascript
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from './AuthContext';
+
+function LogoutButton() {
+  const navigate = useNavigate();
+  const { logout: contextLogout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const refreshToken = localStorage.getItem('refresh_token');
+
+      // Optional: Call server-side logout
+      await axios.post(
+        'https://api.useiris.com/v1/auth/logout',
+        { refresh_token: refreshToken },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Always clear local state
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
+      contextLogout();
+      navigate('/login');
+    }
+  };
+
+  return (
+    <button onClick={handleLogout}>
+      Logout
+    </button>
+  );
+}
+```
+
+### Vue Example
+
+```javascript
+export default {
+  methods: {
+    async logout() {
+      try {
+        const token = localStorage.getItem('token');
+        const refreshToken = localStorage.getItem('refresh_token');
+
+        // Optional: Call server-side logout
+        await this.$axios.post(
+          '/v1/auth/logout',
+          { refresh_token: refreshToken },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+      } catch (error) {
+        console.error('Logout error:', error);
+      } finally {
+        // Always clear local state
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        this.$store.dispatch('auth/logout');
+        this.$router.push('/login');
+      }
+    }
+  }
+}
+```
+
+## Logout All Devices
+
+Currently, the logout endpoint only invalidates the current token. To implement "logout all devices" functionality, you would need to:
+
+1. Generate new tokens for all active sessions
+2. Contact IRISX support to manually revoke all tokens for an account
+
+<Warning>
+  If you suspect your API key or tokens have been compromised, immediately contact support@useiris.com to revoke all credentials.
+</Warning>
+
+## Security Best Practices
+
+### Clear All User Data
+
+```javascript
+function secureLogout() {
+  // Clear authentication
+  localStorage.removeItem('token');
+  localStorage.removeItem('refresh_token');
+
+  // Clear user data
+  localStorage.removeItem('user');
+  localStorage.removeItem('tenant');
+
+  // Clear any cached API responses
+  sessionStorage.clear();
+
+  // Reset app state
+  store.dispatch('auth/logout');
+  store.dispatch('app/reset');
+
+  // Redirect
+  window.location.href = '/login';
+}
+```
+
+### Handle Session Expiration
+
+```javascript
+// Add axios interceptor to detect session expiration
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid
+      console.log('Session expired - logging out');
+      logout();
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+### Confirm Before Logout
+
+```javascript
+function confirmLogout() {
+  if (confirm('Are you sure you want to log out?')) {
+    logout();
+  }
+}
+```
+
+## Error Handling
+
+```javascript
+async function logout() {
+  try {
+    // Attempt server-side logout
+    await apiLogout();
+  } catch (error) {
+    // Log error but continue with client-side logout
+    console.error('Server logout failed:', error);
+  } finally {
+    // Always perform client-side cleanup
+    clearLocalStorage();
+    redirectToLogin();
+  }
+}
+```
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Login" icon="right-to-bracket" href="/api-reference/auth/login">
+    Authenticate users
+  </Card>
+  <Card title="Register" icon="user-plus" href="/api-reference/auth/register">
+    Create new account
+  </Card>
+  <Card title="Refresh Token" icon="arrows-rotate" href="/api-reference/auth/refresh">
+    Get new access token
+  </Card>
+  <Card title="Get Current User" icon="user" href="/api-reference/auth/me">
+    Verify authentication
+  </Card>
+</CardGroup>

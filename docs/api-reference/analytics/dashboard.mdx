@@ -1,0 +1,282 @@
+---
+title: 'Dashboard Analytics'
+api: 'GET /v1/analytics/dashboard'
+description: 'Get overview statistics for dashboard'
+---
+
+## Overview
+
+Retrieve aggregated statistics across all communication channels for a given date range. Perfect for building dashboards and overview reports.
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="start_date" type="string">
+  Start date for analytics (ISO 8601 format). Defaults to 30 days ago.
+</ParamField>
+
+<ParamField query="end_date" type="string">
+  End date for analytics (ISO 8601 format). Defaults to now.
+</ParamField>
+
+## Response
+
+<ResponseField name="calls" type="object">
+  Call statistics
+
+  <Expandable title="Call metrics">
+    <ResponseField name="total" type="integer">
+      Total number of calls
+    </ResponseField>
+    <ResponseField name="completed" type="integer">
+      Successfully completed calls
+    </ResponseField>
+    <ResponseField name="failed" type="integer">
+      Failed calls
+    </ResponseField>
+    <ResponseField name="total_duration" type="integer">
+      Total duration in seconds
+    </ResponseField>
+    <ResponseField name="total_cost" type="number">
+      Total cost in USD
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="sms" type="object">
+  SMS statistics
+
+  <Expandable title="SMS metrics">
+    <ResponseField name="total" type="integer">
+      Total messages sent
+    </ResponseField>
+    <ResponseField name="delivered" type="integer">
+      Successfully delivered messages
+    </ResponseField>
+    <ResponseField name="failed" type="integer">
+      Failed messages
+    </ResponseField>
+    <ResponseField name="total_cost" type="number">
+      Total cost in USD
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="emails" type="object">
+  Email statistics
+
+  <Expandable title="Email metrics">
+    <ResponseField name="total" type="integer">
+      Total emails sent
+    </ResponseField>
+    <ResponseField name="delivered" type="integer">
+      Successfully delivered
+    </ResponseField>
+    <ResponseField name="opened" type="integer">
+      Emails opened
+    </ResponseField>
+    <ResponseField name="clicked" type="integer">
+      Emails with clicks
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl "https://api.useiris.com/v1/analytics/dashboard?start_date=2025-10-01T00:00:00Z&end_date=2025-10-31T23:59:59Z" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function getDashboardAnalytics(startDate, endDate) {
+  const params = new URLSearchParams();
+
+  if (startDate) params.append('start_date', startDate);
+  if (endDate) params.append('end_date', endDate);
+
+  const response = await axios.get(
+    `https://api.useiris.com/v1/analytics/dashboard?${params}`,
+    {
+      headers: { 'X-API-Key': 'YOUR_API_KEY' }
+    }
+  );
+
+  const stats = response.data;
+
+  console.log('Calls:', stats.calls.total);
+  console.log('SMS:', stats.sms.total);
+  console.log('Emails:', stats.emails.total);
+  console.log('Total Cost: $', (stats.calls.total_cost + stats.sms.total_cost).toFixed(2));
+
+  return stats;
+}
+
+// Get this month's stats
+const startOfMonth = new Date();
+startOfMonth.setDate(1);
+startOfMonth.setHours(0, 0, 0, 0);
+
+getDashboardAnalytics(startOfMonth.toISOString(), new Date().toISOString());
+```
+
+```python Python
+import requests
+from datetime import datetime, timedelta
+
+def get_dashboard_analytics(start_date=None, end_date=None):
+    params = {}
+
+    if start_date:
+        params['start_date'] = start_date
+    if end_date:
+        params['end_date'] = end_date
+
+    response = requests.get(
+        'https://api.useiris.com/v1/analytics/dashboard',
+        params=params,
+        headers={'X-API-Key': 'YOUR_API_KEY'}
+    )
+
+    if response.status_code == 200:
+        stats = response.json()
+
+        print(f"Calls: {stats['calls']['total']}")
+        print(f"SMS: {stats['sms']['total']}")
+        print(f"Emails: {stats['emails']['total']}")
+        print(f"Total Cost: ${stats['calls']['total_cost'] + stats['sms']['total_cost']:.2f}")
+
+        return stats
+
+# Get last 30 days
+start = (datetime.now() - timedelta(days=30)).isoformat()
+end = datetime.now().isoformat()
+get_dashboard_analytics(start, end)
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "calls": {
+    "total": 1250,
+    "completed": 1100,
+    "failed": 150,
+    "total_duration": 156000,
+    "total_cost": 18.75
+  },
+  "sms": {
+    "total": 5400,
+    "delivered": 5250,
+    "failed": 150,
+    "total_cost": 40.50
+  },
+  "emails": {
+    "total": 12000,
+    "delivered": 11500,
+    "opened": 4600,
+    "clicked": 920
+  }
+}
+```
+
+</ResponseExample>
+
+## Calculate Success Rates
+
+```javascript
+function calculateSuccessRates(stats) {
+  const callSuccessRate = (stats.calls.completed / stats.calls.total * 100).toFixed(2);
+  const smsDeliveryRate = (stats.sms.delivered / stats.sms.total * 100).toFixed(2);
+  const emailOpenRate = (stats.emails.opened / stats.emails.delivered * 100).toFixed(2);
+  const emailClickRate = (stats.emails.clicked / stats.emails.delivered * 100).toFixed(2);
+
+  return {
+    calls: `${callSuccessRate}%`,
+    sms: `${smsDeliveryRate}%`,
+    emailOpen: `${emailOpenRate}%`,
+    emailClick: `${emailClickRate}%`
+  };
+}
+```
+
+## Dashboard Widget Example
+
+```javascript
+async function renderDashboard() {
+  const stats = await getDashboardAnalytics();
+  const rates = calculateSuccessRates(stats);
+
+  return {
+    calls: {
+      total: stats.calls.total,
+      completed: stats.calls.completed,
+      successRate: rates.calls,
+      avgDuration: (stats.calls.total_duration / stats.calls.total / 60).toFixed(1) + ' min',
+      totalCost: '$' + stats.calls.total_cost.toFixed(2)
+    },
+    sms: {
+      total: stats.sms.total,
+      delivered: stats.sms.delivered,
+      deliveryRate: rates.sms,
+      totalCost: '$' + stats.sms.total_cost.toFixed(2)
+    },
+    emails: {
+      total: stats.emails.total,
+      delivered: stats.emails.delivered,
+      openRate: rates.emailOpen,
+      clickRate: rates.emailClick
+    }
+  };
+}
+```
+
+## Time Period Helpers
+
+```javascript
+// Today
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+getDashboardAnalytics(today.toISOString());
+
+// This week
+const weekStart = new Date();
+weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+weekStart.setHours(0, 0, 0, 0);
+getDashboardAnalytics(weekStart.toISOString());
+
+// This month
+const monthStart = new Date();
+monthStart.setDate(1);
+monthStart.setHours(0, 0, 0, 0);
+getDashboardAnalytics(monthStart.toISOString());
+
+// Last 7 days
+const last7Days = new Date();
+last7Days.setDate(last7Days.getDate() - 7);
+getDashboardAnalytics(last7Days.toISOString());
+```
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Call Analytics" icon="phone" href="/api-reference/analytics/calls">
+    Detailed call analytics
+  </Card>
+  <Card title="SMS Analytics" icon="message" href="/api-reference/analytics/sms">
+    Detailed SMS analytics
+  </Card>
+</CardGroup>

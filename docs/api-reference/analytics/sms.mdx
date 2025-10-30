@@ -1,0 +1,244 @@
+---
+title: 'SMS Analytics'
+api: 'GET /v1/analytics/sms'
+description: 'Get detailed SMS analytics and metrics'
+---
+
+## Overview
+
+Retrieve detailed analytics for SMS messaging including delivery rates, volume trends, and cost analysis.
+
+## Authentication
+
+<ParamField header="X-API-Key" type="string">
+  API key for server-to-server authentication
+</ParamField>
+
+<ParamField header="Authorization" type="string">
+  Bearer token for user authentication
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="start_date" type="string">
+  Start date for analytics (ISO 8601)
+</ParamField>
+
+<ParamField query="end_date" type="string">
+  End date for analytics (ISO 8601)
+</ParamField>
+
+<ParamField query="group_by" type="string">
+  Group results by: `day`, `week`, or `month`
+</ParamField>
+
+<ParamField query="direction" type="string">
+  Filter by direction: `inbound` or `outbound`
+</ParamField>
+
+## Response
+
+<ResponseField name="total_messages" type="integer">
+  Total SMS messages sent
+</ResponseField>
+
+<ResponseField name="delivered_messages" type="integer">
+  Successfully delivered messages
+</ResponseField>
+
+<ResponseField name="failed_messages" type="integer">
+  Failed messages
+</ResponseField>
+
+<ResponseField name="total_segments" type="integer">
+  Total SMS segments (for billing)
+</ResponseField>
+
+<ResponseField name="total_cost" type="number">
+  Total cost in USD
+</ResponseField>
+
+<ResponseField name="delivery_rate" type="number">
+  Percentage of delivered messages
+</ResponseField>
+
+<ResponseField name="avg_cost_per_message" type="number">
+  Average cost per message
+</ResponseField>
+
+<ResponseField name="by_status" type="object">
+  Breakdown by message status
+</ResponseField>
+
+<ResponseField name="timeline" type="array">
+  Time-series data (if group_by is specified)
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl "https://api.useiris.com/v1/analytics/sms?start_date=2025-10-01T00:00:00Z&group_by=day" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+async function getSMSAnalytics(options = {}) {
+  const params = new URLSearchParams(options);
+
+  const response = await axios.get(
+    `https://api.useiris.com/v1/analytics/sms?${params}`,
+    {
+      headers: { 'X-API-Key': 'YOUR_API_KEY' }
+    }
+  );
+
+  const analytics = response.data;
+
+  console.log('Total messages:', analytics.total_messages);
+  console.log('Delivery rate:', analytics.delivery_rate.toFixed(2) + '%');
+  console.log('Total segments:', analytics.total_segments);
+  console.log('Total cost: $', analytics.total_cost.toFixed(2));
+  console.log('Avg cost per message: $', analytics.avg_cost_per_message.toFixed(4));
+
+  return analytics;
+}
+
+// Examples
+getSMSAnalytics({ group_by: 'day' });
+getSMSAnalytics({ direction: 'outbound' });
+```
+
+```python Python
+import requests
+
+def get_sms_analytics(**options):
+    response = requests.get(
+        'https://api.useiris.com/v1/analytics/sms',
+        params=options,
+        headers={'X-API-Key': 'YOUR_API_KEY'}
+    )
+
+    if response.status_code == 200:
+        analytics = response.json()
+
+        print(f"Total messages: {analytics['total_messages']}")
+        print(f"Delivery rate: {analytics['delivery_rate']:.2f}%")
+        print(f"Total segments: {analytics['total_segments']}")
+        print(f"Total cost: ${analytics['total_cost']:.2f}")
+        print(f"Avg cost: ${analytics['avg_cost_per_message']:.4f}")
+
+        return analytics
+
+get_sms_analytics(group_by='day')
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "total_messages": 5400,
+  "delivered_messages": 5250,
+  "failed_messages": 150,
+  "total_segments": 5600,
+  "total_cost": 40.50,
+  "delivery_rate": 97.22,
+  "avg_cost_per_message": 0.0075,
+  "by_status": {
+    "delivered": 5250,
+    "failed": 120,
+    "undelivered": 30
+  },
+  "timeline": [
+    {
+      "date": "2025-10-01",
+      "messages": 180,
+      "delivered": 175,
+      "segments": 185,
+      "cost": 1.39
+    },
+    {
+      "date": "2025-10-02",
+      "messages": 195,
+      "delivered": 190,
+      "segments": 200,
+      "cost": 1.50
+    }
+  ]
+}
+```
+
+</ResponseExample>
+
+## Track Campaign Performance
+
+```javascript
+async function analyzeCampaign(startDate, endDate) {
+  const analytics = await getSMSAnalytics({
+    start_date: startDate,
+    end_date: endDate,
+    group_by: 'day'
+  });
+
+  return {
+    sent: analytics.total_messages,
+    delivered: analytics.delivered_messages,
+    deliveryRate: analytics.delivery_rate,
+    totalCost: analytics.total_cost,
+    costPerDelivery: (analytics.total_cost / analytics.delivered_messages).toFixed(4),
+    dailyTrends: analytics.timeline
+  };
+}
+```
+
+## Visualize Delivery Trends
+
+```javascript
+async function getSMSTrends() {
+  const analytics = await getSMSAnalytics({
+    start_date: '2025-10-01T00:00:00Z',
+    end_date: '2025-10-31T23:59:59Z',
+    group_by: 'day'
+  });
+
+  const chartData = analytics.timeline.map(day => ({
+    date: day.date,
+    messages: day.messages,
+    deliveryRate: (day.delivered / day.messages * 100).toFixed(2),
+    cost: day.cost
+  }));
+
+  return chartData;
+}
+```
+
+## Compare Time Periods
+
+```javascript
+async function compareMonths(month1, month2) {
+  const [stats1, stats2] = await Promise.all([
+    getSMSAnalytics({ start_date: month1 }),
+    getSMSAnalytics({ start_date: month2 })
+  ]);
+
+  return {
+    volumeChange: ((stats2.total_messages - stats1.total_messages) / stats1.total_messages * 100).toFixed(2),
+    deliveryRateChange: (stats2.delivery_rate - stats1.delivery_rate).toFixed(2),
+    costChange: ((stats2.total_cost - stats1.total_cost) / stats1.total_cost * 100).toFixed(2)
+  };
+}
+```
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Dashboard" icon="chart-pie" href="/api-reference/analytics/dashboard">
+    Overview analytics
+  </Card>
+  <Card title="Call Analytics" icon="phone" href="/api-reference/analytics/calls">
+    Call analytics
+  </Card>
+</CardGroup>
