@@ -84,12 +84,13 @@ class AuthService {
       // Start transaction
       await query('BEGIN');
 
-      // Create tenant
+      // Create tenant with slug (convert company name to URL-friendly slug)
+      const slug = companyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       const tenantResult = await query(
-        `INSERT INTO tenants (name, status, plan_type)
-         VALUES ($1, 'active', 'trial')
-         RETURNING id, name, status, plan_type, created_at`,
-        [companyName]
+        `INSERT INTO tenants (name, slug, status, plan)
+         VALUES ($1, $2, 'active', 'trial')
+         RETURNING id, name, slug, status, plan, created_at`,
+        [companyName, slug]
       );
 
       const tenant = tenantResult.rows[0];
@@ -140,7 +141,7 @@ class AuthService {
           id: tenant.id,
           name: tenant.name,
           status: tenant.status,
-          plan_type: tenant.plan_type,
+          plan: tenant.plan,
         },
         tokens: {
           access_token: accessToken,
@@ -437,7 +438,7 @@ class AuthService {
     const result = await query(
       `SELECT u.id, u.tenant_id, u.email, u.first_name, u.last_name, u.phone,
               u.role, u.status, u.created_at, u.last_login_at,
-              t.name as tenant_name, t.status as tenant_status, t.plan_type
+              t.name as tenant_name, t.status as tenant_status, t.plan
        FROM users u
        JOIN tenants t ON t.id = u.tenant_id
        WHERE u.id = $1`,
@@ -465,7 +466,7 @@ class AuthService {
         id: user.tenant_id,
         name: user.tenant_name,
         status: user.tenant_status,
-        plan_type: user.plan_type,
+        plan: user.plan,
       },
     };
   }
