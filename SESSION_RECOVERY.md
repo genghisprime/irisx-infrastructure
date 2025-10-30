@@ -87,10 +87,17 @@ In order of importance:
   - orchestrator.js ✅ (321 lines - API→NATS→FreeSWITCH)
   - cdr.js ✅ (338 lines - CDR collection for billing)
 
-### 🔄 In Progress (Oct 30, 2025):
-- **Deploy cdr.js worker:** Apply same NATS consumer fix to cdr.js
-- **Test end-to-end call:** Make actual phone call via API → NATS → FreeSWITCH
-- **orchestrator.js:** ✅ FULLY OPERATIONAL - connected to FreeSWITCH + NATS, listening for call requests
+### 🔄 In Progress (Oct 30, 2025 - 4:50 AM):
+- **Deploying cdr.js worker:** Applying same NATS consumer fix, then starting on production
+- **Test end-to-end call:** After cdr.js deployed, test actual phone call via API
+
+### ✅ Just Completed:
+- **orchestrator.js worker:** ✅ FULLY OPERATIONAL
+  - Connected to FreeSWITCH ESL (54.160.220.243:8021)
+  - Connected to NATS with token auth (localhost:4222)
+  - Consumer subscribed to calls.> subject (workqueue mode)
+  - Listening for call requests and processing FreeSWITCH events
+  - Fixed NATS v2.29.3 pullSubscribe consumer config API
 
 ### ❌ What's Missing:
 - **Customer Portal:** 0% (Vue 3 dashboard for customers)
@@ -98,7 +105,7 @@ In order of importance:
 - **Platform Admin Dashboard:** 5% (Vue 3 for IRISX staff)
 - **Social channels:** Discord, Teams, WhatsApp, Slack, Telegram
 
-**Next Step:** Fix NATS consumer API in orchestrator.js, then test end-to-end calls
+**Next Step:** Deploy cdr.js worker, test end-to-end call, then start Customer Portal (Week 9-10)
 **Team:** Ryan + Claude
 
 **📊 Full Audit:** See docs/COMPLETE_AUDIT_OCT30.md
