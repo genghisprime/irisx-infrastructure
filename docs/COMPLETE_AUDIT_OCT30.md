@@ -83,6 +83,8 @@
 
 **Summary:** 5/5 workers exist (100%) ✅
 **Status:** All voice call workers COMPLETE!
+**Deployment:** orchestrator.js and cdr.js uploaded to production ✅
+**Package:** modesl installed for FreeSWITCH ESL ✅
 
 ---
 
