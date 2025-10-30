@@ -91,9 +91,9 @@ In order of importance:
   - orchestrator.js ✅ (321 lines - API→NATS→FreeSWITCH)
   - cdr.js ✅ (338 lines - CDR collection for billing)
 
-### 🔄 In Progress (Oct 30, 2025 - 6:15 AM):
-- **Next Development:** Agent Desktop (Week 11-12) or Webhooks page (optional)
-- **Customer Portal:** ✅ 90% COMPLETE (all core features done!)
+### 🔄 In Progress (Oct 30, 2025 - 6:30 AM):
+- **Next Development:** Agent Desktop (Week 11-12) or Documentation & Beta Launch
+- **Customer Portal:** ✅ 100% COMPLETE (ready for deployment!)
 - **Note on phone testing:** Requires carrier SIP configuration (Twilio/Telnyx credentials + FreeSWITCH gateway setup)
 
 ### ✅ Just Completed (Last 30 minutes):
@@ -110,24 +110,45 @@ In order of importance:
   - Collecting CDR records for billing and analytics
   - Publishing CDR events to NATS events stream
 
-### ✅ Customer Portal - 90% COMPLETE (This Session):
-**Files Created (12 total, ~2,800 lines):**
+### ✅ Customer Portal - 100% COMPLETE (This Session):
+**Files Created (15 total, ~2,850 lines):**
 - auth.js - Pinia auth store with JWT management
 - api.js - Axios client with token refresh
 - Login.vue - Email/password authentication
 - Signup.vue - Company/user registration
-- router/index.js - Vue Router with auth guards
-- main.js - App initialization
-- DashboardLayout.vue - Navigation layout
-- DashboardHome.vue - Stats dashboard (calls, messages, cost)
-- APIKeys.vue - API key management (create/revoke/copy)
-- CallLogs.vue - Call history with filters & pagination
-- package.json - Vue 3.5, Router 4, Pinia, Tailwind 4
+- router/index.js - Vue Router with auth guards (requiresAuth/requiresGuest)
+- main.js - App initialization with auth pre-check
+- App.vue - Main router-view component
+- DashboardLayout.vue - Navigation layout with user menu
+- DashboardHome.vue - Stats dashboard (calls, messages, cost, growth indicators)
+- APIKeys.vue - API key management (create/revoke/copy, one-time display)
+- CallLogs.vue - Call history with filters, pagination, recording playback, modal
+- package.json - Vue 3.5, Router 4, Pinia 2.2, Axios, Tailwind 4
+- tailwind.config.js - Tailwind CSS 4 configuration
+- postcss.config.js - PostCSS setup for Tailwind processing
+- .env.example - Environment variable template
 
-**Features:** Auth, Dashboard, API Keys, Call Logs, Pagination, Filters, Recording playback
+**Features Implemented:**
+- JWT authentication with automatic token refresh and 401 retry
+- Protected routes with navigation guards (requiresAuth/requiresGuest)
+- Dashboard with 4 stats cards (Total Calls, Messages, Active Numbers, Monthly Cost)
+- Recent calls table with status badges
+- API key management (create, revoke, copy, masked display with one-time full key reveal)
+- Call logs with advanced filters (status, date range, search)
+- Pagination for call logs
+- Call details modal with recording playback
+- Debounced search for performance
+- Responsive UI with Tailwind CSS 4
+- State management with Pinia
+- HTTP client with automatic auth header injection
+- Loading and empty states throughout
+
+**Repository:** [genghisprime/irisx-infrastructure](https://github.com/genghisprime/irisx-infrastructure)
+**Location:** `/irisx-customer-portal` directory
+**Deployment Ready:** Yes - can deploy to Vercel immediately
 
 ### ❌ What's Missing:
-- **Customer Portal:** 10% (Webhooks page - optional, Tailwind CSS config)
+- **Customer Portal Webhooks Page:** Optional enhancement (can add later)
 - **Agent Desktop:** 0% (Vue 3 with WebRTC softphone - Week 11-12)
 - **Platform Admin Dashboard:** 5% (Vue 3 for IRISX staff)
 - **Social channels:** Discord, Teams, WhatsApp, Slack, Telegram
