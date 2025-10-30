@@ -87,17 +87,22 @@ In order of importance:
   - orchestrator.js ✅ (321 lines - API→NATS→FreeSWITCH)
   - cdr.js ✅ (338 lines - CDR collection for billing)
 
-### 🔄 In Progress (Oct 30, 2025 - 4:50 AM):
-- **Deploying cdr.js worker:** Applying same NATS consumer fix, then starting on production
-- **Test end-to-end call:** After cdr.js deployed, test actual phone call via API
+### 🔄 In Progress (Oct 30, 2025 - 5:05 AM):
+- **Test end-to-end phone call:** Ready to test actual call via API → NATS → FreeSWITCH → Carrier
 
-### ✅ Just Completed:
+### ✅ Just Completed (Last 30 minutes):
 - **orchestrator.js worker:** ✅ FULLY OPERATIONAL
   - Connected to FreeSWITCH ESL (54.160.220.243:8021)
   - Connected to NATS with token auth (localhost:4222)
   - Consumer subscribed to calls.> subject (workqueue mode)
   - Listening for call requests and processing FreeSWITCH events
   - Fixed NATS v2.29.3 pullSubscribe consumer config API
+- **cdr.js worker:** ✅ FULLY OPERATIONAL
+  - Connected to FreeSWITCH ESL (54.160.220.243:8021)
+  - Connected to NATS with token auth (localhost:4222)
+  - Subscribed to CHANNEL_HANGUP events
+  - Collecting CDR records for billing and analytics
+  - Publishing CDR events to NATS events stream
 
 ### ❌ What's Missing:
 - **Customer Portal:** 0% (Vue 3 dashboard for customers)
