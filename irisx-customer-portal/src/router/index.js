@@ -13,6 +13,7 @@ import Signup from '../views/auth/Signup.vue'
 // Dashboard Pages
 import DashboardLayout from '../views/dashboard/DashboardLayout.vue'
 import DashboardHome from '../views/dashboard/DashboardHome.vue'
+import APIKeys from '../views/dashboard/APIKeys.vue'
 
 const routes = [
   {
@@ -41,8 +42,12 @@ const routes = [
         name: 'Dashboard',
         component: DashboardHome
       },
+      {
+        path: 'api-keys',
+        name: 'APIKeys',
+        component: APIKeys
+      },
       // Future dashboard routes:
-      // { path: 'api-keys', name: 'APIKeys', component: () => import('../views/dashboard/APIKeys.vue') },
       // { path: 'webhooks', name: 'Webhooks', component: () => import('../views/dashboard/Webhooks.vue') },
       // { path: 'call-logs', name: 'CallLogs', component: () => import('../views/dashboard/CallLogs.vue') },
     ]
