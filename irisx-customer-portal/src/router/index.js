@@ -14,7 +14,7 @@ import Signup from '../views/auth/Signup.vue'
 import DashboardLayout from '../views/dashboard/DashboardLayout.vue'
 import DashboardHome from '../views/dashboard/DashboardHome.vue'
 import APIKeys from '../views/dashboard/APIKeys.vue'
-
+import CallLogs from '../views/dashboard/CallLogs.vue'
 const routes = [
   {
     path: '/',
@@ -44,7 +44,11 @@ const routes = [
       },
       {
         path: 'api-keys',
-        name: 'APIKeys',
+      },
+      {
+        path: 'call-logs',
+        name: 'CallLogs',
+        component: CallLogs        name: 'APIKeys',
         component: APIKeys
       },
       // Future dashboard routes:
