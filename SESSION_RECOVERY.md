@@ -91,10 +91,10 @@ In order of importance:
   - orchestrator.js ✅ (321 lines - API→NATS→FreeSWITCH)
   - cdr.js ✅ (338 lines - CDR collection for billing)
 
-### 🔄 In Progress (Oct 30, 2025 - 5:25 AM):
-- **Customer Portal:** Building authentication UI (Login.vue, Signup.vue)
-- **Completed:** Auth store (Pinia), API client utility, project structure
-- **Next:** Vue Router setup, dashboard pages (home, API keys, webhooks, call logs)
+### 🔄 In Progress (Oct 30, 2025 - 5:35 AM):
+- **Customer Portal:** Building dashboard pages (DashboardLayout.vue, DashboardHome.vue)
+- **Completed This Session:** Auth pages (Login.vue, Signup.vue), Router with guards, Auth store, API client
+- **Next:** API Keys page, Webhooks page, Call Logs page, Tailwind CSS setup, package.json dependencies
 - **Note on phone testing:** Requires carrier SIP configuration (Twilio/Telnyx credentials + FreeSWITCH gateway setup)
 
 ### ✅ Just Completed (Last 30 minutes):
@@ -112,7 +112,7 @@ In order of importance:
   - Publishing CDR events to NATS events stream
 
 ### ❌ What's Missing:
-- **Customer Portal:** 0% (Vue 3 dashboard for customers)
+- **Customer Portal:** 40% (Auth pages done, need dashboard pages + Tailwind setup)
 - **Agent Desktop:** 0% (Vue 3 with WebRTC softphone)
 - **Platform Admin Dashboard:** 5% (Vue 3 for IRISX staff)
 - **Social channels:** Discord, Teams, WhatsApp, Slack, Telegram
