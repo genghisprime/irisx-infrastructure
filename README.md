@@ -98,6 +98,26 @@ Say to Claude: "Read SESSION_RECOVERY.md. Where did we leave off?"
   - Usage tracking for billing
   - Webhook delivery monitoring
 
+- ✅ **Multi-Carrier Voice Routing with LCR** ⭐ **NEW**
+  - Least-Cost Routing (LCR) - Auto-select cheapest carrier
+  - Support for 7+ carriers (Twilio, Telnyx, Bandwidth, SignalWire, Vonage, Plivo, Custom SIP)
+  - **50%+ cost savings** (Twilio $0.0085/min → Telnyx $0.0040/min)
+  - Health-based carrier selection
+  - Automatic failover on carrier failure
+  - 16 REST API endpoints for calls management
+  - Carrier management via admin interface
+  - Complete call cost tracking and analytics
+
+- ✅ **Multi-Provider SMS/Email Routing with LCR** ⭐ **NEW**
+  - Unified provider management for SMS and Email
+  - **SMS: 56% savings** (Twilio $0.0079/msg → Telnyx $0.0035/msg)
+  - **Email: 20% savings** (SendGrid $0.10/1000 → Mailgun $0.08/1000)
+  - Support for SMS providers: Twilio, Telnyx, Bandwidth
+  - Support for Email providers: SendGrid, Amazon SES, Mailgun, Postmark
+  - Health monitoring and automatic failover
+  - Country-specific rate routing
+  - Admin interface for provider configuration
+
 - ✅ **Contact Management API (Deployed)**
   - Full contact CRUD operations
   - Tag-based organization
