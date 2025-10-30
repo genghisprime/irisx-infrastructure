@@ -38,6 +38,7 @@ import monitoring from './routes/monitoring.js';
 import jobs from './routes/jobs.js';
 import webhooksEnhanced from './routes/webhooks-enhanced.js';
 import carriers from './routes/carriers.js';
+import auth from './routes/auth.js';
 
 dotenv.config();
 
@@ -263,6 +264,7 @@ app.route('/v1/monitoring', monitoring);
 app.route('/v1/jobs', jobs);
 app.route('/v1/webhooks', webhooksEnhanced); // Enhanced webhook management with full CRUD
 app.route('/v1/carriers', carriers); // Carrier management for multi-carrier routing
+app.route('/v1/auth', auth); // Authentication API (register, login, refresh, logout)
 
 // 404 handler
 app.notFound((c) => {

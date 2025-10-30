@@ -21,6 +21,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const NATS_URL = process.env.NATS_URL || 'localhost:4222';
+const NATS_TOKEN = process.env.NATS_TOKEN || 'irisx-nats-prod-token-2025';
 const FREESWITCH_HOST = process.env.FREESWITCH_HOST || '10.0.1.213';
 const FREESWITCH_PORT = parseInt(process.env.FREESWITCH_PORT || '8021');
 const FREESWITCH_PASSWORD = process.env.FREESWITCH_PASSWORD || 'ClueCon';
@@ -67,7 +68,7 @@ async function connectToFreeSWITCH() {
  */
 async function connectToNATS() {
   console.log(`[CDR] Connecting to NATS at ${NATS_URL}...`);
-  natsConnection = await natsConnect({ servers: NATS_URL });
+  natsConnection = await natsConnect({ servers: NATS_URL, token: NATS_TOKEN });
   jetstream = natsConnection.jetstream();
   console.log('✓ Connected to NATS');
 

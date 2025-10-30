@@ -53,6 +53,26 @@ async function initStreams() {
       max_bytes: 21474836480, // 20GB - handles 10M webhooks at ~2KB each
       storage: 'file',
       discard: 'old'
+    },
+    {
+      name: 'calls',
+      subjects: ['calls.>'],
+      retention: 'workqueue', // workqueue = messages deleted after being acked
+      max_age: 3600 * 1000000000, // 1 hour (calls should be processed quickly)
+      max_msgs: 1000000,  // 1M pending calls
+      max_bytes: 5368709120, // 5GB
+      storage: 'file',
+      discard: 'old'
+    },
+    {
+      name: 'events',
+      subjects: ['events.>'],
+      retention: 'limits', // Keep for analytics
+      max_age: 7 * 24 * 60 * 60 * 1000000000, // 7 days
+      max_msgs: 10000000,  // 10M events
+      max_bytes: 10737418240, // 10GB - CDR events, call events, etc.
+      storage: 'file',
+      discard: 'old'
     }
   ];
 

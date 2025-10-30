@@ -22,6 +22,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const NATS_URL = process.env.NATS_URL || 'localhost:4222';
+const NATS_TOKEN = process.env.NATS_TOKEN || 'irisx-nats-prod-token-2025';
 const FREESWITCH_HOST = process.env.FREESWITCH_HOST || '10.0.1.213';
 const FREESWITCH_PORT = parseInt(process.env.FREESWITCH_PORT || '8021');
 const FREESWITCH_PASSWORD = process.env.FREESWITCH_PASSWORD || 'ClueCon';
@@ -254,7 +255,7 @@ async function startOrchestrator() {
 
     // Connect to NATS
     console.log(`[Orchestrator] Connecting to NATS at ${NATS_URL}...`);
-    const nc = await natsConnect({ servers: NATS_URL });
+    const nc = await natsConnect({ servers: NATS_URL, token: NATS_TOKEN });
     console.log('✓ Connected to NATS');
 
     // Get JetStream context
@@ -275,28 +276,25 @@ async function startOrchestrator() {
       console.log('ℹ NATS stream "calls" already exists');
     }
 
-    // Create or get the consumer
-    let consumer;
-    try {
-      consumer = await js.consumers.add('calls', {
+    // Subscribe to call requests (pull-based, durable consumer)
+    const sub = js.pullSubscribe('calls.>',{
+      config: {
         durable_name: 'orchestrator',
         ack_policy: 'explicit',
-        max_deliver: 3, // Retry up to 3 times
-        ack_wait: 30 * 1e9, // 30 seconds in nanoseconds
-      });
-      console.log('✓ NATS consumer "orchestrator" ready');
-    } catch (err) {
-      // Consumer might already exist
-      consumer = await js.consumers.get('calls', 'orchestrator');
-      console.log('ℹ NATS consumer "orchestrator" already exists');
-    }
+        max_deliver: 3,
+        ack_wait: 30 * 1e9,
+      }
+    });
 
-    // Start consuming messages
+    console.log('✓ NATS consumer "orchestrator" ready');
     console.log('✓ Orchestrator is ready and listening for call requests...\n');
 
-    const messages = await consumer.consume();
-    for await (const msg of messages) {
-      await processCallRequest(msg);
+    // Continuously fetch and process messages
+    while (true) {
+      const messages = await sub.fetch({ batch: 10, expires: 5000 });
+      for await (const msg of messages) {
+        await processCallRequest(msg);
+      }
     }
   } catch (error) {
     console.error('[Orchestrator] Fatal error:', error);
