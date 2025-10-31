@@ -5,6 +5,26 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>irisx-agent-desktop</title>
+    <script>
+      // CRITICAL: Prevent blank page by catching ALL errors before Vue loads
+      window.addEventListener('error', function(event) {
+        console.error('ERROR CAUGHT:', event.error);
+        event.preventDefault();
+
+        // Show error on screen instead of blank page
+        var app = document.getElementById('app');
+        if (app && !app.innerHTML) {
+          app.innerHTML = '<div style="padding:20px;color:red;font-family:monospace;">ERROR: ' + (event.error?.message || 'Unknown error') + '<br><br>Check console (F12) for details.<br><br><button onclick="location.reload()">Reload Page</button></div>';
+        }
+        return false;
+      });
+
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error('UNHANDLED REJECTION:', event.reason);
+        event.preventDefault();
+        return false;
+      });
+    </script>
   </head>
   <body>
     <div id="app"></div>

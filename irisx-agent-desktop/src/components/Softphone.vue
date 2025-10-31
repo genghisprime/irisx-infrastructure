@@ -1,9 +1,19 @@
 <template>
   <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm mx-auto">
-    <!-- DEMO MODE Banner -->
-    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 mb-4">
-      <p class="text-sm font-semibold">DEMO MODE</p>
-      <p class="text-xs">WebRTC integration in Phase 3</p>
+    <!-- Connection Status Banner with Manual Connect -->
+    <div v-if="!isRegistered && !isConnecting" class="bg-gray-100 border-l-4 border-gray-500 text-gray-700 p-3 mb-4">
+      <p class="text-sm font-semibold">⚪ OFFLINE</p>
+      <button @click="connectWebRTC" class="mt-2 px-4 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+        Connect
+      </button>
+    </div>
+    <div v-else-if="isConnecting" class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 mb-4">
+      <p class="text-sm font-semibold">⚠️ CONNECTING...</p>
+      <p class="text-xs">Please wait...</p>
+    </div>
+    <div v-else-if="isRegistered" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 mb-4">
+      <p class="text-sm font-semibold">✅ CONNECTED</p>
+      <p class="text-xs">Extension {{ sipUsername }} ready</p>
     </div>
 
     <!-- Display Screen -->
@@ -126,12 +136,24 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import WebRTCService from '../services/webrtc'
+import { SessionState } from 'sip.js'
+
+// Create a new WebRTC instance for this component
+const webrtc = new WebRTCService()
+
+// SIP Configuration
+const sipUsername = ref('1000')
+const sipPassword = ref('IrisX2025Secure!')
+const sipServer = ref('54.160.220.243')
 
 // State
 const displayNumber = ref('')
 const callStatus = ref('idle') // idle, dialing, ringing, connected, onhold
 const callDuration = ref(0)
 const isMuted = ref(false)
+const isRegistered = ref(false)
+const isConnecting = ref(false)
 let callTimer = null
 
 // Dial pad configuration
@@ -164,56 +186,116 @@ function handleBackspace() {
   displayNumber.value = displayNumber.value.slice(0, -1)
 }
 
-function handleCall() {
-  console.log('DEMO: Initiating call to', displayNumber.value)
+async function connectWebRTC() {
+  isConnecting.value = true
+
+  try {
+    // Disconnect any existing connection first
+    if (webrtc.userAgent) {
+      await webrtc.disconnect().catch(e => console.log('Disconnect ignored:', e))
+    }
+
+    const result = await webrtc.connect({
+      sipUsername: sipUsername.value,
+      sipPassword: sipPassword.value,
+      sipServer: sipServer.value,
+      displayName: `Agent ${sipUsername.value}`
+    })
+
+    if (!result.success) {
+      console.error('Failed to connect:', result.error)
+      alert('Connection failed: ' + result.error)
+      isConnecting.value = false
+    }
+  } catch (error) {
+    console.error('Connection error:', error)
+    alert('Connection error: ' + error.message)
+    isConnecting.value = false
+  }
+}
+
+async function handleCall() {
+  if (!displayNumber.value) return
+
+  console.log('📞 Initiating call to', displayNumber.value)
+  console.log('📞 displayNumber type:', typeof displayNumber.value)
+  console.log('📞 displayNumber length:', displayNumber.value.length)
+  console.log('📞 displayNumber chars:', displayNumber.value.split('').join(','))
+
   callStatus.value = 'dialing'
 
-  // Simulate call progression (DEMO only)
-  setTimeout(() => {
-    callStatus.value = 'ringing'
-  }, 1000)
-
-  setTimeout(() => {
-    callStatus.value = 'connected'
-    startCallTimer()
-    emit('call-started', { number: displayNumber.value })
-  }, 3000)
-}
-
-function handleHangup() {
-  console.log('DEMO: Ending call')
-  callStatus.value = 'idle'
-  stopCallTimer()
-  emit('call-ended', {
-    number: displayNumber.value,
-    duration: callDuration.value
-  })
-  displayNumber.value = ''
-  callDuration.value = 0
-  isMuted.value = false
-}
-
-function handleMute() {
-  isMuted.value = !isMuted.value
-  console.log('DEMO: Mute toggled:', isMuted.value)
-  emit('call-muted', { muted: isMuted.value })
-}
-
-function handleHold() {
-  if (callStatus.value === 'connected') {
-    callStatus.value = 'onhold'
-    console.log('DEMO: Call placed on hold')
-  } else if (callStatus.value === 'onhold') {
-    callStatus.value = 'connected'
-    console.log('DEMO: Call resumed')
+  try {
+    const result = await webrtc.makeCall(displayNumber.value)
+    if (!result.success) {
+      console.error('Call failed:', result.error)
+      callStatus.value = 'idle'
+      alert(`Call failed: ${result.error}`)
+    }
+  } catch (error) {
+    console.error('Call error:', error)
+    callStatus.value = 'idle'
+    alert(`Call error: ${error.message}`)
   }
-  emit('call-held', { onHold: callStatus.value === 'onhold' })
 }
 
-function handleTransfer() {
-  console.log('DEMO: Transfer initiated')
-  emit('call-transferred')
-  // In real implementation, this would open a transfer dialog
+async function handleHangup() {
+  console.log('📞 Ending call')
+
+  try {
+    await webrtc.hangup()
+    callStatus.value = 'idle'
+    stopCallTimer()
+    emit('call-ended', {
+      number: displayNumber.value,
+      duration: callDuration.value
+    })
+    displayNumber.value = ''
+    callDuration.value = 0
+    isMuted.value = false
+  } catch (error) {
+    console.error('Hangup error:', error)
+  }
+}
+
+async function handleMute() {
+  try {
+    const result = await webrtc.toggleMute()
+    if (result.success) {
+      isMuted.value = result.muted
+      emit('call-muted', { muted: result.muted })
+    }
+  } catch (error) {
+    console.error('Mute error:', error)
+  }
+}
+
+async function handleHold() {
+  try {
+    const result = await webrtc.toggleHold()
+    if (result.success) {
+      callStatus.value = result.onHold ? 'onhold' : 'connected'
+      emit('call-held', { onHold: result.onHold })
+    }
+  } catch (error) {
+    console.error('Hold error:', error)
+  }
+}
+
+async function handleTransfer() {
+  const transferTarget = prompt('Enter extension or number to transfer to:')
+  if (transferTarget) {
+    try {
+      const result = await webrtc.transfer(transferTarget)
+      if (result.success) {
+        emit('call-transferred')
+        callStatus.value = 'idle'
+        displayNumber.value = ''
+      }
+    } catch (error) {
+      console.error('Transfer error:', error)
+      alert('Transfer failed: ' + error.message)
+    }
+  }
 }
 
 function startCallTimer() {
@@ -235,8 +317,70 @@ function formatTime(seconds) {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 }
 
+// Initialize WebRTC event handlers on mount (NO auto-connection)
+onMounted(() => {
+  console.log('🔌 Component mounted, WebRTC ready')
+
+  try {
+    webrtc.onRegistered = () => {
+      try {
+        console.log('✅ Registered with SIP server')
+        isRegistered.value = true
+        isConnecting.value = false
+      } catch (err) {
+        console.error('Error in onRegistered:', err)
+      }
+    }
+
+    webrtc.onUnregistered = () => {
+      try {
+        console.log('⚠️ Unregistered from SIP server')
+        isRegistered.value = false
+      } catch (err) {
+        console.error('Error in onUnregistered:', err)
+      }
+    }
+
+    webrtc.onCallStateChange = (newState) => {
+      try {
+        console.log('Call state changed:', newState)
+
+        if (newState === SessionState.Establishing) {
+          callStatus.value = 'dialing'
+        } else if (newState === SessionState.Established) {
+          callStatus.value = 'connected'
+          startCallTimer()
+          emit('call-started', { number: displayNumber.value })
+        } else if (newState === SessionState.Terminated) {
+          callStatus.value = 'idle'
+          stopCallTimer()
+          emit('call-ended', {
+            number: displayNumber.value,
+            duration: callDuration.value
+          })
+          displayNumber.value = ''
+          callDuration.value = 0
+          isMuted.value = false
+        }
+      } catch (err) {
+        console.error('Error in onCallStateChange:', err)
+      }
+    }
+  } catch (err) {
+    console.error('Error setting up WebRTC handlers:', err)
+  }
+})
+
 // Cleanup on unmount
 onUnmounted(() => {
+  console.log('🔌 Component unmounting, cleaning up')
   stopCallTimer()
+
+  // Disconnect WebRTC (non-blocking, catch all errors)
+  if (webrtc && webrtc.disconnect) {
+    webrtc.disconnect().catch(err => {
+      console.log('Disconnect error (ignored):', err)
+    })
+  }
 })
 </script>
