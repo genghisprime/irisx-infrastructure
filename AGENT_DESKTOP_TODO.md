@@ -1,12 +1,12 @@
-# Agent Desktop Phase 2 - COMPLETE ✅
+# Agent Desktop Phase 3 - COMPLETE ✅
 
-## Current Status: Phase 2 Complete (100%)
+## Current Status: Phase 3 Complete (100%)
 
-**Completion Date:** October 30, 2025
-**Total Code:** 1,299 lines (Vue 3 + JavaScript)
-**Files Created:** 6 components
+**Completion Date:** October 31, 2025
+**Total Code:** 1,700+ lines (Vue 3 + JavaScript)
+**Files Created:** 7 components + WebRTC service
 
-All components created, dependencies installed, and dev server tested successfully!
+All components created, WebRTC integration complete, inbound/outbound calling working!
 
 ## What's Done:
 
@@ -104,8 +104,29 @@ http://localhost:5173
 **Status:** Ready for testing!
 **Next:** Phase 3 - WebRTC/SIP.js integration (4-6 hours)
 
-## Note on WebRTC:
-Phase 2 created a WORKING agent desktop with DEMO softphone UI.
-Real SIP.js WebRTC integration is Phase 3 (requires FreeSWITCH WebRTC config).
+## ✅ Phase 3 Complete - WebRTC & Inbound Calling (Oct 31, 2025):
 
-The UI is fully functional - just simulates calls until Phase 3.
+### WebRTC Integration (Week 19 Part 2):
+- ✅ webrtc.js service (438 lines) - SIP.js 0.21.2 integration
+- ✅ SIP registration to FreeSWITCH (extension 1000)
+- ✅ Outbound calling to PSTN working
+- ✅ All call controls (mute, hold, transfer, DTMF)
+- ✅ Manual Connect button (prevents blank page)
+- ✅ Transport state management
+
+### Inbound Calling (Week 19 Part 3):
+- ✅ Incoming call modal UI (full-screen overlay)
+- ✅ Accept/Reject buttons functional
+- ✅ Caller ID display with pulsing animation
+- ✅ FreeSWITCH dialplan for PSTN→WebSocket routing
+- ✅ User directory contact resolution
+- ✅ Twilio ACL whitelist configuration
+- ✅ End-to-end tested: 832-637-8414 → Browser
+
+### Critical Fixes:
+- ✅ Fixed WebSocket contact resolution (user/1000@domain)
+- ✅ Fixed blank page on refresh (3-second API timeout)
+- ✅ Fixed icon sizing persistence (!important flags)
+- ✅ Fixed MANDATORY_IE_MISSING error (user directory)
+
+**Status:** Agent Desktop is now production-ready for voice calling!
