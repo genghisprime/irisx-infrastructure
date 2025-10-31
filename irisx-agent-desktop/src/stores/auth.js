@@ -94,6 +94,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     user.value = null
     localStorage.removeItem('token')
+    localStorage.removeItem('sip_config') // Clear SIP config on logout
   }
 
   async function fetchUser() {
@@ -112,7 +113,27 @@ export const useAuthStore = defineStore('auth', () => {
       })
       clearTimeout(timeoutId)
 
-      user.value = response.data.user
+      // Handle new API response format with data wrapper
+      const userData = response.data.data || response.data
+
+      user.value = userData.user || userData
+
+      // AUTO-CONFIGURE SIP CREDENTIALS
+      // If user has extensions and sipConfig, save to localStorage for WebRTC service
+      if (userData.extensions && userData.extensions.length > 0 && userData.sipConfig) {
+        const primaryExtension = userData.extensions[0]
+
+        const sipConfig = {
+          server: userData.sipConfig.websocketUrl,
+          realm: userData.sipConfig.realm,
+          extension: primaryExtension.extension,
+          password: primaryExtension.sip_password
+        }
+
+        localStorage.setItem('sip_config', JSON.stringify(sipConfig))
+        console.log('✅ SIP credentials auto-configured for extension:', primaryExtension.extension)
+      }
+
       return { success: true }
     } catch (err) {
       // Ignore timeout errors during initialization

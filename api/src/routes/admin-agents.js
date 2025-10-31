@@ -14,6 +14,8 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
+import { query } from '../db/connection.js'
+import { authenticateJWT } from '../middleware/auth.js'
 import {
   provisionExtension,
   deprovisionExtension,

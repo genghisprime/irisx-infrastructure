@@ -13,6 +13,7 @@ class WebRTCService {
     this.isRegistered = false
     this.isTransportConnected = false
     this.remoteAudio = null
+    this.autoConfig = null
 
     // Event callbacks
     this.onRegistered = null
@@ -21,18 +22,75 @@ class WebRTCService {
     this.onCallStateChange = null
     this.onCallEnded = null
     this.onTransportConnected = null
+
+    // AUTO-LOAD SIP credentials from localStorage (set by auth store)
+    this.loadAutoConfig()
+  }
+
+  /**
+   * Load SIP config from localStorage if available
+   * This is set by auth.js when user logs in
+   */
+  loadAutoConfig() {
+    try {
+      const saved = localStorage.getItem('sip_config')
+      if (saved) {
+        this.autoConfig = JSON.parse(saved)
+        console.log('✅ SIP config loaded from localStorage:', this.autoConfig.extension)
+      }
+    } catch (err) {
+      console.warn('⚠️ Failed to load SIP config:', err)
+      this.autoConfig = null
+    }
+  }
+
+  /**
+   * Check if auto-config is available
+   */
+  hasAutoConfig() {
+    return !!this.autoConfig
+  }
+
+  /**
+   * Get auto-config for display (without password)
+   */
+  getAutoConfigInfo() {
+    if (!this.autoConfig) return null
+    return {
+      extension: this.autoConfig.extension,
+      server: this.autoConfig.server
+    }
   }
 
   /**
    * Initialize and connect to FreeSWITCH via WebSocket
-   * @param {Object} config - SIP configuration
+   * @param {Object} config - SIP configuration (optional if autoConfig loaded)
    * @param {string} config.sipUsername - SIP username (e.g., "1000")
    * @param {string} config.sipPassword - SIP password
    * @param {string} config.sipServer - FreeSWITCH server (e.g., "54.160.220.243")
    * @param {string} config.displayName - Agent display name
    */
-  async connect(config) {
+  async connect(config = null) {
     try {
+      // Use auto-config if no config provided
+      if (!config && this.autoConfig) {
+        console.log('📱 Using auto-config from localStorage')
+        // Extract server hostname from websocket URL (wss://server:port -> server)
+        const serverMatch = this.autoConfig.server.match(/\/\/([^:]+)/)
+        const sipServer = serverMatch ? serverMatch[1] : this.autoConfig.server
+
+        config = {
+          sipUsername: this.autoConfig.extension,
+          sipPassword: this.autoConfig.password,
+          sipServer: sipServer,
+          displayName: `Extension ${this.autoConfig.extension}`
+        }
+      }
+
+      if (!config) {
+        throw new Error('No SIP configuration provided and no auto-config available')
+      }
+
       const { sipUsername, sipPassword, sipServer, displayName } = config
 
       // Create remote audio element for incoming audio
