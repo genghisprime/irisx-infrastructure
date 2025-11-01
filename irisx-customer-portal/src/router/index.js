@@ -27,6 +27,7 @@ import SocialMessages from '../views/SocialMessages.vue'
 import Webhooks from '../views/dashboard/Webhooks.vue'
 import Conversations from '../views/dashboard/Conversations.vue'
 import AgentManagement from '../views/AgentManagement.vue'
+import AgentPerformance from '../views/AgentPerformance.vue'
 
 const routes = [
   {
@@ -124,6 +125,11 @@ const routes = [
         path: 'agents',
         name: 'AgentManagement',
         component: AgentManagement
+      },
+      {
+        path: 'agent-performance',
+        name: 'AgentPerformance',
+        component: AgentPerformance
       }
     ]
   }
