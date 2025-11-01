@@ -6,6 +6,7 @@
 
 import pool from '../config/database.js';
 import fetch from 'node-fetch';
+import * as conversationService from './conversation-service.js';
 
 // =============================================================================
 // Discord Integration
@@ -117,7 +118,7 @@ async function processDiscordMessage(message) {
   );
 
   // Store message
-  await storeInboundMessage({
+  const messageId = await storeInboundMessage({
     tenantId: account.tenant_id,
     accountId: account.id,
     platform: 'discord',
@@ -135,6 +136,38 @@ async function processDiscordMessage(message) {
     replyToMessageId: message.referenced_message?.id,
     platformData: message,
   });
+
+  // Auto-create or update conversation in Unified Inbox
+  try {
+    const customerIdentifier = `${message.author.username}@discord`;
+    const customerName = message.author.global_name || message.author.username;
+    const messagePreview = message.content || '[Discord message]';
+
+    const conversationId = await conversationService.findOrCreateConversation({
+      tenantId: account.tenant_id,
+      channel: 'discord',
+      customerIdentifier,
+      customerName,
+      subject: `Discord: #${message.channel_id}`,
+      lastMessagePreview: messagePreview.substring(0, 255),
+      lastMessageDirection: 'inbound',
+      customerId: null,
+      channelConversationId: message.channel_id
+    });
+
+    await conversationService.addMessageToConversation({
+      conversationId,
+      direction: 'inbound',
+      senderType: 'customer',
+      content: message.content || '',
+      channelMessageId: messageId.toString(),
+      status: 'sent'
+    });
+
+    console.log(`  📬 Conversation ${conversationId} updated for Discord message ${messageId}`);
+  } catch (convError) {
+    console.error('  ⚠️  Failed to create/update conversation:', convError.message);
+  }
 
   return { success: true };
 }
@@ -617,13 +650,14 @@ async function storeInboundMessage(data) {
     platformData,
   } = data;
 
-  await pool.query(
+  const result = await pool.query(
     `INSERT INTO social_messages (
       tenant_id, social_account_id, platform, platform_message_id, platform_channel_id, platform_thread_id,
       direction, status, from_user_id, from_username, from_avatar_url,
       message_type, text_content, attachments, embeds, mentions, reply_to_message_id,
       platform_data, created_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, 'inbound', 'sent', $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())`,
+    ) VALUES ($1, $2, $3, $4, $5, $6, 'inbound', 'sent', $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
+    RETURNING id`,
     [
       tenantId,
       accountId,
@@ -643,6 +677,8 @@ async function storeInboundMessage(data) {
       JSON.stringify(platformData),
     ]
   );
+
+  return result.rows[0].id;
 }
 
 /**
