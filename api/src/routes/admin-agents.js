@@ -21,6 +21,7 @@ import {
   deprovisionExtension,
   getFreeSWITCHStatus
 } from '../services/freeswitch-provisioning.js'
+import { sendAgentWelcomeEmail } from '../services/agent-welcome-email.js'
 
 const router = new Hono()
 
@@ -169,10 +170,22 @@ router.post('/agents', authenticateJWT, async (c) => {
       }
     }
 
-    // 6. TODO: Send welcome email (implement email service)
+    // 6. Send welcome email
     if (data.send_welcome_email) {
-      console.log(`  📧 TODO: Send welcome email to ${data.email}`)
-      // await sendAgentWelcomeEmail({ email, tempPassword, extensions })
+      try {
+        await sendAgentWelcomeEmail({
+          tenantId,
+          email: data.email,
+          firstName: data.first_name,
+          lastName: data.last_name,
+          tempPassword,
+          extensions: assignedExtensions
+        })
+        console.log(`  📧 Welcome email queued for ${data.email}`)
+      } catch (emailError) {
+        console.error(`  ⚠️  Failed to send welcome email:`, emailError.message)
+        // Don't fail the agent creation if email fails
+      }
     }
 
     console.log(`✅ Agent created successfully: ${user.email}`)
@@ -483,6 +496,187 @@ router.delete('/agents/:id', authenticateJWT, async (c) => {
   } catch (error) {
     console.error('Delete agent error:', error)
     return c.json({ error: 'Failed to delete agent', message: error.message }, 500)
+  }
+})
+
+// ============================================================================
+// POST /v1/admin/agents/bulk-import - Bulk Import Agents
+// ============================================================================
+
+router.post('/agents/bulk-import', authenticateJWT, async (c) => {
+  try {
+    const body = await c.req.json()
+    const { agents } = body // Array of agent objects
+    const tenantId = c.get('tenantId')
+
+    if (!Array.isArray(agents) || agents.length === 0) {
+      return c.json({ error: 'agents array is required and must not be empty' }, 400)
+    }
+
+    if (agents.length > 100) {
+      return c.json({ error: 'Maximum 100 agents can be imported at once' }, 400)
+    }
+
+    console.log(`📦 Bulk importing ${agents.length} agents for tenant ${tenantId}`)
+
+    const results = {
+      success: [],
+      failed: [],
+      total: agents.length
+    }
+
+    // Process each agent
+    for (const agentData of agents) {
+      try {
+        // Validate required fields
+        if (!agentData.first_name || !agentData.last_name || !agentData.email) {
+          results.failed.push({
+            email: agentData.email || 'unknown',
+            error: 'Missing required fields (first_name, last_name, email)'
+          })
+          continue
+        }
+
+        // Check if email already exists
+        const existingUser = await query(
+          'SELECT id FROM users WHERE email = $1 AND tenant_id = $2',
+          [agentData.email, tenantId]
+        )
+
+        if (existingUser.rows.length > 0) {
+          results.failed.push({
+            email: agentData.email,
+            error: 'Email already exists'
+          })
+          continue
+        }
+
+        // Generate temp password
+        const tempPassword = crypto.randomBytes(16).toString('hex')
+        const hashedPassword = await bcrypt.hash(tempPassword, 10)
+
+        // Create user
+        const userResult = await query(
+          `INSERT INTO users (tenant_id, email, password, first_name, last_name, role, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+           RETURNING id, email, first_name, last_name`,
+          [tenantId, agentData.email, hashedPassword, agentData.first_name, agentData.last_name, agentData.role || 'agent']
+        )
+
+        const user = userResult.rows[0]
+
+        // Allocate extension
+        const extensionsCount = agentData.extensions_count || 1
+        const extensionResults = await query(
+          `SELECT id, extension, sip_password
+           FROM agent_extensions
+           WHERE tenant_id = $1 AND user_id IS NULL AND status = 'active'
+           ORDER BY CAST(extension AS INTEGER) ASC
+           LIMIT $2`,
+          [tenantId, extensionsCount]
+        )
+
+        let extensions = extensionResults.rows
+
+        // Create extensions if needed
+        if (extensions.length < extensionsCount) {
+          const needed = extensionsCount - extensions.length
+          const lastExtResult = await query(
+            `SELECT COALESCE(MAX(CAST(extension AS INTEGER)), $1) as last_ext
+             FROM agent_extensions
+             WHERE tenant_id = $2`,
+            [(tenantId + 1) * 1000 - 1, tenantId]
+          )
+
+          let nextExtNum = parseInt(lastExtResult.rows[0].last_ext) + 1
+
+          for (let i = 0; i < needed; i++) {
+            const sipPassword = crypto.randomBytes(32).toString('hex')
+            const newExtResult = await query(
+              `INSERT INTO agent_extensions (tenant_id, extension, sip_password, status, created_at)
+               VALUES ($1, $2, $3, 'active', NOW())
+               RETURNING id, extension, sip_password`,
+              [tenantId, nextExtNum.toString(), sipPassword]
+            )
+            extensions.push(newExtResult.rows[0])
+            nextExtNum++
+          }
+        }
+
+        // Assign and provision extensions
+        const assignedExtensions = []
+        for (const ext of extensions) {
+          await query(
+            `UPDATE agent_extensions
+             SET user_id = $1, assigned_at = NOW(), updated_at = NOW()
+             WHERE id = $2`,
+            [user.id, ext.id]
+          )
+
+          try {
+            await provisionExtension({
+              tenantId,
+              extension: ext.extension,
+              sipPassword: ext.sip_password,
+              userName: `${agentData.first_name} ${agentData.last_name}`,
+              voicemailEnabled: true
+            })
+            assignedExtensions.push({ extension: ext.extension })
+          } catch (provisionError) {
+            console.error(`  ⚠️  Failed to provision extension ${ext.extension}:`, provisionError.message)
+            // Rollback assignment
+            await query(
+              `UPDATE agent_extensions SET user_id = NULL, assigned_at = NULL WHERE id = $1`,
+              [ext.id]
+            )
+          }
+        }
+
+        // Send welcome email if requested
+        if (agentData.send_welcome_email !== false) {
+          try {
+            await sendAgentWelcomeEmail({
+              tenantId,
+              email: agentData.email,
+              firstName: agentData.first_name,
+              lastName: agentData.last_name,
+              tempPassword,
+              extensions: assignedExtensions
+            })
+          } catch (emailError) {
+            console.error(`  ⚠️  Failed to send welcome email to ${agentData.email}`)
+          }
+        }
+
+        results.success.push({
+          email: agentData.email,
+          name: `${agentData.first_name} ${agentData.last_name}`,
+          extensions: assignedExtensions.map(e => e.extension),
+          temp_password: tempPassword
+        })
+
+        console.log(`  ✅ Imported ${agentData.email}`)
+
+      } catch (error) {
+        console.error(`  ❌ Failed to import ${agentData.email}:`, error.message)
+        results.failed.push({
+          email: agentData.email || 'unknown',
+          error: error.message
+        })
+      }
+    }
+
+    console.log(`✅ Bulk import complete: ${results.success.length} succeeded, ${results.failed.length} failed`)
+
+    return c.json({
+      success: true,
+      results,
+      message: `Imported ${results.success.length} out of ${results.total} agents`
+    }, results.failed.length > 0 ? 207 : 201) // 207 Multi-Status if some failed
+
+  } catch (error) {
+    console.error('❌ Bulk import error:', error)
+    return c.json({ error: 'Failed to import agents', message: error.message }, 500)
   }
 })
 
