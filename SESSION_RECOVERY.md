@@ -692,17 +692,49 @@ Unified Inbox across all channels with conversation threading, agent assignment,
   - Update status and priority
   - Auto-scroll to bottom
 
-**What's Pending:**
+**Step 4: Auto-Create Conversations - ⏳ 33% COMPLETE**
 
-**Step 4: Auto-Create Conversations - ⏳ PENDING**
-- Update SMS inbound webhook to auto-create conversation
+**✅ COMPLETE: Conversation Service (380+ lines)**
+- api/src/services/conversation-service.js (NEW)
+- `findOrCreateConversation()` - Smart conversation matching (searches open/pending first)
+- `addMessageToConversation()` - Link channel messages to unified conversations
+- `autoAssignConversation()` - Round-robin agent assignment via DB function
+- `findCustomerByIdentifier()` - Customer lookup by phone/email
+- Helper functions: `closeConversation()`, `reopenConversation()`, `updateConversationPriority()`
+
+**✅ COMPLETE: WhatsApp Integration**
+- Modified api/src/routes/whatsapp.js POST /webhook handler (lines 180-224)
+- Auto-creates conversation for each inbound WhatsApp message
+- Links whatsapp_messages.id → conversation_messages.channel_message_id
+- Extracts customer name from WhatsApp profile metadata
+- Handles text messages, image/video/document captions
+- Graceful error handling (won't fail message processing if conversation fails)
+- **How it works:**
+  1. WhatsApp webhook receives message from Meta
+  2. Message stored in whatsapp_messages table (existing)
+  3. NEW: Searches for existing open/pending conversation with customer
+  4. If found: Updates conversation with new message preview, increments counts
+  5. If not found: Creates new conversation with "open" status
+  6. Auto-assigns to agent using round-robin
+  7. Adds message to conversation_messages table
+  8. Links via channel_message_id field
+- Deployed to production ✅
+
+**⏳ PENDING: Email Integration**
 - Update Email inbound processing to auto-create conversation
-- Update WhatsApp inbound webhook to auto-create conversation
-- Update Social inbound webhooks to auto-create conversation
-- Link channel-specific messages to unified conversation (channel_message_id field)
+- Link emails table → conversation_messages
+
+**⏳ PENDING: Social Channels Integration**
+- Update Discord/Slack/Telegram/Teams webhooks to auto-create conversation
+- Link social_messages → conversation_messages
+
+**⏳ PENDING: SMS Integration**
+- SMS routes don't exist yet - need to create sms.js route file first
+- Or integrate into existing messaging infrastructure
 
 **Step 5: End-to-End Testing - ⏳ PENDING**
-- Send inbound SMS → verify conversation created
+- Send inbound WhatsApp message → verify conversation created ✅ (ready to test)
+- Send inbound Email → verify conversation created (pending integration)
 - Assign to agent → verify assignment
 - Agent replies → verify message sent
 - Close conversation → verify status updated
@@ -723,19 +755,23 @@ Unified Inbox across all channels with conversation threading, agent assignment,
 **Files Created:**
 - database/migrations/012_unified_inbox_conversations.sql (464 lines)
 - api/src/routes/conversations.js (650+ lines)
+- api/src/services/conversation-service.js (380+ lines) - NEW
 - irisx-customer-portal/src/views/dashboard/Conversations.vue (1,333 lines)
 - docs/SCALABILITY_ANALYSIS.md (574 lines)
 - docs/CHANNEL_QUEUE_ANALYSIS.md (473 lines)
 
 **Deployment:**
 - Database migration applied to production RDS ✅
-- API routes deployed and registered ✅
+- Conversations API routes deployed and registered ✅
+- Conversation service deployed ✅
+- WhatsApp webhook updated and deployed ✅
+- API server restarted ✅
 - Test conversation created (ID: 1) ✅
 - API endpoint verified ✅
 
-**Git Commits:** 4a5ab63, 5d254c0, eb33d38
+**Git Commits:** 4a5ab63, 5d254c0, eb33d38, 30aeb1a
 
-**Next:** Complete Step 4 (Auto-Create Conversations from Inbound Messages)
+**Next:** Complete Email and Social channels integration (Step 4 - 67% remaining)
 
 ### 🎉 Week 19 Part 1: Voice Testing - COMPLETE! (Oct 30, 2025)
 **Status:** ✅ FIRST SUCCESSFUL END-TO-END VOICE CALL IN IRISX HISTORY
