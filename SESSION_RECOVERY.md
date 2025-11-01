@@ -892,6 +892,152 @@ Provide customers with comprehensive agent performance monitoring, productivity 
 
 ---
 
+### ✅ Week 20: Platform Admin Dashboard Backend - 100% COMPLETE! (Nov 1, 2025)
+**Status:** ✅ Backend APIs Deployed - Admin Portal Frontend Pending
+
+**The Goal:**
+Provide IRISX staff with a powerful admin interface to manage ALL tenants, monitor platform health, and access global analytics.
+
+**What We Built:**
+
+**1. Database Schema (Migration 013) - ✅ COMPLETE**
+- database/migrations/013_admin_portal_system.sql (346 lines)
+- `admin_users` table - IRISX staff authentication (separate from tenant users)
+- `admin_sessions` table - Admin JWT sessions with token hashing
+- `admin_audit_log` table - Complete audit trail of all admin actions
+- 4 views for admin analytics:
+  - `admin_tenant_stats_view` - Per-tenant metrics
+  - `admin_platform_stats_view` - Platform-wide aggregations
+  - `admin_recent_signups_view` - New tenant registrations
+  - `admin_revenue_view` - Revenue tracking
+- Helper functions: `hash_admin_session_token()`, `update_admin_tenant_stats()`
+- 2 triggers: Auto-update stats, auto-revoke expired sessions
+- Seed data: Default superadmin user (admin@irisx.internal / TestPassword123)
+
+**2. Admin Authentication API - ✅ COMPLETE**
+- api/src/routes/admin-auth.js (425 lines)
+- 6 authentication endpoints:
+  - POST /admin/auth/login - Login with bcrypt password verification
+  - POST /admin/auth/logout - Revoke current session
+  - GET /admin/auth/me - Get current admin user details
+  - POST /admin/auth/change-password - Update password
+  - GET /admin/auth/sessions - List all active sessions
+  - DELETE /admin/auth/sessions/:id - Revoke specific session
+- JWT tokens with 4-hour expiry (shorter than tenant tokens)
+- SHA-256 token hashing for security
+- Bcrypt password hashing (cost factor 10)
+- Middleware: `authenticateAdmin()` for protected routes
+- Audit logging for all authentication events
+
+**3. Tenant Management API - ✅ COMPLETE**
+- api/src/routes/admin-tenants.js (560+ lines)
+- 8 tenant management endpoints:
+  - GET /admin/tenants - List with pagination, filters, search
+  - GET /admin/tenants/:id - Get tenant details + stats + user count
+  - POST /admin/tenants - Create new tenant + admin user atomically
+  - PATCH /admin/tenants/:id - Update tenant settings
+  - POST /admin/tenants/:id/suspend - Suspend tenant (superadmin only)
+  - POST /admin/tenants/:id/reactivate - Reactivate suspended tenant
+  - DELETE /admin/tenants/:id - Soft delete tenant (superadmin only)
+  - GET /admin/tenants/:id/audit-log - View tenant action history
+- Advanced filtering: status, plan, search by name/domain/email
+- Sorting: created date, user count, status
+- Pagination with configurable page size
+- Atomic tenant creation (rollback on failure)
+
+**4. Platform Dashboard API - ✅ COMPLETE**
+- api/src/routes/admin-dashboard.js (445 lines)
+- 8 analytics endpoints:
+  - GET /admin/dashboard/overview - Quick stats (total tenants, users, active calls, revenue)
+  - GET /admin/dashboard/stats - Detailed platform metrics
+  - GET /admin/dashboard/charts/daily-activity - Time series data for charts
+  - GET /admin/dashboard/charts/tenant-growth - Signup trends
+  - GET /admin/dashboard/revenue - Revenue breakdown by plan tier
+  - GET /admin/dashboard/recent-activity - Latest tenant actions
+  - GET /admin/dashboard/system-health - Infrastructure status (DB, Redis, FreeSWITCH)
+  - GET /admin/dashboard/audit-log - Global audit log with filters
+- Real-time metrics from database views
+- Chart-ready data formats
+- System health monitoring
+
+**5. Global Search API - ✅ COMPLETE**
+- api/src/routes/admin-search.js (430+ lines)
+- 5 powerful search endpoints:
+  - GET /admin/search - Global search across tenants, users, calls
+  - GET /admin/search/tenants - Search tenants by name, domain, email
+  - GET /admin/search/users - Search users across all tenants
+  - GET /admin/search/calls - Search call records with filters
+  - GET /admin/search/suggestions - Autocomplete for search
+- Full-text search with ILIKE operators
+- Cross-tenant searching (superadmin only)
+- Search history tracking
+- Real-time suggestions
+
+**Admin Role Hierarchy:**
+- **superadmin** - Full access to all features including delete
+- **admin** - Can manage tenants but cannot delete
+- **support** - Read-only access to tenant data
+- **readonly** - Dashboard and analytics only
+
+**Security Features:**
+- Separate admin authentication from tenant users
+- 4-hour JWT expiry (vs 24h for tenants)
+- SHA-256 token hashing in sessions table
+- Bcrypt password hashing with cost factor 10
+- Complete audit logging of all admin actions
+- IP address and user agent tracking
+- Session revocation capability
+
+**Deployment Status:**
+- ✅ Database migration applied to production RDS
+- ✅ Default superadmin user created
+- ✅ All 4 API route files deployed to production
+- ✅ Routes registered in index.js
+- ✅ Import errors fixed (crypto require → import)
+- ✅ PM2 environment variables configured
+- ✅ API server restarted and stable
+- ✅ Admin login endpoint tested and working
+
+**Issues Fixed During Deployment:**
+1. **Database import paths** - Changed from `../config/database.js` to `../db/connection.js`
+2. **ES module exports** - Fixed named vs default exports for pool
+3. **PM2 env loading** - Database connection was failing (undefined host)
+4. **Crypto require()** - Changed `require('crypto')` to ES module `import crypto`
+5. **Admin user seed data** - Password hash needed regeneration on server
+6. **Password testing** - Changed from "ChangeMe123!" to "TestPassword123" (JSON parsing issue with `!`)
+
+**Production Credentials:**
+- **Email:** admin@irisx.internal
+- **Password:** TestPassword123
+- **Role:** superadmin
+- **Token Expiry:** 4 hours
+
+**Files Created:**
+- database/migrations/013_admin_portal_system.sql (346 lines)
+- api/src/routes/admin-auth.js (425 lines)
+- api/src/routes/admin-tenants.js (560+ lines)
+- api/src/routes/admin-dashboard.js (445 lines)
+- api/src/routes/admin-search.js (430+ lines)
+
+**Files Modified:**
+- /home/ubuntu/irisx-backend/src/index.js (added 4 admin route imports + registrations)
+
+**What's Pending:**
+- ❌ Admin Portal Frontend (Vue 3 UI for IRISX staff)
+- ❌ Two-factor authentication for admin users
+- ❌ Admin user management UI
+- ❌ Advanced reporting and exports
+
+**API Endpoints Summary:** 27 new endpoints across 4 route files
+**Lines of Code:** ~1,860 lines of production backend code
+**Documentation:** Full OpenAPI specs pending
+
+**Git Commits:** [Pending]
+
+**Next:** Build Admin Portal frontend (Vue 3) or continue with Call Queue system
+
+---
+
 ### 🎉 Week 19 Part 1: Voice Testing - COMPLETE! (Oct 30, 2025)
 **Status:** ✅ FIRST SUCCESSFUL END-TO-END VOICE CALL IN IRISX HISTORY
 

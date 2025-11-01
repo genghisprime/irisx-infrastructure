@@ -5,7 +5,7 @@
  */
 
 import { Hono } from 'hono';
-import { pool } from '../config/database.js';
+import pool from '../db/connection.js';
 import { authenticateAdmin } from './admin-auth.js';
 
 const adminDashboard = new Hono();

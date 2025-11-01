@@ -8,7 +8,8 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { pool } from '../config/database.js';
+import crypto from 'crypto';
+import pool from '../db/connection.js';
 
 const adminAuth = new Hono();
 
@@ -103,7 +104,6 @@ export async function authenticateAdmin(c, next) {
 // =====================================================
 
 function hashToken(token) {
-  const crypto = require('crypto');
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 

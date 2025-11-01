@@ -7,7 +7,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
-import { pool } from '../config/database.js';
+import pool from '../db/connection.js';
 import { authenticateAdmin } from './admin-auth.js';
 
 const adminTenants = new Hono();
