@@ -7,6 +7,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import * as whatsappService from '../services/whatsapp.js';
+import * as conversationService from '../services/conversation-service.js';
 import pool from '../config/database.js';
 
 const whatsapp = new Hono();
@@ -175,6 +176,52 @@ async function processMessagesWebhook(value) {
         );
 
         console.log(`Stored inbound WhatsApp message: ${messageId}`);
+
+        // Auto-create or update conversation in Unified Inbox
+        try {
+          const customerPhone = message.from;
+          const customerName = value.contacts?.[0]?.profile?.name || customerPhone;
+          const messageText = message.text?.body ||
+                             message.image?.caption ||
+                             message.video?.caption ||
+                             message.document?.caption ||
+                             `[${message.type} message]`;
+
+          // Find or create customer ID
+          const customerId = await conversationService.findCustomerByIdentifier(
+            account.tenant_id,
+            customerPhone,
+            'whatsapp'
+          );
+
+          // Find or create conversation
+          const conversationId = await conversationService.findOrCreateConversation({
+            tenantId: account.tenant_id,
+            channel: 'whatsapp',
+            customerIdentifier: customerPhone,
+            customerName,
+            subject: 'WhatsApp conversation',
+            lastMessagePreview: messageText.substring(0, 255),
+            lastMessageDirection: 'inbound',
+            customerId,
+            channelConversationId: message.id
+          });
+
+          // Add message to conversation
+          await conversationService.addMessageToConversation({
+            conversationId,
+            direction: 'inbound',
+            senderType: 'customer',
+            content: messageText,
+            channelMessageId: messageId.toString(),
+            status: 'delivered'
+          });
+
+          console.log(`  📬 Conversation ${conversationId} updated for WhatsApp message ${messageId}`);
+        } catch (convError) {
+          console.error('  ⚠️  Failed to create/update conversation:', convError.message);
+          // Don't fail message processing if conversation creation fails
+        }
 
         // Download media if present
         if (message.type in ['image', 'video', 'audio', 'document'] && message[message.type]?.id) {
