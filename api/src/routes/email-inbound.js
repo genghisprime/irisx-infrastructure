@@ -21,6 +21,7 @@
 import { Hono } from 'hono';
 import { query } from '../db/index.js';
 import emailParser from '../services/email-parser.js';
+import * as conversationService from '../services/conversation-service.js';
 import crypto from 'crypto';
 
 const emailInbound = new Hono();
@@ -103,6 +104,49 @@ emailInbound.post('/webhook/sendgrid', async (c) => {
     const attachmentCount = parseInt(formData.get('attachments')) || 0;
     if (attachmentCount > 0) {
       await handleSendGridAttachments(formData, emailId, tenant.id);
+    }
+
+    // Auto-create or update conversation in Unified Inbox
+    try {
+      const senderEmail = from.match(/<(.+?)>/) ? from.match(/<(.+?)>/)[1] : from;
+      const senderName = from.match(/^(.+?)\s*</) ? from.match(/^(.+?)\s*</)[1].trim() : senderEmail;
+      const messagePreview = (text || html || '').substring(0, 255).replace(/<[^>]*>/g, '').trim();
+
+      // Find or create customer ID
+      const customerId = await conversationService.findCustomerByIdentifier(
+        tenant.id,
+        senderEmail,
+        'email'
+      );
+
+      // Find or create conversation
+      const conversationId = await conversationService.findOrCreateConversation({
+        tenantId: tenant.id,
+        channel: 'email',
+        customerIdentifier: senderEmail,
+        customerName: senderName,
+        subject: subject || '(no subject)',
+        lastMessagePreview: messagePreview,
+        lastMessageDirection: 'inbound',
+        customerId,
+        channelConversationId: emailId.toString()
+      });
+
+      // Add message to conversation
+      await conversationService.addMessageToConversation({
+        conversationId,
+        direction: 'inbound',
+        senderType: 'customer',
+        content: text || '',
+        contentHtml: html || null,
+        channelMessageId: emailId.toString(),
+        status: 'received'
+      });
+
+      console.log(`  📬 Conversation ${conversationId} updated for email ${emailId}`);
+    } catch (convError) {
+      console.error('  ⚠️  Failed to create/update conversation:', convError.message);
+      // Don't fail email processing if conversation creation fails
     }
 
     // Process routing rules
@@ -201,6 +245,41 @@ emailInbound.post('/webhook/mailgun', async (c) => {
       await handleMailgunAttachments(formData, emailId, tenant.id, attachmentCount);
     }
 
+    // Auto-create or update conversation in Unified Inbox
+    try {
+      const senderEmail = from.match(/<(.+?)>/) ? from.match(/<(.+?)>/)[1] : from;
+      const senderName = from.match(/^(.+?)\s*</) ? from.match(/^(.+?)\s*</)[1].trim() : senderEmail;
+      const messagePreview = (text || html || '').substring(0, 255).replace(/<[^>]*>/g, '').trim();
+
+      const customerId = await conversationService.findCustomerByIdentifier(tenant.id, senderEmail, 'email');
+
+      const conversationId = await conversationService.findOrCreateConversation({
+        tenantId: tenant.id,
+        channel: 'email',
+        customerIdentifier: senderEmail,
+        customerName: senderName,
+        subject: subject || '(no subject)',
+        lastMessagePreview: messagePreview,
+        lastMessageDirection: 'inbound',
+        customerId,
+        channelConversationId: emailId.toString()
+      });
+
+      await conversationService.addMessageToConversation({
+        conversationId,
+        direction: 'inbound',
+        senderType: 'customer',
+        content: text || '',
+        contentHtml: html || null,
+        channelMessageId: emailId.toString(),
+        status: 'received'
+      });
+
+      console.log(`  📬 Conversation ${conversationId} updated for email ${emailId}`);
+    } catch (convError) {
+      console.error('  ⚠️  Failed to create/update conversation:', convError.message);
+    }
+
     // Process routing rules
     await processRoutingRules(emailId, tenant.id, { from, to, subject, body: text });
 
@@ -294,6 +373,41 @@ emailInbound.post('/webhook/generic', async (c) => {
           [emailId, s3Data.filename, s3Data.contentType, s3Data.size, s3Data.s3Key, 'pending']
         );
       }
+    }
+
+    // Auto-create or update conversation in Unified Inbox
+    try {
+      const senderEmail = parsed.from.match(/<(.+?)>/) ? parsed.from.match(/<(.+?)>/)[1] : parsed.from;
+      const senderName = parsed.from.match(/^(.+?)\s*</) ? parsed.from.match(/^(.+?)\s*</)[1].trim() : senderEmail;
+      const messagePreview = (parsed.textBody || parsed.htmlBody || '').substring(0, 255).replace(/<[^>]*>/g, '').trim();
+
+      const customerId = await conversationService.findCustomerByIdentifier(tenant.id, senderEmail, 'email');
+
+      const conversationId = await conversationService.findOrCreateConversation({
+        tenantId: tenant.id,
+        channel: 'email',
+        customerIdentifier: senderEmail,
+        customerName: senderName,
+        subject: parsed.subject || '(no subject)',
+        lastMessagePreview: messagePreview,
+        lastMessageDirection: 'inbound',
+        customerId,
+        channelConversationId: emailId.toString()
+      });
+
+      await conversationService.addMessageToConversation({
+        conversationId,
+        direction: 'inbound',
+        senderType: 'customer',
+        content: parsed.textBody || '',
+        contentHtml: parsed.htmlBody || null,
+        channelMessageId: emailId.toString(),
+        status: 'received'
+      });
+
+      console.log(`  📬 Conversation ${conversationId} updated for email ${emailId}`);
+    } catch (convError) {
+      console.error('  ⚠️  Failed to create/update conversation:', convError.message);
     }
 
     // Process routing rules
