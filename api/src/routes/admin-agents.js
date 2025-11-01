@@ -15,7 +15,7 @@ import { z } from 'zod'
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import { query } from '../db/connection.js'
-import { authenticateJWT } from '../middleware/auth.js'
+import { authenticateJWT } from '../middleware/authMiddleware.js'
 import {
   provisionExtension,
   deprovisionExtension,
@@ -48,17 +48,16 @@ const updateAgentSchema = z.object({
 // POST /v1/admin/agents - Create Agent
 // ============================================================================
 
-router.post('/v1/admin/agents', async (c) => {
+router.post('/agents', authenticateJWT, async (c) => {
   try {
     const body = await c.req.json()
     const data = createAgentSchema.parse(body)
     const tenantId = c.get('tenantId')
-    const db = c.get('db')
 
     console.log(`📞 Creating agent for tenant ${tenantId}: ${data.email}`)
 
     // 1. Check if email already exists
-    const existingUser = await db.query(
+    const existingUser = await query(
       'SELECT id FROM users WHERE email = $1 AND tenant_id = $2',
       [data.email, tenantId]
     )
@@ -75,7 +74,7 @@ router.post('/v1/admin/agents', async (c) => {
     const hashedPassword = await bcrypt.hash(tempPassword, 10)
 
     // 3. Create user account
-    const userResult = await db.query(
+    const userResult = await query(
       `INSERT INTO users (tenant_id, email, password, first_name, last_name, role, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
        RETURNING id, email, first_name, last_name, role`,
@@ -87,7 +86,7 @@ router.post('/v1/admin/agents', async (c) => {
 
     // 4. Find or create available extensions
     const assignedExtensions = []
-    const extensionResults = await db.query(
+    const extensionResults = await query(
       `SELECT id, extension, sip_password
        FROM agent_extensions
        WHERE tenant_id = $1 AND user_id IS NULL AND status = 'active'
@@ -103,7 +102,7 @@ router.post('/v1/admin/agents', async (c) => {
       const needed = data.extensions_count - extensions.length
 
       // Get next extension number
-      const lastExtResult = await db.query(
+      const lastExtResult = await query(
         `SELECT COALESCE(MAX(CAST(extension AS INTEGER)), $1) as last_ext
          FROM agent_extensions
          WHERE tenant_id = $2`,
@@ -116,7 +115,7 @@ router.post('/v1/admin/agents', async (c) => {
         // Generate SIP password (will be stored in plaintext for FreeSWITCH)
         const sipPassword = crypto.randomBytes(32).toString('hex')
 
-        const newExtResult = await db.query(
+        const newExtResult = await query(
           `INSERT INTO agent_extensions (tenant_id, extension, sip_password, status, created_at)
            VALUES ($1, $2, $3, 'active', NOW())
            RETURNING id, extension, sip_password`,
@@ -131,7 +130,7 @@ router.post('/v1/admin/agents', async (c) => {
     // 5. Assign extensions to user and provision in FreeSWITCH
     for (const ext of extensions) {
       // Assign to user in database
-      await db.query(
+      await query(
         `UPDATE agent_extensions
          SET user_id = $1, assigned_at = NOW(), updated_at = NOW()
          WHERE id = $2`,
@@ -159,7 +158,7 @@ router.post('/v1/admin/agents', async (c) => {
         console.error(`  ❌ Failed to provision extension ${ext.extension}:`, provisionError.message)
 
         // Rollback assignment in database
-        await db.query(
+        await query(
           `UPDATE agent_extensions
            SET user_id = NULL, assigned_at = NULL
            WHERE id = $1`,
@@ -213,10 +212,9 @@ router.post('/v1/admin/agents', async (c) => {
 // GET /v1/admin/agents - List Agents
 // ============================================================================
 
-router.get('/v1/admin/agents', async (c) => {
+router.get('/agents', authenticateJWT, async (c) => {
   try {
     const tenantId = c.get('tenantId')
-    const db = c.get('db')
 
     // Query parameters for filtering
     const status = c.req.query('status') // active, suspended
@@ -239,7 +237,7 @@ router.get('/v1/admin/agents', async (c) => {
     }
 
     // Get agents with their extensions
-    const result = await db.query(`
+    const result = await query(`
       SELECT
         u.id,
         u.email,
@@ -266,7 +264,7 @@ router.get('/v1/admin/agents', async (c) => {
     `, [...params, limit, offset])
 
     // Get total count
-    const countResult = await db.query(`
+    const countResult = await query(`
       SELECT COUNT(DISTINCT u.id) as total
       FROM users u
       ${whereClause}
@@ -293,13 +291,12 @@ router.get('/v1/admin/agents', async (c) => {
 // GET /v1/admin/agents/:id - Get Agent Details
 // ============================================================================
 
-router.get('/v1/admin/agents/:id', async (c) => {
+router.get('/agents/:id', authenticateJWT, async (c) => {
   try {
     const agentId = c.req.param('id')
     const tenantId = c.get('tenantId')
-    const db = c.get('db')
 
-    const result = await db.query(`
+    const result = await query(`
       SELECT
         u.id,
         u.email,
@@ -345,11 +342,10 @@ router.get('/v1/admin/agents/:id', async (c) => {
 // PATCH /v1/admin/agents/:id - Update Agent
 // ============================================================================
 
-router.patch('/v1/admin/agents/:id', async (c) => {
+router.patch('/agents/:id', authenticateJWT, async (c) => {
   try {
     const agentId = c.req.param('id')
     const tenantId = c.get('tenantId')
-    const db = c.get('db')
 
     const body = await c.req.json()
     const data = updateAgentSchema.parse(body)
@@ -383,7 +379,7 @@ router.patch('/v1/admin/agents/:id', async (c) => {
       paramCounter++
 
       // Also update extension status
-      await db.query(
+      await query(
         `UPDATE agent_extensions
          SET status = $1
          WHERE user_id = $2 AND tenant_id = $3`,
@@ -398,7 +394,7 @@ router.patch('/v1/admin/agents/:id', async (c) => {
     updates.push(`updated_at = NOW()`)
     values.push(agentId, tenantId)
 
-    const result = await db.query(`
+    const result = await query(`
       UPDATE users
       SET ${updates.join(', ')}
       WHERE id = $${paramCounter} AND tenant_id = $${paramCounter + 1} AND deleted_at IS NULL
@@ -430,16 +426,15 @@ router.patch('/v1/admin/agents/:id', async (c) => {
 // DELETE /v1/admin/agents/:id - Delete Agent
 // ============================================================================
 
-router.delete('/v1/admin/agents/:id', async (c) => {
+router.delete('/agents/:id', authenticateJWT, async (c) => {
   try {
     const agentId = c.req.param('id')
     const tenantId = c.get('tenantId')
-    const db = c.get('db')
 
     console.log(`🗑️  Deleting agent ${agentId}...`)
 
     // 1. Get agent's extensions
-    const extResult = await db.query(
+    const extResult = await query(
       `SELECT id, extension FROM agent_extensions
        WHERE user_id = $1 AND tenant_id = $2`,
       [agentId, tenantId]
@@ -457,7 +452,7 @@ router.delete('/v1/admin/agents/:id', async (c) => {
     }
 
     // 3. Unassign extensions (return to pool)
-    await db.query(
+    await query(
       `UPDATE agent_extensions
        SET user_id = NULL, assigned_at = NULL, status = 'active', updated_at = NOW()
        WHERE user_id = $1 AND tenant_id = $2`,
@@ -465,7 +460,7 @@ router.delete('/v1/admin/agents/:id', async (c) => {
     )
 
     // 4. Soft delete user
-    const result = await db.query(
+    const result = await query(
       `UPDATE users
        SET deleted_at = NOW(), updated_at = NOW()
        WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL
@@ -495,7 +490,7 @@ router.delete('/v1/admin/agents/:id', async (c) => {
 // GET /v1/admin/freeswitch/status - FreeSWITCH Server Status
 // ============================================================================
 
-router.get('/v1/admin/freeswitch/status', async (c) => {
+router.get('/freeswitch/status', authenticateJWT, async (c) => {
   try {
     const status = await getFreeSWITCHStatus()
     return c.json(status)
