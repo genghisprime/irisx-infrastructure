@@ -33,27 +33,33 @@
 
 ---
 
-### 2. Agent Desktop WebRTC ❌ NOT WORKING
-**Status:** UI is complete (DEMO mode), but WebRTC not integrated
-**Impact:** CRITICAL - Agents cannot receive calls via browser
-**Risk:** Cannot onboard call center customers without this
+### 2. Agent Desktop WebRTC ✅ COMPLETE (Verified Nov 1, 2025)
+**Status:** WebRTC fully integrated and production-ready
+**Completion Date:** October 31, 2025
+**Impact:** Agents can now receive/make calls via browser
 
-**What's Missing:**
-- [ ] Integrate SIP.js library (v0.21.2)
-- [ ] Configure FreeSWITCH WebSocket (WSS) on port 8082
-- [ ] SSL certificate for WSS (Let's Encrypt)
-- [ ] Test browser-based softphone
-- [ ] Test call controls (mute, hold, transfer, hangup)
-- [ ] Test across browsers (Chrome, Firefox, Safari)
-- [ ] Handle network reconnection
-- [ ] Audio device selection UI
+**What Was Completed:**
+- [x] Integrated SIP.js library (v0.21.2)
+- [x] Configured FreeSWITCH WebSocket (WSS) on port 8082
+- [x] SSL certificate configured
+- [x] Tested browser-based softphone (working)
+- [x] Tested call controls (mute, hold, transfer, hangup, DTMF)
+- [x] Tested across browsers (Chrome, Firefox, Safari)
+- [x] Network reconnection handling implemented
+- [x] Manual Connect button to prevent blank page
+- [x] Inbound calling with full-screen modal
+- [x] Caller ID display and contact resolution
 
-**Time to Complete:** 6-8 hours
-**Blocker Level:** P0 - Required for agent customers
+**Files Created:**
+- irisx-agent-desktop/src/services/webrtc.js (438 lines)
+- IncomingCallModal.vue
+- FreeSWITCH dialplan updates
+
+**Documentation:** AGENT_DESKTOP_TODO.md
 
 ---
 
-### 3. Platform Admin Dashboard ❌ 0% COMPLETE
+### 3. Platform Admin Dashboard ❌ 0% COMPLETE (Verified Nov 1, 2025) - **NOW TOP PRIORITY**
 **Status:** Not started
 **Impact:** HIGH - Cannot manage tenants or system
 **Risk:** No way to support customers or debug issues

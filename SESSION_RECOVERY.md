@@ -109,15 +109,20 @@ ssh -i ~/.ssh/irisx-prod-key.pem ubuntu@54.160.220.243
 **Last Completed:** Week 19 Part 5 - Agent Provisioning Enhancements (Welcome Emails + Bulk Import)
 **Next Up:** Week 20 - Platform Admin Dashboard or Additional Enhancements
 
-### What Actually Works End-to-End ✅
+### What Actually Works End-to-End ✅ (VERIFIED NOV 1, 2025)
 1. **Authentication:** Login, signup, JWT, API keys, token refresh
-2. **SMS:** Send/receive via 7 providers with LCR routing (Twilio, Telnyx, Bandwidth, Plivo, Vonage, MessageBird, Sinch)
-3. **Email:** Send/receive via 5 providers, templates, campaigns, analytics, automation (SendGrid, Mailgun, Postmark, SES, SMTP)
-4. **WhatsApp:** Send/receive messages, media handling, templates, status tracking (Meta Cloud API)
-5. **Social Media:** Discord, Slack, Microsoft Teams, Telegram unified inbox with webhooks
-6. **Customer Portal:** Full Vue 3 UI for all 5 channels + webhooks + API keys (20 components, 10,000+ lines)
-7. **Documentation:** Complete docs site (45 pages), Node.js SDK, code examples (77 files, 25,000+ lines)
-8. **Infrastructure:** AWS RDS PostgreSQL, ElastiCache Redis, S3, EC2 all running
+2. **Voice Calls:** FreeSWITCH + Twilio SIP trunk, inbound/outbound PSTN calling, CDR logging
+3. **Agent Desktop:** WebRTC browser-based softphone (SIP.js), inbound/outbound calling, call controls
+4. **Agent Management:** Auto-provisioning, SIP extensions, welcome emails, bulk import
+5. **SMS:** Send/receive via 7 providers with LCR routing (Twilio, Telnyx, Bandwidth, Plivo, Vonage, MessageBird, Sinch)
+6. **Email:** Send/receive via 5 providers, templates, campaigns, analytics, automation (SendGrid, Mailgun, Postmark, SES, SMTP)
+7. **WhatsApp:** Send/receive messages, media handling, templates, status tracking (Meta Cloud API)
+8. **Social Media:** Discord, Slack, Microsoft Teams, Telegram unified inbox with webhooks
+9. **Unified Inbox:** Cross-channel conversations (WhatsApp, Email, Discord) with agent assignment
+10. **Customer Portal:** Full Vue 3 UI for all channels + webhooks + API keys (20+ components, 10,000+ lines)
+11. **Agent Performance Dashboard:** Analytics with leaderboard, stats cards, time range filtering
+12. **Documentation:** Complete docs site (45 pages), Node.js SDK, code examples (77 files, 25,000+ lines)
+13. **Infrastructure:** AWS RDS PostgreSQL, ElastiCache Redis, S3, EC2 all running
 
 ### What Exists But UNTESTED ⚠️
 1. ✅ **Voice Calls:** PROVEN WORKING - Oct 30, 2025 first successful end-to-end call (Twilio SIP trunk → FreeSWITCH → PSTN)
@@ -126,12 +131,12 @@ ssh -i ~/.ssh/irisx-prod-key.pem ubuntu@54.160.220.243
 4. **Queue System:** Backend code exists, Redis integration exists, testing unknown
 5. **Campaign System:** Backend code exists (progressive dialer), NO frontend, untested
 
-### What's Missing ❌
-1. **Agent Desktop WebRTC:** SIP.js NOT integrated, FreeSWITCH WebSocket NOT configured (UI is DEMO mode only) - **NEXT PRIORITY**
-2. **Call Control Verbs:** Gather, Transfer, Record, Dial - code exists but UNTESTED
-3. **Campaign Dialer Frontend:** 0% complete (no UI for campaigns)
-4. **Platform Admin Dashboard:** 0% complete (no admin interface for IRISX staff)
-5. **Real-time Analytics:** Email has Chart.js, but no cross-channel analytics dashboard
+### What's Missing ❌ (VERIFIED NOV 1, 2025)
+1. **Platform Admin Dashboard:** 0% complete (no admin interface for IRISX staff) - **TOP PRIORITY**
+2. **Call Queue & Routing System:** 0% complete (no queue management, no skills-based routing)
+3. **Cross-Channel Analytics Dashboard:** Only Email Analytics exists, need unified view
+4. **Campaign Dialer Frontend:** Backend exists, but 0% frontend UI (only EmailCampaignBuilder exists)
+5. **Call Control Verbs:** Gather, Transfer, Record, Dial - code exists but UNTESTED
 6. **Production Testing:** No load tests run, no call quality testing, no multi-region deployment
 
 ### Recent Completed Work (Last 3 Weeks)
