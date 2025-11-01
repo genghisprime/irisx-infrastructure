@@ -791,7 +791,72 @@ Unified Inbox across all channels with conversation threading, agent assignment,
 - ⏳ Slack, Telegram, Teams (follow same pattern - can be added incrementally)
 - ⏳ SMS (low priority - most use WhatsApp)
 
-**Next:** End-to-End Testing (Step 5) or move to next priority feature
+**Next:** Week 21 - Agent Performance Dashboard
+
+### ✅ Week 21: Agent Performance Dashboard - 30% COMPLETE! (Nov 1, 2025)
+**Status:** ⏳ Analytics API Complete - Frontend Pending
+
+**The Goal:**
+Provide customers with comprehensive agent performance monitoring, productivity metrics, and leaderboards.
+
+**What We Built:**
+
+**Analytics API Routes - ✅ COMPLETE**
+- api/src/routes/analytics-agents.js (441 lines)
+- 6 powerful endpoints for agent performance data
+
+**Endpoints:**
+1. **GET /v1/analytics/agents/overview**
+   - Overall tenant statistics
+   - Total calls, answered, missed
+   - Total talk time, average duration
+   - Active agents count
+   - Time range filters: 1h, 24h, 7d, 30d, 90d, all
+
+2. **GET /v1/analytics/agents/list**
+   - List all agents with performance metrics
+   - Per-agent: total calls, inbound/outbound breakdown
+   - Total talk time, average call duration
+   - Agent extensions included
+   - Sorted by performance
+
+3. **GET /v1/analytics/agents/:agentId/details**
+   - Detailed metrics for specific agent
+   - Full call statistics breakdown
+   - Call trends over last 30 days (for charts)
+   - Recent calls history (last 20)
+   - Longest/shortest call tracking
+   - Agent profile info
+
+4. **GET /v1/analytics/agents/leaderboard**
+   - Top performers ranking
+   - Sort options: calls, duration, answered calls
+   - Configurable limit (default 10)
+   - Perfect for gamification
+
+5. **GET /v1/analytics/agents/charts/calls-by-hour**
+   - Hourly call distribution (0-23 hours)
+   - Data ready for bar/line charts
+   - Identifies peak call times
+
+**Features:**
+- Time range filtering across all endpoints
+- Tenant isolation via JWT middleware
+- Efficient SQL queries with aggregations
+- Handles empty data gracefully
+- Returns cleaned, frontend-ready JSON
+
+**What's Pending:**
+- ⏳ Register routes in index.js
+- ⏳ Create AgentPerformance.vue frontend component
+- ⏳ Deploy to production
+
+**Files Created:**
+- api/src/routes/analytics-agents.js (441 lines)
+
+**Git Commit:** 9417fff
+
+**Next:** Create AgentPerformance.vue frontend with charts and metrics cards
 
 ### 🎉 Week 19 Part 1: Voice Testing - COMPLETE! (Oct 30, 2025)
 **Status:** ✅ FIRST SUCCESSFUL END-TO-END VOICE CALL IN IRISX HISTORY
