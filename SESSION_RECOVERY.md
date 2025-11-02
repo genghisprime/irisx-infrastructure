@@ -1481,6 +1481,103 @@ IRISX/
 
 ---
 
+## Week 21: Platform Admin Panel - Phase 2 Frontend IN PROGRESS (Nov 2, 2025)
+
+### Admin Frontend Phase 2: 30% COMPLETE 🚧
+
+**Status:** Core infrastructure complete, building pages
+
+**What We Built:**
+
+**1. Project Setup - ✅ COMPLETE**
+- Vue 3 + Vite + TypeScript + Tailwind CSS app created
+- Copied from customer portal template (reuse working setup)
+- Dependencies installed (Vue Router, Pinia, axios, Chart.js)
+- .env configured for admin API endpoints
+
+**2. Core Infrastructure - ✅ COMPLETE**
+
+**a) Auth Store (Pinia)** - [src/stores/adminAuth.js](irisx-admin-portal/src/stores/adminAuth.js)
+- Admin login/logout functionality
+- JWT token management (4-hour expiry)
+- Automatic token refresh on expiry
+- Role-based permissions (superadmin, admin, support, readonly)
+- `hasPermission()` helper for RBAC
+- LocalStorage persistence + auto-restore
+
+**b) API Client** - [src/utils/api.js](irisx-admin-portal/src/utils/api.js)
+- Complete axios client with all 46 endpoint methods
+- Organized by resource (auth, tenants, users, billing, providers, recordings, etc.)
+- Request interceptor (auto-inject JWT token)
+- Response interceptor (handle 401, auto-refresh token)
+- Clean async/await interfaces
+
+**c) Router** - [src/router/index.js](irisx-admin-portal/src/router/index.js)
+- 15 admin routes with lazy loading
+- Auth guards (requiresAuth, requiresGuest)
+- Role-based guards (requiresRole: admin/superadmin)
+- Auto-redirect unauthenticated to /login
+- Restore auth from localStorage on navigation
+
+**3. Layout & Pages Built - ✅ 3/17 COMPLETE**
+
+**a) AdminLayout** - [src/components/admin/layout/AdminLayout.vue](irisx-admin-portal/src/components/admin/layout/AdminLayout.vue)
+- Dark sidebar navigation with IRISX branding
+- Role-based menu items (hide based on permissions)
+- Top header with user info + logout button
+- Dynamic page titles
+- Professional, clean UI
+
+**b) AdminLogin** - [src/views/admin/auth/AdminLogin.vue](irisx-admin-portal/src/views/admin/auth/AdminLogin.vue)
+- IRISX branding with dark gradient background
+- Email + password form
+- Loading states, error handling
+- "IRISX Staff Only" warning
+- Redirect to original destination after login
+
+**c) DashboardOverview** - [src/views/admin/dashboard/DashboardOverview.vue](irisx-admin-portal/src/views/admin/dashboard/DashboardOverview.vue)
+- 4 stats cards (Total Tenants, Total Users, MRR, Calls Today)
+- Recent activity feed (last 10 admin actions)
+- Loading/error states
+- Responsive Tailwind design
+
+**4. Directory Structure:**
+```
+src/
+├── views/admin/
+│   ├── auth/          ✅ AdminLogin.vue
+│   ├── dashboard/     ✅ DashboardOverview.vue, ⏳ SystemHealth, ⏳ AuditLog
+│   ├── tenants/       ⏳ List, Details, Create, Users
+│   ├── billing/       ⏳ Invoices, Revenue
+│   ├── communications/⏳ Conversations, Recordings, PhoneNumbers
+│   ├── agents/        ⏳ List, BulkImport
+│   ├── providers/     ⏳ Credentials
+│   └── settings/      ⏳ SystemSettings, FeatureFlags
+└── components/admin/
+    ├── layout/        ✅ AdminLayout.vue
+    └── shared/        ⏳ Reusable components (tables, modals, forms)
+```
+
+**Git Commits:**
+- `db74a9f` - Added Phase 2 TODO (19 pages, 140 hours timeline)
+- `20ee371` - Foundation complete (auth store, directory structure)
+- `72580ba` - Core infrastructure complete (API client, router, layout, login, dashboard)
+
+**Remaining Work (70% / ~120 hours):**
+- 14 more admin pages to build
+- Shared components (data tables, modals, forms, stats cards)
+- Testing with real backend APIs
+- Production deployment
+
+**Next Immediate Tasks:**
+1. Build SystemHealth.vue page (system status monitoring)
+2. Build AuditLog.vue page (searchable audit trail)
+3. Build TenantList.vue page (paginated tenant list with filters)
+4. Build TenantDetails.vue page (tenant overview + actions)
+5. Continue with remaining 10 pages
+
+---
+
 ## Remember
 
 - **You (Ryan) + Claude** = Fast development
