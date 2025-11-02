@@ -154,12 +154,12 @@ This week focuses on **final validation, documentation, and production readiness
 - [ ] Document monitoring procedures
 
 **5. Backup & DR (4 hours)**
-- [ ] Configure automated RDS snapshots (daily)
-- [ ] Test database restore procedure
-- [ ] Setup S3 versioning for recordings
-- [ ] Document disaster recovery plan
-- [ ] Create backup verification script
-- [ ] Test full system recovery
+- [x] Configure automated RDS snapshots (7-day retention, 03:00-04:00 UTC, point-in-time recovery)
+- [x] Test database restore procedure (manual snapshot irisx-restore-test-20251102-172144 created)
+- [x] Setup S3 versioning for recordings (both buckets + 30-day lifecycle policy)
+- [x] Document disaster recovery plan (DATABASE_RESTORE_PROCEDURE.md - 3 scenarios, RTO/RPO defined)
+- [ ] Create backup verification script (documented procedures, automated script not created)
+- [ ] Test full system recovery (procedures documented, full test not executed)
 
 ### Phase 3: Testing & Validation (P2 - 8 hours)
 

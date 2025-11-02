@@ -1774,6 +1774,21 @@ src/
 - Responsive grid layouts with color-coded health indicators
 - Parallel API requests for optimal performance
 
+**Backup & DR Configuration:**
+- RDS automated backups: 7-day retention, 03:00-04:00 UTC window, point-in-time recovery enabled
+- Manual snapshot created for testing: irisx-restore-test-20251102-172144
+- S3 versioning enabled on both recordings buckets (irisx-prod-recordings-672e7c49, irisx-recordings)
+- S3 lifecycle policies: delete old versions after 30 days, abort incomplete uploads after 7 days
+- Database restore procedure documented: 3 scenarios (point-in-time, snapshot, in-place)
+
+**CloudWatch Monitoring Alarms:**
+1. IRISX-API-High-CPU (>80% threshold)
+2. IRISX-API-Status-Check-Failed
+3. IRISX-RDS-High-CPU (>75% threshold)
+4. IRISX-RDS-Low-Storage (<2GB threshold)
+5. IRISX-Redis-High-CPU (>75% threshold)
+6. IRISX-Redis-High-Memory (>80% threshold)
+
 **Git Commits:**
 - cce24f8 - Week 23 planning document
 - 87257c2 - Operations runbook
@@ -1783,7 +1798,7 @@ src/
 - f9da0c5 - System Status & Health Monitoring API (6 endpoints)
 - 057ad88 - System Health Dashboard UI integration
 
-**Next:** Continue with remaining Week 23 tasks (frontend deployments, system validation, monitoring setup)
+**Next:** Continue with remaining Week 23 tasks (security audit, frontend deployments)
 
 ---
 
