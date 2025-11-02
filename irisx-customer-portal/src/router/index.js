@@ -28,6 +28,11 @@ import Webhooks from '../views/dashboard/Webhooks.vue'
 import Conversations from '../views/dashboard/Conversations.vue'
 import AgentManagement from '../views/AgentManagement.vue'
 import AgentPerformance from '../views/AgentPerformance.vue'
+import QueueManagement from '../views/QueueManagement.vue'
+import CampaignManagement from '../views/CampaignManagement.vue'
+import AdvancedAnalytics from '../views/AdvancedAnalytics.vue'
+import WebhookConfiguration from '../views/WebhookConfiguration.vue'
+import EmailTemplateLibrary from '../views/EmailTemplateLibrary.vue'
 
 const routes = [
   {
@@ -130,6 +135,31 @@ const routes = [
         path: 'agent-performance',
         name: 'AgentPerformance',
         component: AgentPerformance
+      },
+      {
+        path: 'queues',
+        name: 'QueueManagement',
+        component: QueueManagement
+      },
+      {
+        path: 'campaigns',
+        name: 'CampaignManagement',
+        component: CampaignManagement
+      },
+      {
+        path: 'analytics',
+        name: 'AdvancedAnalytics',
+        component: AdvancedAnalytics
+      },
+      {
+        path: 'webhook-config',
+        name: 'WebhookConfiguration',
+        component: WebhookConfiguration
+      },
+      {
+        path: 'email-template-library',
+        name: 'EmailTemplateLibrary',
+        component: EmailTemplateLibrary
       }
     ]
   }
