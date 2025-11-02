@@ -102,12 +102,6 @@ const routes = [
         name: 'SystemSettings',
         component: () => import('../views/admin/settings/SystemSettings.vue'),
         meta: { requiresRole: 'superadmin' }
-      },
-      {
-        path: 'settings/features',
-        name: 'FeatureFlags',
-        component: () => import('../views/admin/settings/FeatureFlags.vue'),
-        meta: { requiresRole: 'admin' }
       }
     ]
   }
