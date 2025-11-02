@@ -33,6 +33,7 @@ import CampaignManagement from '../views/CampaignManagement.vue'
 import AdvancedAnalytics from '../views/AdvancedAnalytics.vue'
 import WebhookConfiguration from '../views/WebhookConfiguration.vue'
 import EmailTemplateLibrary from '../views/EmailTemplateLibrary.vue'
+import CallRecordingPlayer from '../views/CallRecordingPlayer.vue'
 
 const routes = [
   {
@@ -160,6 +161,11 @@ const routes = [
         path: 'email-template-library',
         name: 'EmailTemplateLibrary',
         component: EmailTemplateLibrary
+      },
+      {
+        path: 'recordings',
+        name: 'CallRecordingPlayer',
+        component: CallRecordingPlayer
       }
     ]
   }
