@@ -53,6 +53,7 @@ import adminRecordings from './routes/admin-recordings.js';
 import adminConversations from './routes/admin-conversations.js';
 import adminPhoneNumbers from './routes/admin-phone-numbers.js';
 import adminSettings from './routes/admin-settings.js';
+import systemStatus from './routes/system-status.js';
 
 dotenv.config();
 
@@ -293,6 +294,7 @@ app.route('/admin/recordings', adminRecordings); // Call Recordings
 app.route('/admin/conversations', adminConversations); // Conversation Oversight
 app.route('/admin/phone-numbers', adminPhoneNumbers); // Phone Number Provisioning
 app.route('/admin/settings', adminSettings); // Feature Flags & System Config
+app.route('/admin/system', systemStatus); // System Health & Monitoring
 
 // 404 handler
 app.notFound((c) => {
