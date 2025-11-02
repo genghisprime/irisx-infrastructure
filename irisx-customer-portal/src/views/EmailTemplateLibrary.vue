@@ -195,7 +195,7 @@
             <h4 class="text-sm font-semibold text-blue-900 mb-2">Available Variables</h4>
             <div class="grid grid-cols-2 gap-2 text-xs text-blue-800">
               <div v-for="variable in availableVariables" :key="variable.key">
-                <code class="bg-white px-2 py-1 rounded">{{ `{{${variable.key}}}` }}</code>
+                <code class="bg-white px-2 py-1 rounded">{{ variable.label }}</code>
                 - {{ variable.description }}
               </div>
             </div>
