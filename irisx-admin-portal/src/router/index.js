@@ -1,33 +1,5 @@
-/**
- * Vue Router Configuration
- * Handles navigation and route guards for authentication
- */
-
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
-
-// Auth Pages
-import Login from '../views/auth/Login.vue'
-import Signup from '../views/auth/Signup.vue'
-
-// Dashboard Pages
-import DashboardLayout from '../views/dashboard/DashboardLayout.vue'
-import DashboardHome from '../views/dashboard/DashboardHome.vue'
-import APIKeys from '../views/dashboard/APIKeys.vue'
-import CallLogs from '../views/dashboard/CallLogs.vue'
-import Messages from '../views/dashboard/Messages.vue'
-import EmailCampaigns from '../views/dashboard/EmailCampaigns.vue'
-import EmailTemplates from '../views/EmailTemplates.vue'
-import EmailCampaignBuilder from '../views/EmailCampaignBuilder.vue'
-import EmailAnalytics from '../views/EmailAnalytics.vue'
-import EmailAutomation from '../views/EmailAutomation.vue'
-import EmailDeliverability from '../views/EmailDeliverability.vue'
-import WhatsAppMessages from '../views/WhatsAppMessages.vue'
-import SocialMessages from '../views/SocialMessages.vue'
-import Webhooks from '../views/dashboard/Webhooks.vue'
-import Conversations from '../views/dashboard/Conversations.vue'
-import AgentManagement from '../views/AgentManagement.vue'
-import AgentPerformance from '../views/AgentPerformance.vue'
+import { useAdminAuthStore } from '../stores/adminAuth'
 
 const routes = [
   {
@@ -37,99 +9,105 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: Login,
-    meta: { requiresGuest: true }
-  },
-  {
-    path: '/signup',
-    name: 'Signup',
-    component: Signup,
+    component: () => import('../views/admin/auth/AdminLogin.vue'),
     meta: { requiresGuest: true }
   },
   {
     path: '/dashboard',
-    component: DashboardLayout,
+    component: () => import('../components/admin/layout/AdminLayout.vue'),
     meta: { requiresAuth: true },
     children: [
       {
         path: '',
         name: 'Dashboard',
-        component: DashboardHome
+        component: () => import('../views/admin/dashboard/DashboardOverview.vue')
       },
+      {
+        path: 'system-health',
+        name: 'SystemHealth',
+        component: () => import('../views/admin/dashboard/SystemHealth.vue')
+      },
+      {
+        path: 'audit-log',
+        name: 'AuditLog',
+        component: () => import('../views/admin/dashboard/AuditLog.vue')
+      },
+      // Tenants
+      {
+        path: 'tenants',
+        name: 'TenantList',
+        component: () => import('../views/admin/tenants/TenantList.vue')
+      },
+      {
+        path: 'tenants/create',
+        name: 'TenantCreate',
+        component: () => import('../views/admin/tenants/TenantCreate.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      {
+        path: 'tenants/:id',
+        name: 'TenantDetails',
+        component: () => import('../views/admin/tenants/TenantDetails.vue')
+      },
+      {
+        path: 'tenants/:id/users',
+        name: 'TenantUsers',
+        component: () => import('../views/admin/tenants/TenantUsers.vue')
+      },
+      // Billing
+      {
+        path: 'billing/invoices',
+        name: 'InvoiceList',
+        component: () => import('../views/admin/billing/InvoiceList.vue')
+      },
+      {
+        path: 'billing/revenue',
+        name: 'RevenueReports',
+        component: () => import('../views/admin/billing/RevenueReports.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // Communications
       {
         path: 'conversations',
-        name: 'Conversations',
-        component: Conversations
+        name: 'ConversationOversight',
+        component: () => import('../views/admin/communications/ConversationOversight.vue')
       },
       {
-        path: 'call-logs',
-        name: 'CallLogs',
-        component: CallLogs
+        path: 'recordings',
+        name: 'RecordingManagement',
+        component: () => import('../views/admin/communications/RecordingManagement.vue')
       },
       {
-        path: 'messages',
-        name: 'Messages',
-        component: Messages
+        path: 'phone-numbers',
+        name: 'PhoneNumberProvisioning',
+        component: () => import('../views/admin/communications/PhoneNumberProvisioning.vue'),
+        meta: { requiresRole: 'admin' }
       },
-      {
-        path: 'emails',
-        name: 'EmailCampaigns',
-        component: EmailCampaigns
-      },
-      {
-        path: 'email-templates',
-        name: 'EmailTemplates',
-        component: EmailTemplates
-      },
-      {
-        path: 'email-campaign-builder',
-        name: 'EmailCampaignBuilder',
-        component: EmailCampaignBuilder
-      },
-      {
-        path: 'email-analytics',
-        name: 'EmailAnalytics',
-        component: EmailAnalytics
-      },
-      {
-        path: 'email-automation',
-        name: 'EmailAutomation',
-        component: EmailAutomation
-      },
-      {
-        path: 'email-deliverability',
-        name: 'EmailDeliverability',
-        component: EmailDeliverability
-      },
-      {
-        path: 'whatsapp',
-        name: 'WhatsAppMessages',
-        component: WhatsAppMessages
-      },
-      {
-        path: 'social',
-        name: 'SocialMessages',
-        component: SocialMessages
-      },
-      {
-        path: 'webhooks',
-        name: 'Webhooks',
-        component: Webhooks
-      },
-      {
-        path: 'api-keys',
-        name: 'APIKeys',
-        component: APIKeys
-      },
+      // Agents
       {
         path: 'agents',
-        name: 'AgentManagement',
-        component: AgentManagement
+        name: 'AgentList',
+        component: () => import('../views/admin/agents/AgentList.vue')
+      },
+      // Providers
+      {
+        path: 'providers',
+        name: 'ProviderCredentials',
+        component: () => import('../views/admin/providers/ProviderCredentials.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // Settings
+      {
+        path: 'settings/system',
+        name: 'SystemSettings',
+        component: () => import('../views/admin/settings/SystemSettings.vue'),
+        meta: { requiresRole: 'superadmin' }
       },
       {
-        path: 'agent-performance',
-        name: 'AgentPerformance',
-        component: AgentPerformance
+        path: 'settings/features',
+        name: 'FeatureFlags',
+        component: () => import('../views/admin/settings/FeatureFlags.vue'),
+        meta: { requiresRole: 'admin' }
       }
     ]
   }
@@ -142,11 +120,14 @@ const router = createRouter({
 
 // Navigation Guards
 router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore()
+  const authStore = useAdminAuthStore()
 
-  // Initialize auth store if not already
-  if (authStore.token && !authStore.user) {
-    await authStore.initialize()
+  // Restore auth from localStorage if needed
+  if (!authStore.admin && localStorage.getItem('admin_token')) {
+    authStore.restoreFromLocalStorage()
+    if (authStore.token) {
+      await authStore.fetchCurrentAdmin()
+    }
   }
 
   // Check if route requires authentication
@@ -157,6 +138,13 @@ router.beforeEach(async (to, from, next) => {
 
   // Check if route requires guest (not authenticated)
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
+    next({ name: 'Dashboard' })
+    return
+  }
+
+  // Check role-based access
+  if (to.meta.requiresRole && !authStore.hasPermission(to.meta.requiresRole)) {
+    console.warn('Access denied - insufficient permissions')
     next({ name: 'Dashboard' })
     return
   }
