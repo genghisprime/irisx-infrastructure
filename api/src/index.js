@@ -28,6 +28,8 @@ import queues from './routes/queues.js';
 import agents from './routes/agents.js';
 import campaigns from './routes/campaigns.js';
 import billing from './routes/billing.js';
+import chat from './routes/chat.js';
+import usage from './routes/usage.js';
 // // import recordings from './routes/recordings.js';
 // import phoneNumbers from './routes/phone-numbers.js';
 // import tenants from './routes/tenants.js';
@@ -344,6 +346,8 @@ app.route('/v1/queues', queues);
 app.route('/v1/agents', agents);
 app.route('/v1/campaigns', campaigns);
 app.route('/v1/billing', billing);
+app.route('/v1/chat', chat); // Live Chat (Week 24-25)
+app.route('/v1/usage', usage); // Usage & Billing Dashboard (Week 24-25)
 // app.route('/v1/recordings', recordings);
 // app.route('/v1/phone-numbers', phoneNumbers);
 // app.route('/v1/tenants', tenants);
