@@ -9,6 +9,7 @@ import { useAuthStore } from '../stores/auth'
 // Auth Pages
 import Login from '../views/auth/Login.vue'
 import Signup from '../views/auth/Signup.vue'
+import EmailVerified from '../views/auth/EmailVerified.vue'
 
 // Dashboard Pages
 import DashboardLayout from '../views/dashboard/DashboardLayout.vue'
@@ -50,6 +51,12 @@ const routes = [
     path: '/signup',
     name: 'Signup',
     component: Signup,
+    meta: { requiresGuest: true }
+  },
+  {
+    path: '/verify-email/:token',
+    name: 'EmailVerified',
+    component: EmailVerified,
     meta: { requiresGuest: true }
   },
   {
