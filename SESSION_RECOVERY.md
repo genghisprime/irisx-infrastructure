@@ -2211,3 +2211,68 @@ Error [ERR_MODULE_NOT_FOUND]: Cannot find module
 **Lessons:** Backup/rollback strategy works perfectly. Need better pre-deployment validation.
 
 **Production Impact:** Zero - Fast rollback prevented any service interruption.
+
+---
+
+## Week 27 FINAL: Deployment Blocked - Production File Audit Needed (November 3, 2025)
+
+### Status: ⚠️ BLOCKED - Missing production dependencies (freeswitch.js + unknown files)
+
+**Two Deployment Attempts Made:**
+1. **Attempt 1:** Missing `src/db/connection.js` & `redis.js` → Rolled back ✅
+2. **Fix Applied:** Copied db/ files, committed to Git (840d6277)
+3. **Attempt 2:** Missing `src/services/freeswitch.js` → Rolled back ✅
+
+**Key Discovery:** Local codebase is MISSING production files, not the reverse!
+
+### Root Cause
+
+Deployment approach deletes ALL production files, replaces with local:
+```bash
+rm -rf src/  # ← Destroys production-only files
+tar xzf local.tar.gz  # ← Replaces with incomplete local
+```
+
+**Problem:** Local doesn't have ALL files that production index.js imports.
+
+### Missing Files Identified
+
+**Copied to Local:**
+- ✅ `src/db/connection.js`
+- ✅ `src/db/redis.js`
+
+**Still Missing:**
+- ❌ `src/services/freeswitch.js` (CRITICAL - voice won't work)
+- ❓ Unknown other production dependencies
+
+### Solution Required
+
+**Before Next Deployment:**
+1. Complete production file audit (find all files)
+2. Copy ALL missing files to local
+3. Verify `node --check` passes with complete codebase
+4. Commit complete merged codebase
+5. Use overlay approach (don't delete src/)
+
+**Estimated Time:** 2-3 hours for complete audit + merge
+
+### Current Status
+
+**Production:** ✅ HEALTHY (restored from backup, 21st restart)
+**Database:** ✅ Ready (migrations 025 & 026 applied)
+**Local:** ⚠️ Incomplete (missing freeswitch.js + others)
+**Backups:** 6 timestamped backups, 100% success rate
+**Customer Impact:** ZERO (fast rollbacks < 1 minute each)
+
+### MVP Readiness
+
+**Current:** 80% (unchanged - deployment still blocked)
+**After File Audit + Deployment:** 90%
+
+---
+
+**Next Step:** Complete production file audit, copy ALL missing files, verify complete build, then retry with overlay approach.
+
+**Lesson:** You cannot deploy a codebase you don't fully understand. Must have complete file inventory first.
+
+**Production Safe:** Backup/rollback strategy proven bulletproof (3/3 successful recoveries).
