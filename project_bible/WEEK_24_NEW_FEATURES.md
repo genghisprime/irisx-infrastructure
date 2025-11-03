@@ -54,8 +54,8 @@ With Week 23 complete (100% - all production deployments done), Week 24 focuses 
 ---
 
 ### Feature 2: API Documentation Website ⭐ HIGH PRIORITY
-**Status:** ✅ 80% CODE COMPLETE (Deployment Pending)
-**Time Estimate:** 6 hours (5 hours actual)
+**Status:** ✅ CODE COMPLETE (Deployment Requires User Account)
+**Time Estimate:** 6 hours (5.5 hours actual)
 **Value:** Critical for developer onboarding
 
 **What to Build:**
@@ -67,11 +67,12 @@ With Week 23 complete (100% - all production deployments done), Week 24 focuses 
    - Authentication guides ✅
    - Webhook integration guides ✅
 
-2. **CloudFront + S3 Deployment** ⏳ PENDING
-   - Deploy to docs.tazzi.com
-   - SSL certificate setup
-   - DNS configuration
-   - CloudFront distribution
+2. **Mintlify Cloud Deployment** ⏳ PENDING (Requires User Action)
+   - Documentation complete and ready for deployment
+   - Deployment instructions provided in README
+   - Requires user to create Mintlify account
+   - ~30 minutes to deploy once account is set up
+   - DNS configuration via Route53 documented
 
 **Deliverables:**
 - [x] Choose documentation framework (Mintlify selected)
@@ -83,8 +84,9 @@ With Week 23 complete (100% - all production deployments done), Week 24 focuses 
 - [x] Add code examples (4 languages: cURL, Node.js, Python, PHP)
 - [x] Create tutorial guides (4 guides: First Call, Send SMS, WhatsApp, Unified Inbox)
 - [x] Create API reference pages (5 sections: Calls, SMS, Email, WhatsApp, Conversations)
-- [ ] Deploy to docs.tazzi.com
-- [ ] Test all interactive features
+- [x] Add deployment instructions and npm scripts
+- [ ] Deploy to docs.tazzi.com (requires user Mintlify account)
+- [ ] Test all interactive features (post-deployment)
 
 ---
 

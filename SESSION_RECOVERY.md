@@ -1889,7 +1889,7 @@ src/
    - ✅ Frontend verification page (EmailVerified.vue - 180 lines) - Success animation, auto-redirect
    - ✅ Router configuration - /signup and /verify-email/:token routes added
    - ⏳ Production deployment (deferred - can deploy in 15 minutes when ready)
-2. **API Documentation Website** ✅ 80% CODE COMPLETE - [FEATURE_2_API_DOCUMENTATION.md](project_bible/FEATURE_2_API_DOCUMENTATION.md) (6 hours, ~5 hours spent)
+2. **API Documentation Website** ✅ CODE COMPLETE - [FEATURE_2_API_DOCUMENTATION.md](project_bible/FEATURE_2_API_DOCUMENTATION.md) (6 hours, 5.5 hours spent)
    - ✅ Mintlify project initialized (926 packages)
    - ✅ mint.json configured with Tazzi branding (purple gradient colors)
    - ✅ OpenAPI spec integrated (openapi.yaml)
@@ -1899,7 +1899,8 @@ src/
    - ✅ API Reference (5): Calls, SMS, Email, WhatsApp, Conversations
    - ✅ Code examples in 4 languages (cURL, Node.js, Python, PHP) for all endpoints
    - ✅ Interactive UI components (Tabs, Accordions, CardGroups)
-   - ⏳ Deployment to docs.tazzi.com (S3/CloudFront or Mintlify Cloud - can deploy in 30 minutes)
+   - ✅ Deployment instructions (Mintlify Cloud - 30 min setup documented)
+   - ⏳ Production deployment (requires user Mintlify account + DNS configuration)
 3. **Usage & Billing Dashboard** - [FEATURE_3_USAGE_BILLING.md](project_bible/FEATURE_3_USAGE_BILLING.md) (6-8 hours)
 4. **Live Chat Widget** - [FEATURE_4_LIVE_CHAT.md](project_bible/FEATURE_4_LIVE_CHAT.md) (8-10 hours)
 
