@@ -2085,3 +2085,66 @@ Status: OPERATIONAL
 **Next Step:** Align local/production code structures, then deploy Week 24-25 features via CI/CD.
 
 **Let's align and deploy! 🚀🔄**
+
+---
+
+## Week 27 Update: Deployment Plan Ready (November 3, 2025)
+
+### Status: 📋 READY TO DEPLOY
+
+**Key Discovery:** Local codebase is MORE complete than production!
+
+- Local: 77 files (12 admin routes + Week 24-25 features + all services)
+- Production: 65 files (missing admin routes that index.js requires)
+
+### Deployment Strategy
+
+**Solution:** Full src directory replacement (forward-only deployment)
+
+**Readiness:**
+- ✅ Database: Migrations 025 & 026 applied
+- ✅ Code: All features validated and committed
+- ✅ Backup: Strategy proven (Week 26 recovery)
+- ✅ Plan: Complete deployment runbook created
+
+### Deployment Plan
+
+See [WEEK_27_DEPLOYMENT_PLAN.md](WEEK_27_DEPLOYMENT_PLAN.md) for complete step-by-step instructions.
+
+**Quick Summary:**
+1. Backup production (5 min)
+2. Deploy full local src directory (10 min)
+3. Restart & verify health (10 min)
+4. Test endpoints (10 min)
+**Total: 35 minutes + 25 min buffer = 1 hour**
+
+### What Gets Deployed
+
+**New Endpoints:**
+- `/v1/chat/*` - Live chat widget system (13 endpoints)
+- `/v1/usage/*` - Usage tracking & billing (4 endpoints)
+
+**Already Deployed (Verified Working):**
+- `/v1/campaigns/*` - Campaign management
+- `/v1/analytics/*` - Cross-channel analytics
+- `/v1/calls/*` - Voice (tested Week 25) ✅
+
+### Post-Deployment Goals
+
+**Week 27:**
+1. Deploy features (1 hour)
+2. Configure voice webhooks (2-3 hours)
+3. Load testing (4-6 hours)
+
+**Week 28:**
+4. Admin Panel Phase 2
+5. Agent Desktop WebRTC
+6. Stripe billing
+
+**MVP Launch:** 90% ready (after Week 27 deployment)
+
+---
+
+**Next Step:** Execute deployment plan during off-peak hours. All prerequisites met.
+
+**Let's ship it! 🚀📦**
