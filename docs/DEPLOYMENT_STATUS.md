@@ -151,6 +151,22 @@ Purpose: Super admin tenant management
 Last Deployed: November 2, 2025
 ```
 
+**Tazzi Agent Desktop (Vue 3):**
+```
+Production URL: https://agent.tazzi.com
+S3 Bucket: irisx-agent-desktop-prod
+S3 URL: http://irisx-agent-desktop-prod.s3-website-us-east-1.amazonaws.com
+CloudFront: dje9e75vn7r4y.cloudfront.net (E66ULLTG54WRZ)
+Status: ✅ DEPLOYED & ACCESSIBLE
+Framework: Vue 3 + Vite 7 + Tailwind CSS 4
+Bundle Size: 409.8 KB (gzipped)
+Features: WebRTC softphone, SIP.js integration, call controls
+SSL Certificate: ✅ ISSUED (agent.tazzi.com)
+DNS: ✅ Configured (Route53 CNAME)
+Purpose: Agent browser-based softphone
+Last Deployed: November 2, 2025
+```
+
 ---
 
 ## 📋 Deployed Features
