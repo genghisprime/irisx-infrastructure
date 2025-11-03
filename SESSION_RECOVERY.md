@@ -1880,7 +1880,15 @@ src/
 
 **Status:** Week 23 100% Complete - Moving to Week 24
 
-**Next:** Week 24 - New feature development (Customer Signup, API Docs, Usage Dashboard, Live Chat)
+**Week 24 Features (In Progress):**
+1. **Customer Signup Flow** - [FEATURE_1_CUSTOMER_SIGNUP.md](project_bible/FEATURE_1_CUSTOMER_SIGNUP.md) (5.5 hours)
+2. **API Documentation Website** - [FEATURE_2_API_DOCUMENTATION.md](project_bible/FEATURE_2_API_DOCUMENTATION.md) (6 hours)
+3. **Usage & Billing Dashboard** - [FEATURE_3_USAGE_BILLING.md](project_bible/FEATURE_3_USAGE_BILLING.md) (6-8 hours)
+4. **Live Chat Widget** - [FEATURE_4_LIVE_CHAT.md](project_bible/FEATURE_4_LIVE_CHAT.md) (8-10 hours)
+
+**Total Estimated Time:** 25.5-29.5 hours across 4 features
+
+**Next:** Build Feature 1 (Customer Signup) - Database migration, Backend API, Frontend page
 
 ---
 
