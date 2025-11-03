@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
-import DashboardLayout from '../components/DashboardLayout.vue';
+import DashboardLayout from './dashboard/DashboardLayout.vue';
 import { Line, Bar, Doughnut } from 'vue-chartjs';
 import {
   Chart as ChartJS,

@@ -432,7 +432,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
-import DashboardLayout from '../components/DashboardLayout.vue'
+import DashboardLayout from './dashboard/DashboardLayout.vue'
 
 const authStore = useAuthStore()
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://3.83.53.69:3000'
