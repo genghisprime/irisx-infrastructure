@@ -39,6 +39,8 @@ import UsageDashboard from '../views/UsageDashboard.vue'
 import BillingHistory from '../views/BillingHistory.vue'
 import ChatInbox from '../views/ChatInbox.vue'
 import ChatSettings from '../views/ChatSettings.vue'
+import CampaignList from '../views/CampaignList.vue'
+import CampaignDashboard from '../views/CampaignDashboard.vue'
 
 const routes = [
   {
@@ -197,6 +199,16 @@ const routes = [
         path: 'chat-settings',
         name: 'ChatSettings',
         component: ChatSettings
+      },
+      {
+        path: 'campaigns',
+        name: 'CampaignList',
+        component: CampaignList
+      },
+      {
+        path: 'campaigns/:id',
+        name: 'CampaignDashboard',
+        component: CampaignDashboard
       }
     ]
   }
