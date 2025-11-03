@@ -72,3 +72,68 @@ aws s3 sync out/ s3://tazzi-docs-prod/
 7. Update DNS records
 
 **Estimated Time to Complete**: 1-2 hours remaining (deployment only)
+
+## Detailed Deployment Instructions
+
+### Recommended: Mintlify Cloud Hosting
+
+**Why Mintlify Cloud:**
+- ✅ Free tier with custom domain support
+- ✅ Automatic deployments on git push
+- ✅ Built-in CDN and SSL
+- ✅ Zero infrastructure maintenance
+- ✅ Automatic updates when docs change
+
+**Steps:**
+
+1. **Create Mintlify Account** (5 minutes)
+   - Visit https://mintlify.com
+   - Click "Sign up with GitHub"
+   - Authorize Mintlify to access repositories
+
+2. **Connect Repository** (2 minutes)
+   - Click "New Documentation"
+   - Select repository: `genghisprime/irisx-infrastructure`
+   - Set documentation path: `tazzi-docs/`
+   - Mintlify will auto-detect `mint.json`
+
+3. **Configure Custom Domain** (10 minutes)
+   - Go to project Settings → Custom Domain
+   - Enter: `docs.tazzi.com`
+   - Mintlify will provide CNAME record values
+
+4. **Update DNS in Route53** (5 minutes)
+   ```bash
+   aws route53 change-resource-record-sets \
+     --hosted-zone-id Z01234567ABCDEFGHIJKL \
+     --change-batch '{
+       "Changes": [{
+         "Action": "CREATE",
+         "ResourceRecordSet": {
+           "Name": "docs.tazzi.com",
+           "Type": "CNAME",
+           "TTL": 300,
+           "ResourceRecords": [{"Value": "[mintlify-provided-value]"}]
+         }
+       }]
+     }'
+   ```
+
+5. **Verify Deployment** (5 minutes)
+   - Wait for DNS propagation (5-10 minutes)
+   - Visit https://docs.tazzi.com
+   - Test all pages and navigation
+   - Verify SSL certificate is active
+
+**Total Time:** ~30 minutes
+
+### Alternative: Self-Hosted on S3/CloudFront
+
+If you prefer self-hosting (not recommended for Mintlify projects):
+
+**Note:** Mintlify doesn't provide a static build command. Self-hosting requires running a Mintlify server instance or converting docs to another format. This approach is significantly more complex and not recommended.
+
+If self-hosting is required, consider:
+1. Converting to Docusaurus or Nextra (both support static builds)
+2. Running Mintlify dev server on an EC2 instance
+3. Using a reverse proxy to serve docs.tazzi.com
