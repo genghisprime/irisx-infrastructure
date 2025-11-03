@@ -112,14 +112,16 @@ Customer Portal: tazzi-customer-portal-prod
 
 **Tazzi Customer Portal (Vue 3):**
 ```
+Production URL: https://app.tazzi.com
 S3 Bucket: tazzi-customer-portal-prod
-URL: http://tazzi-customer-portal-prod.s3-website-us-east-1.amazonaws.com
+S3 URL: http://tazzi-customer-portal-prod.s3-website-us-east-1.amazonaws.com
+CloudFront: dq0rzcazrc3vd.cloudfront.net (E3AJMTXOW61AXZ)
 Status: ✅ DEPLOYED & ACCESSIBLE
 Framework: Vue 3.5 + Vite 7 + Tailwind CSS 3
 Bundle Size: 1.0 MB (307.64 kB gzipped)
 Pages: 20+ pages (Dashboard, Email, SMS, Voice, Analytics)
-Build Status: ✅ Production build successful
-Public Access: ✅ Enabled with read-only policy
+SSL Certificate: ✅ ISSUED (app.tazzi.com)
+DNS: ✅ Configured (Route53 CNAME)
 Last Deployed: November 2, 2025
 ```
 
@@ -135,11 +137,18 @@ Last Deployed: November 2, 2025
 
 **Tazzi Admin Portal (Vue 3):**
 ```
+Production URL: https://admin.tazzi.com
 S3 Bucket: tazzi-admin-portal-prod
-URL: http://tazzi-admin-portal-prod.s3-website-us-east-1.amazonaws.com
-Status: ⏳ PENDING DEPLOYMENT
-Framework: Vue 3 + Vite + Tailwind CSS
+S3 URL: http://tazzi-admin-portal-prod.s3-website-us-east-1.amazonaws.com
+CloudFront: d3o44o6bqe7rbj.cloudfront.net (E2V7P9YRBU3YZV)
+Status: ✅ DEPLOYED & ACCESSIBLE
+Framework: Vue 3 + Vite 7 + Tailwind CSS 3
+Bundle Size: 286.9 KB (53.90 KB gzipped)
+Pages: 17 admin pages (Tenants, Users, Billing, System Health)
+SSL Certificate: ✅ ISSUED (admin.tazzi.com)
+DNS: ✅ Configured (Route53 CNAME)
 Purpose: Super admin tenant management
+Last Deployed: November 2, 2025
 ```
 
 ---
