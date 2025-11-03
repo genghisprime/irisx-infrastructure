@@ -41,6 +41,7 @@ import ChatInbox from '../views/ChatInbox.vue'
 import ChatSettings from '../views/ChatSettings.vue'
 import CampaignList from '../views/CampaignList.vue'
 import CampaignDashboard from '../views/CampaignDashboard.vue'
+import UnifiedAnalytics from '../views/UnifiedAnalytics.vue'
 
 const routes = [
   {
@@ -209,6 +210,11 @@ const routes = [
         path: 'campaigns/:id',
         name: 'CampaignDashboard',
         component: CampaignDashboard
+      },
+      {
+        path: 'unified-analytics',
+        name: 'UnifiedAnalytics',
+        component: UnifiedAnalytics
       }
     ]
   }
