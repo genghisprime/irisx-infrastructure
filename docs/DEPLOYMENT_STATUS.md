@@ -1,6 +1,6 @@
 # IRISX Platform - Production Deployment Status
 
-**Last Updated:** October 29, 2025
+**Last Updated:** November 2, 2025
 **Environment:** Production (3.83.53.69)
 **Status:** ✅ **FULLY OPERATIONAL** - All Systems Running
 
@@ -104,6 +104,42 @@ NATS: Running on API server (localhost:4222)
 Call Recordings: irisx-call-recordings-prod
 Media Storage: irisx-media-prod
 TTS Cache: ~/irisx-backend/cache/tts/ (local, S3 pending)
+Admin Portal: tazzi-admin-portal-prod
+Customer Portal: tazzi-customer-portal-prod
+```
+
+### Frontend Deployments
+
+**Tazzi Customer Portal (Vue 3):**
+```
+S3 Bucket: tazzi-customer-portal-prod
+URL: http://tazzi-customer-portal-prod.s3-website-us-east-1.amazonaws.com
+Status: ✅ DEPLOYED & ACCESSIBLE
+Framework: Vue 3.5 + Vite 7 + Tailwind CSS 3
+Bundle Size: 1.0 MB (307.64 kB gzipped)
+Pages: 20+ pages (Dashboard, Email, SMS, Voice, Analytics)
+Build Status: ✅ Production build successful
+Public Access: ✅ Enabled with read-only policy
+Last Deployed: November 2, 2025
+```
+
+**Key Features:**
+- Email campaign management with TipTap rich text editor
+- SMS/MMS messaging interface
+- Voice call logs and recording player
+- WhatsApp and social media integration
+- Agent management and performance tracking
+- Real-time analytics dashboards
+- API key management
+- Webhook configuration
+
+**Tazzi Admin Portal (Vue 3):**
+```
+S3 Bucket: tazzi-admin-portal-prod
+URL: http://tazzi-admin-portal-prod.s3-website-us-east-1.amazonaws.com
+Status: ⏳ PENDING DEPLOYMENT
+Framework: Vue 3 + Vite + Tailwind CSS
+Purpose: Super admin tenant management
 ```
 
 ---
