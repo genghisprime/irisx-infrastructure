@@ -1,0 +1,125 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Tazzi API Documentation",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.png",
+  "colors": {
+    "primary": "#667eea",
+    "light": "#8b9aff",
+    "dark": "#4c5fd5",
+    "anchors": {
+      "from": "#667eea",
+      "to": "#764ba2"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Sign Up",
+      "url": "https://app.tazzi.com/signup"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "https://app.tazzi.com"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    },
+    {
+      "name": "Guides",
+      "url": "guides"
+    },
+    {
+      "name": "Webhooks",
+      "url": "webhooks"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "Community",
+      "icon": "discord",
+      "url": "https://discord.gg/tazzi"
+    },
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/tazzi"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": [
+        "pages/introduction",
+        "pages/quickstart",
+        "pages/authentication",
+        "pages/api-keys"
+      ]
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        "guides/first-call",
+        "guides/send-sms",
+        "guides/send-email",
+        "guides/whatsapp-integration",
+        "guides/unified-inbox"
+      ]
+    },
+    {
+      "group": "Webhooks",
+      "pages": [
+        "webhooks/overview",
+        "webhooks/events",
+        "webhooks/security"
+      ]
+    },
+    {
+      "group": "Voice & Calls",
+      "pages": [
+        "api-reference/calls"
+      ]
+    },
+    {
+      "group": "SMS & MMS",
+      "pages": [
+        "api-reference/sms"
+      ]
+    },
+    {
+      "group": "Email",
+      "pages": [
+        "api-reference/email"
+      ]
+    },
+    {
+      "group": "WhatsApp",
+      "pages": [
+        "api-reference/whatsapp"
+      ]
+    },
+    {
+      "group": "Conversations",
+      "pages": [
+        "api-reference/conversations"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/tazzi",
+    "linkedin": "https://www.linkedin.com/company/tazzi"
+  },
+  "openapi": "openapi.yaml",
+  "api": {
+    "baseUrl": "https://api.tazzi.com",
+    "auth": {
+      "method": "key",
+      "name": "X-API-Key"
+    }
+  }
+}

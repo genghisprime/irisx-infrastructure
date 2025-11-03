@@ -1,0 +1,1178 @@
+openapi: 3.1.0
+info:
+  title: IRISX Communications Platform API
+  version: 1.0.0
+  description: |
+    IRISX is a multi-channel communications platform providing voice, SMS, and email capabilities with advanced routing, IVR, webhooks, and analytics.
+
+    ## Authentication
+
+    IRISX supports two authentication methods:
+
+    1. **JWT Bearer Token** - For user-based authentication (customer portal, agent desktop)
+    2. **API Key** - For server-to-server authentication (X-API-Key header)
+
+    ## Rate Limiting
+
+    - **Calls:** 10 requests per minute
+    - **Messages (SMS/Email):** 100 requests per minute
+    - **Read Operations:** 1000 requests per minute
+
+    Rate limit information is returned in response headers:
+    - `X-RateLimit-Limit` - Maximum requests allowed
+    - `X-RateLimit-Remaining` - Requests remaining
+    - `X-RateLimit-Reset` - Timestamp when limit resets
+
+    ## Webhooks
+
+    IRISX can notify your application of events via webhooks. Configure webhook endpoints to receive real-time notifications for:
+    - Call events (initiated, ringing, answered, completed, failed)
+    - SMS events (sent, delivered, failed)
+    - Email events (sent, delivered, opened, clicked, bounced)
+
+    ## Error Handling
+
+    IRISX uses standard HTTP status codes:
+    - `200` - Success
+    - `201` - Created
+    - `400` - Bad Request
+    - `401` - Unauthorized
+    - `403` - Forbidden
+    - `404` - Not Found
+    - `429` - Too Many Requests
+    - `500` - Internal Server Error
+
+  contact:
+    name: IRISX Support
+    email: support@useiris.com
+    url: https://useiris.com/support
+  license:
+    name: Proprietary
+    url: https://useiris.com/terms
+
+servers:
+  - url: https://api.useiris.com
+    description: Production server
+  - url: http://54.160.220.243:3000
+    description: Staging server (for beta testing)
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Calls
+    description: Voice call management and control
+  - name: SMS
+    description: SMS messaging and templates
+  - name: Email
+    description: Email sending and templates
+  - name: Webhooks
+    description: Webhook endpoint management
+  - name: Phone Numbers
+    description: Phone number provisioning and management
+  - name: Recordings
+    description: Call recording management
+  - name: Analytics
+    description: Usage statistics and reporting
+  - name: IVR
+    description: Interactive Voice Response menus
+  - name: TTS
+    description: Text-to-Speech generation
+  - name: Contacts
+    description: Contact management and lists
+  - name: Campaigns
+    description: Marketing campaign management
+  - name: Queues
+    description: Call queue management
+  - name: Agents
+    description: Agent management and presence
+  - name: Billing
+    description: Billing and usage tracking
+  - name: Tenants
+    description: Multi-tenant management
+
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /v1/auth/login
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for server-to-server authentication
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "UNAUTHORIZED"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid API key"
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+
+    Call:
+      type: object
+      required:
+        - uuid
+        - tenant_id
+        - to
+        - from
+        - status
+        - direction
+        - created_at
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          description: Unique call identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        tenant_id:
+          type: integer
+          description: Tenant ID
+          example: 1
+        to:
+          type: string
+          description: Destination phone number (E.164 format)
+          example: "+15551234567"
+        from:
+          type: string
+          description: Caller ID phone number (E.164 format)
+          example: "+15559876543"
+        status:
+          type: string
+          enum: [initiated, ringing, in-progress, completed, failed, busy, no-answer, canceled]
+          description: Current call status
+          example: "completed"
+        direction:
+          type: string
+          enum: [inbound, outbound]
+          description: Call direction
+          example: "outbound"
+        duration:
+          type: integer
+          description: Call duration in seconds
+          example: 125
+          nullable: true
+        start_time:
+          type: string
+          format: date-time
+          description: Call start time
+          nullable: true
+        end_time:
+          type: string
+          format: date-time
+          description: Call end time
+          nullable: true
+        carrier_id:
+          type: integer
+          description: Carrier used for this call
+          nullable: true
+        cost:
+          type: number
+          format: float
+          description: Call cost in USD
+          example: 0.015
+          nullable: true
+        recording_url:
+          type: string
+          format: uri
+          description: URL to call recording (if recorded)
+          nullable: true
+        metadata:
+          type: object
+          description: Custom metadata
+          additionalProperties: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateCallRequest:
+      type: object
+      required:
+        - to
+        - from
+      properties:
+        to:
+          type: string
+          description: Destination phone number (E.164 format)
+          example: "+15551234567"
+        from:
+          type: string
+          description: Caller ID from your phone numbers
+          example: "+15559876543"
+        webhook_url:
+          type: string
+          format: uri
+          description: URL to receive call status updates
+          example: "https://example.com/webhooks/calls"
+        record:
+          type: boolean
+          description: Whether to record the call
+          default: false
+        timeout:
+          type: integer
+          description: Ring timeout in seconds
+          default: 60
+          minimum: 10
+          maximum: 300
+        metadata:
+          type: object
+          description: Custom metadata to attach to the call
+          additionalProperties: true
+
+    SMS:
+      type: object
+      required:
+        - id
+        - tenant_id
+        - to
+        - from
+        - body
+        - status
+        - direction
+        - created_at
+      properties:
+        id:
+          type: integer
+          description: SMS message ID
+          example: 12345
+        tenant_id:
+          type: integer
+          description: Tenant ID
+        to:
+          type: string
+          description: Recipient phone number (E.164 format)
+          example: "+15551234567"
+        from:
+          type: string
+          description: Sender phone number (E.164 format)
+          example: "+15559876543"
+        body:
+          type: string
+          description: Message text content
+          example: "Hello! This is a test message."
+          maxLength: 1600
+        status:
+          type: string
+          enum: [queued, sending, sent, delivered, failed, undelivered]
+          description: Message delivery status
+        direction:
+          type: string
+          enum: [inbound, outbound]
+          description: Message direction
+        cost:
+          type: number
+          format: float
+          description: Message cost in USD
+          example: 0.0075
+          nullable: true
+        error_code:
+          type: string
+          description: Error code if failed
+          nullable: true
+        error_message:
+          type: string
+          description: Error message if failed
+          nullable: true
+        segments:
+          type: integer
+          description: Number of SMS segments
+          example: 1
+        media_urls:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: MMS media URLs
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SendSMSRequest:
+      type: object
+      required:
+        - to
+        - from
+        - body
+      properties:
+        to:
+          type: string
+          description: Recipient phone number (E.164 format)
+          example: "+15551234567"
+        from:
+          type: string
+          description: Sender phone number from your numbers
+          example: "+15559876543"
+        body:
+          type: string
+          description: Message text content
+          example: "Hello! This is a test message."
+          maxLength: 1600
+        media_urls:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Media URLs for MMS (up to 10)
+          maxItems: 10
+        webhook_url:
+          type: string
+          format: uri
+          description: URL to receive delivery status updates
+
+    Email:
+      type: object
+      required:
+        - id
+        - tenant_id
+        - to
+        - from
+        - subject
+        - status
+        - created_at
+      properties:
+        id:
+          type: integer
+          description: Email ID
+        tenant_id:
+          type: integer
+          description: Tenant ID
+        to:
+          type: string
+          format: email
+          description: Recipient email address
+          example: "recipient@example.com"
+        from:
+          type: string
+          format: email
+          description: Sender email address
+          example: "noreply@useiris.com"
+        subject:
+          type: string
+          description: Email subject line
+          example: "Welcome to IRISX"
+        body_text:
+          type: string
+          description: Plain text email body
+        body_html:
+          type: string
+          description: HTML email body
+        status:
+          type: string
+          enum: [queued, sending, sent, delivered, opened, clicked, bounced, complained, failed]
+          description: Email delivery status
+        opened_at:
+          type: string
+          format: date-time
+          description: Time email was first opened
+          nullable: true
+        clicked_at:
+          type: string
+          format: date-time
+          description: Time link was first clicked
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Webhook:
+      type: object
+      required:
+        - id
+        - tenant_id
+        - url
+        - events
+        - enabled
+        - created_at
+      properties:
+        id:
+          type: integer
+          description: Webhook ID
+        tenant_id:
+          type: integer
+          description: Tenant ID
+        url:
+          type: string
+          format: uri
+          description: Webhook endpoint URL
+          example: "https://example.com/webhooks/irisx"
+        events:
+          type: array
+          items:
+            type: string
+            enum:
+              - call.initiated
+              - call.ringing
+              - call.answered
+              - call.completed
+              - call.failed
+              - sms.sent
+              - sms.delivered
+              - sms.failed
+              - email.sent
+              - email.delivered
+              - email.opened
+              - email.clicked
+              - email.bounced
+          description: Events to subscribe to
+        enabled:
+          type: boolean
+          description: Whether webhook is active
+        secret:
+          type: string
+          description: HMAC secret for signature verification
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PhoneNumber:
+      type: object
+      required:
+        - id
+        - tenant_id
+        - number
+        - country
+        - type
+        - status
+        - monthly_cost
+        - created_at
+      properties:
+        id:
+          type: integer
+          description: Phone number ID
+        tenant_id:
+          type: integer
+          description: Tenant ID
+        number:
+          type: string
+          description: Phone number (E.164 format)
+          example: "+15551234567"
+        friendly_name:
+          type: string
+          description: User-friendly name
+          example: "Support Line"
+          nullable: true
+        country:
+          type: string
+          description: Two-letter country code
+          example: "US"
+        type:
+          type: string
+          enum: [local, toll-free, mobile]
+          description: Number type
+        capabilities:
+          type: object
+          properties:
+            voice:
+              type: boolean
+            sms:
+              type: boolean
+            mms:
+              type: boolean
+        status:
+          type: string
+          enum: [active, suspended, released]
+          description: Number status
+        monthly_cost:
+          type: number
+          format: float
+          description: Monthly cost in USD
+          example: 1.00
+        webhook_url:
+          type: string
+          format: uri
+          description: Webhook URL for inbound messages/calls
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    User:
+      type: object
+      required:
+        - id
+        - tenant_id
+        - email
+        - role
+        - created_at
+      properties:
+        id:
+          type: integer
+          description: User ID
+        tenant_id:
+          type: integer
+          description: Tenant ID
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: "user@example.com"
+        first_name:
+          type: string
+          description: First name
+          example: "John"
+        last_name:
+          type: string
+          description: Last name
+          example: "Doe"
+        role:
+          type: string
+          enum: [admin, agent, user]
+          description: User role
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Check if the API is operational
+      tags:
+        - System
+      security: []
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /v1/auth/register:
+    post:
+      summary: Register New Tenant
+      description: Create a new tenant account with admin user
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - company_name
+                - email
+                - password
+                - first_name
+                - last_name
+              properties:
+                company_name:
+                  type: string
+                  description: Company name
+                  example: "Acme Corp"
+                email:
+                  type: string
+                  format: email
+                  description: Admin user email
+                  example: "admin@acme.com"
+                password:
+                  type: string
+                  format: password
+                  description: Password (minimum 8 characters)
+                  minLength: 8
+                first_name:
+                  type: string
+                  example: "John"
+                last_name:
+                  type: string
+                  example: "Doe"
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT access token
+                  refresh_token:
+                    type: string
+                    description: Refresh token
+                  user:
+                    $ref: '#/components/schemas/User'
+                  tenant:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      company_name:
+                        type: string
+                      api_key:
+                        type: string
+                        description: API key for server authentication
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/auth/login:
+    post:
+      summary: Login
+      description: Authenticate with email and password
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "admin@acme.com"
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT access token
+                  refresh_token:
+                    type: string
+                    description: Refresh token
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/auth/me:
+    get:
+      summary: Get Current User
+      description: Get authenticated user information
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/calls:
+    post:
+      summary: Create Outbound Call
+      description: Initiate a new outbound call with automatic carrier selection
+      tags:
+        - Calls
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCallRequest'
+      responses:
+        '201':
+          description: Call created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  call:
+                    $ref: '#/components/schemas/Call'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      summary: List Calls
+      description: Get a list of calls with filtering and pagination
+      tags:
+        - Calls
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: Filter by call status
+          schema:
+            type: string
+            enum: [initiated, ringing, in-progress, completed, failed, busy, no-answer, canceled]
+        - name: direction
+          in: query
+          description: Filter by call direction
+          schema:
+            type: string
+            enum: [inbound, outbound]
+        - name: from
+          in: query
+          description: Filter by caller ID
+          schema:
+            type: string
+        - name: to
+          in: query
+          description: Filter by destination number
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          description: Filter calls after this date (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: end_date
+          in: query
+          description: Filter calls before this date (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Results per page
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: List of calls
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calls:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Call'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+
+  /v1/calls/{uuid}:
+    get:
+      summary: Get Call
+      description: Get details of a specific call
+      tags:
+        - Calls
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          description: Call UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Call details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  call:
+                    $ref: '#/components/schemas/Call'
+        '404':
+          description: Call not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/sms/send:
+    post:
+      summary: Send SMS
+      description: Send a single SMS message
+      tags:
+        - SMS
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendSMSRequest'
+      responses:
+        '201':
+          description: SMS queued for delivery
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    $ref: '#/components/schemas/SMS'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/sms:
+    get:
+      summary: List SMS Messages
+      description: Get a list of SMS messages with filtering
+      tags:
+        - SMS
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: Filter by message status
+          schema:
+            type: string
+            enum: [queued, sending, sent, delivered, failed, undelivered]
+        - name: direction
+          in: query
+          description: Filter by message direction
+          schema:
+            type: string
+            enum: [inbound, outbound]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      responses:
+        '200':
+          description: List of SMS messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SMS'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+
+  /v1/webhooks/endpoints:
+    post:
+      summary: Create Webhook Endpoint
+      description: Register a new webhook endpoint to receive event notifications
+      tags:
+        - Webhooks
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - events
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Webhook endpoint URL
+                  example: "https://example.com/webhooks/irisx"
+                events:
+                  type: array
+                  items:
+                    type: string
+                  description: Events to subscribe to
+                  example: ["call.completed", "sms.delivered"]
+                description:
+                  type: string
+                  description: Webhook description
+                  example: "Production webhook"
+      responses:
+        '201':
+          description: Webhook created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook:
+                    $ref: '#/components/schemas/Webhook'
+
+    get:
+      summary: List Webhooks
+      description: Get all webhook endpoints for your account
+      tags:
+        - Webhooks
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of webhooks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+
+  /v1/phone-numbers/search:
+    get:
+      summary: Search Available Numbers
+      description: Search for phone numbers available for purchase
+      tags:
+        - Phone Numbers
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: country
+          in: query
+          required: true
+          description: Two-letter country code
+          schema:
+            type: string
+            example: "US"
+        - name: area_code
+          in: query
+          description: Area code to search in
+          schema:
+            type: string
+            example: "415"
+        - name: contains
+          in: query
+          description: Number must contain these digits
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Number type
+          schema:
+            type: string
+            enum: [local, toll-free, mobile]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+      responses:
+        '200':
+          description: Available numbers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  numbers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PhoneNumber'
+
+  /v1/analytics/dashboard:
+    get:
+      summary: Dashboard Analytics
+      description: Get overview statistics for dashboard
+      tags:
+        - Analytics
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: start_date
+          in: query
+          description: Start date for analytics (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: end_date
+          in: query
+          description: End date for analytics (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calls:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      completed:
+                        type: integer
+                      failed:
+                        type: integer
+                      total_duration:
+                        type: integer
+                        description: Total duration in seconds
+                      total_cost:
+                        type: number
+                        format: float
+                  sms:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      delivered:
+                        type: integer
+                      failed:
+                        type: integer
+                      total_cost:
+                        type: number
+                        format: float
+                  emails:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      delivered:
+                        type: integer
+                      opened:
+                        type: integer
+                      clicked:
+                        type: integer
+
+webhooks:
+  call.completed:
+    post:
+      summary: Call Completed Webhook
+      description: Triggered when a call completes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: string
+                  example: "call.completed"
+                timestamp:
+                  type: string
+                  format: date-time
+                data:
+                  $ref: '#/components/schemas/Call'
+      responses:
+        '200':
+          description: Webhook received successfully
