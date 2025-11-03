@@ -7,6 +7,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import * as apiKeysService from '../services/api-keys.js';
+import { apiKeyCreationRateLimit } from '../middleware/rate-limit.js';
 
 const apiKeys = new Hono();
 
@@ -50,8 +51,9 @@ async function extractTenantId(c, next) {
 /**
  * POST /v1/api-keys
  * Create a new API key
+ * Rate limited: 10 keys per hour per tenant
  */
-apiKeys.post('/', extractTenantId, async (c) => {
+apiKeys.post('/', apiKeyCreationRateLimit, extractTenantId, async (c) => {
   try {
     const body = await c.req.json();
     const validation = createKeySchema.safeParse(body);

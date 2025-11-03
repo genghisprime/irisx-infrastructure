@@ -10,6 +10,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import pool from '../db/connection.js';
+import { authRateLimit } from '../middleware/rate-limit.js';
 
 const adminAuth = new Hono();
 
@@ -148,8 +149,9 @@ async function logAuditAction(adminId, action, resourceType, resourceId, changes
 /**
  * POST /admin/auth/login
  * Login as admin user
+ * Rate limited: 5 attempts per 15 minutes per IP
  */
-adminAuth.post('/login', async (c) => {
+adminAuth.post('/login', authRateLimit, async (c) => {
   try {
     const body = await c.req.json();
     const validation = loginSchema.safeParse(body);

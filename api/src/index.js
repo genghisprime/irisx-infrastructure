@@ -57,6 +57,45 @@ import systemStatus from './routes/system-status.js';
 
 dotenv.config();
 
+// =====================================================
+// SECURITY: Environment Variable Validation
+// =====================================================
+const REQUIRED_ENV_VARS = [
+  'DATABASE_URL',
+  'REDIS_HOST',
+  'JWT_SECRET',
+  'FREESWITCH_HOST',
+  'FREESWITCH_PASSWORD',
+];
+
+console.log('🔒 Validating environment variables...');
+
+for (const varName of REQUIRED_ENV_VARS) {
+  if (!process.env[varName]) {
+    console.error(`❌ FATAL: Missing required environment variable: ${varName}`);
+    process.exit(1);
+  }
+}
+
+// Validate production secrets
+if (process.env.NODE_ENV === 'production') {
+  if (
+    !process.env.JWT_SECRET ||
+    process.env.JWT_SECRET.includes('change-this') ||
+    process.env.JWT_SECRET.includes('your-') ||
+    process.env.JWT_SECRET.length < 32
+  ) {
+    console.error('❌ FATAL: Insecure JWT_SECRET detected in production!');
+    console.error('   JWT_SECRET must be set to a secure random value (min 32 chars)');
+    process.exit(1);
+  }
+
+  console.log('✅ Environment variables validated successfully');
+  console.log('✅ Production security checks passed');
+} else {
+  console.log('✅ Environment variables validated (development mode)');
+}
+
 const app = new Hono();
 
 // Initialize FreeSWITCH service
@@ -128,10 +167,38 @@ app.use('*', async (c, next) => {
 
 // Middleware
 app.use('*', logger());
+
+// CORS Configuration - Security Enhanced
+const ALLOWED_ORIGINS = [
+  'https://admin.irisx.com',
+  'https://app.irisx.com',
+  'https://agent.irisx.com',
+  'http://localhost:5173', // Admin Portal dev
+  'http://localhost:5174', // Customer Portal dev
+  'http://localhost:5175', // Agent Desktop dev
+  process.env.ADMIN_PORTAL_URL,
+  process.env.CUSTOMER_PORTAL_URL,
+  process.env.AGENT_DESKTOP_URL,
+].filter(Boolean);
+
 app.use('*', cors({
-  origin: '*',
+  origin: (origin) => {
+    // Allow requests with no origin (mobile apps, Postman, server-to-server)
+    if (!origin) return true;
+
+    // Check if origin is in whitelist
+    if (ALLOWED_ORIGINS.includes(origin)) return true;
+
+    // Log rejected origins in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`CORS: Rejected origin: ${origin}`);
+    }
+
+    return false;
+  },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+  credentials: true,
 }));
 
 // Health check endpoint
