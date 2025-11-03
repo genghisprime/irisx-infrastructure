@@ -35,6 +35,8 @@ import AdvancedAnalytics from '../views/AdvancedAnalytics.vue'
 import WebhookConfiguration from '../views/WebhookConfiguration.vue'
 import EmailTemplateLibrary from '../views/EmailTemplateLibrary.vue'
 import CallRecordingPlayer from '../views/CallRecordingPlayer.vue'
+import UsageDashboard from '../views/UsageDashboard.vue'
+import BillingHistory from '../views/BillingHistory.vue'
 
 const routes = [
   {
@@ -133,6 +135,16 @@ const routes = [
         path: 'api-keys',
         name: 'APIKeys',
         component: APIKeys
+      },
+      {
+        path: 'usage',
+        name: 'UsageDashboard',
+        component: UsageDashboard
+      },
+      {
+        path: 'billing-history',
+        name: 'BillingHistory',
+        component: BillingHistory
       },
       {
         path: 'agents',
