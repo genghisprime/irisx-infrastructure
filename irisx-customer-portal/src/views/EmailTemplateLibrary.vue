@@ -364,7 +364,7 @@ const sampleData = {
   firstName: 'John',
   lastName: 'Doe',
   email: 'john.doe@example.com',
-  companyName: 'IRISX Communications',
+  companyName: 'Tazzi Communications',
   supportEmail: 'support@irisx.com',
   phoneNumber: '+1-555-123-4567',
   accountNumber: 'ACC-12345',

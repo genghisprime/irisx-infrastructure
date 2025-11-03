@@ -1,5 +1,5 @@
 /**
- * IRISX Admin Portal - Main Entry Point
+ * Tazzi Admin Portal - Main Entry Point
  * Vue 3.5 + Vue Router 4 + Pinia
  */
 

@@ -5,7 +5,7 @@
       <div>
         <h1 class="text-2xl font-bold text-gray-900">API Keys</h1>
         <p class="mt-1 text-sm text-gray-600">
-          Manage your API keys for authenticating requests to the IRISX API.
+          Manage your API keys for authenticating requests to the Tazzi API.
         </p>
       </div>
       <button

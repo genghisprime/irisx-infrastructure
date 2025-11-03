@@ -3,7 +3,7 @@
     <!-- Sidebar -->
     <aside class="fixed inset-y-0 left-0 w-64 bg-gray-900 text-white z-30">
       <div class="flex items-center justify-center h-16 bg-gray-950 border-b border-gray-800">
-        <h1 class="text-xl font-bold">IRISX Admin</h1>
+        <h1 class="text-xl font-bold">Tazzi Admin</h1>
       </div>
 
       <nav class="mt-6 px-3">
@@ -241,7 +241,7 @@ const pageTitle = computed(() => {
     'FeatureFlags': 'Feature Flags',
     'SystemSettings': 'System Settings'
   }
-  return titles[route.name] || 'IRISX Admin Portal'
+  return titles[route.name] || 'Tazzi Admin Portal'
 })
 
 const roleLabel = computed(() => {

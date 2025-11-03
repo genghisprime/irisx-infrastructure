@@ -318,7 +318,7 @@ const settings = ref({
   smtp_host: '',
   smtp_port: 587,
   smtp_from_email: '',
-  smtp_from_name: 'IRISX',
+  smtp_from_name: 'Tazzi',
   s3_bucket: '',
   s3_region: 'us-east-1',
   max_file_size_mb: 50,

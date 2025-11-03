@@ -7,7 +7,7 @@
           <div class="flex">
             <!-- Logo -->
             <div class="flex-shrink-0 flex items-center">
-              <h1 class="text-xl font-bold text-indigo-600">IRISX</h1>
+              <h1 class="text-xl font-bold text-indigo-600">Tazzi</h1>
             </div>
 
             <!-- Navigation Links -->

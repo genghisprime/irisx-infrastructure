@@ -3,9 +3,9 @@
     <div class="max-w-md w-full">
       <!-- Logo/Header -->
       <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold text-white mb-2">IRISX</h1>
+        <h1 class="text-4xl font-bold text-white mb-2">Tazzi</h1>
         <p class="text-gray-400">Platform Administration Portal</p>
-        <p class="text-sm text-gray-500 mt-2">IRISX Staff Only</p>
+        <p class="text-sm text-gray-500 mt-2">Tazzi Staff Only</p>
       </div>
 
       <!-- Login Card -->
@@ -73,7 +73,7 @@
         <!-- Info -->
         <div class="mt-6 pt-6 border-t border-gray-200">
           <p class="text-xs text-gray-500 text-center">
-            This portal is for authorized IRISX staff only. All activities are logged and monitored.
+            This portal is for authorized Tazzi staff only. All activities are logged and monitored.
           </p>
         </div>
       </div>
@@ -81,7 +81,7 @@
       <!-- Footer -->
       <div class="text-center mt-8">
         <p class="text-sm text-gray-500">
-          IRISX Platform v1.0 | Powered by IRISX Infrastructure
+          Tazzi Platform v1.0 | Powered by Tazzi Infrastructure
         </p>
       </div>
     </div>

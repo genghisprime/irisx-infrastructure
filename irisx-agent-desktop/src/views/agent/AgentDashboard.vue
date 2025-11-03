@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <!-- Logo and Title -->
           <div class="flex items-center">
-            <h1 class="text-2xl font-bold text-gray-900">IRISX Agent Desktop</h1>
+            <h1 class="text-2xl font-bold text-gray-900">Tazzi Agent Desktop</h1>
           </div>
 
           <!-- Status and User Menu -->

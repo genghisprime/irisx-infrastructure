@@ -1,5 +1,5 @@
 /**
- * IRISX Customer Portal - Main Entry Point
+ * Tazzi Customer Portal - Main Entry Point
  * Vue 3.5 + Vue Router 4 + Pinia
  */
 

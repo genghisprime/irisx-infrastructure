@@ -6,7 +6,7 @@
           Create your account
         </h2>
         <p class="mt-2 text-center text-sm text-gray-600">
-          Start using IRISX communications platform
+          Start using Tazzi communications platform
         </p>
       </div>
 
