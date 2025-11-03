@@ -1910,7 +1910,7 @@ src/
    - ✅ Router integration - /usage and /billing-history routes added
    - ⏳ Production deployment (deferred - can deploy in 20 minutes when ready)
    - ✅ Usage recorder service (usage-recorder.js - 283 lines) - Auto-record calls, SMS, email, WhatsApp usage
-4. **Live Chat Widget** 🚧 65% BACKEND COMPLETE - [FEATURE_4_LIVE_CHAT.md](project_bible/FEATURE_4_LIVE_CHAT.md) (8-10 hours, ~3 hours spent)
+4. **Live Chat Widget** 🚧 85% BACKEND COMPLETE - [FEATURE_4_LIVE_CHAT.md](project_bible/FEATURE_4_LIVE_CHAT.md) (8-10 hours, ~6 hours spent)
    - ✅ Database migration (026_live_chat.sql - 294 lines) - 5 tables, 6 SQL functions, 2 triggers
    - ✅ chat_widgets table - Widget configuration and customization
    - ✅ chat_conversations table - Chat sessions with visitor tracking
@@ -1919,6 +1919,7 @@ src/
    - ✅ chat_typing_indicators table - Live typing notifications
    - ⏳ WebSocket server for real-time chat (pending)
    - ✅ Chat service (chat.js - 422 lines) - Conversation and message management
+   - ✅ Chat API routes (chat.js - 479 lines) - 13 REST endpoints (6 public + 7 authenticated)
    - ⏳ Chat API routes (pending)
    - ⏳ Embeddable chat widget JavaScript (pending)
    - ⏳ Chat inbox UI component (pending)
