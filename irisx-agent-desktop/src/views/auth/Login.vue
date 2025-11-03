@@ -6,7 +6,7 @@
           Agent Login
         </h2>
         <p class="mt-2 text-center text-sm text-gray-600">
-          IRISX Agent Desktop
+          Tazzi Agent Desktop
         </p>
       </div>
 
