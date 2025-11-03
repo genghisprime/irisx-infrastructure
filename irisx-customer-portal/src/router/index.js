@@ -37,6 +37,8 @@ import EmailTemplateLibrary from '../views/EmailTemplateLibrary.vue'
 import CallRecordingPlayer from '../views/CallRecordingPlayer.vue'
 import UsageDashboard from '../views/UsageDashboard.vue'
 import BillingHistory from '../views/BillingHistory.vue'
+import ChatInbox from '../views/ChatInbox.vue'
+import ChatSettings from '../views/ChatSettings.vue'
 
 const routes = [
   {
@@ -185,6 +187,16 @@ const routes = [
         path: 'recordings',
         name: 'CallRecordingPlayer',
         component: CallRecordingPlayer
+      },
+      {
+        path: 'chat-inbox',
+        name: 'ChatInbox',
+        component: ChatInbox
+      },
+      {
+        path: 'chat-settings',
+        name: 'ChatSettings',
+        component: ChatSettings
       }
     ]
   }
