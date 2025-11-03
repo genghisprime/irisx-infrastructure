@@ -170,10 +170,19 @@ app.use('*', logger());
 
 // CORS Configuration - Security Enhanced
 const ALLOWED_ORIGINS = [
-  'http://irisx-agent-desktop-prod.s3-website-us-east-1.amazonaws.com', // Agent Desktop S3
+  // S3 Website URLs (temporary)
+  'http://irisx-agent-desktop-prod.s3-website-us-east-1.amazonaws.com',
+  'http://tazzi-admin-portal-prod.s3-website-us-east-1.amazonaws.com',
+  'http://tazzi-customer-portal-prod.s3-website-us-east-1.amazonaws.com',
+  // Tazzi.com custom domains (will work after DNS propagation)
+  'https://agent.tazzi.com',
+  'https://admin.tazzi.com',
+  'https://app.tazzi.com',
+  // Development
   'http://localhost:5173', // Admin Portal dev
   'http://localhost:5174', // Customer Portal dev
   'http://localhost:5175', // Agent Desktop dev
+  // Environment variables
   process.env.ADMIN_PORTAL_URL,
   process.env.CUSTOMER_PORTAL_URL,
   process.env.AGENT_DESKTOP_URL,
