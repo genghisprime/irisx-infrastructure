@@ -1,0 +1,90 @@
+---
+title: 'API Keys'
+description: 'How to create and manage API keys'
+---
+
+# API Keys
+
+API keys are used to authenticate requests to the Tazzi API. This guide covers how to create, manage, and secure your API keys.
+
+## Creating an API Key
+
+1. Log in to your [Tazzi dashboard](https://app.tazzi.com)
+2. Navigate to **Settings → API Keys**
+3. Click **Create API Key**
+4. Enter a descriptive name (e.g., "Production Server", "Mobile App")
+5. Select the environment: **Test** or **Live**
+6. (Optional) Set permissions for restricted access
+7. Click **Create**
+8. **Copy your API key immediately** - it won't be shown again!
+
+<Warning>
+Store your API key securely. You won't be able to view it again after creation.
+</Warning>
+
+## Key Format
+
+Test keys and live keys have different prefixes:
+
+- **Test keys**: `tazzi_test_abc123...`
+- **Live keys**: `tazzi_live_xyz789...`
+
+## Managing API Keys
+
+### View All Keys
+
+See all your API keys in the dashboard:
+- Key name and description
+- Environment (test/live)
+- Created date
+- Last used timestamp
+- Usage statistics
+
+### Revoke a Key
+
+To revoke an API key:
+1. Go to **Settings → API Keys**
+2. Find the key you want to revoke
+3. Click **Revoke**
+4. Confirm the action
+
+<Warning>
+Revoking a key is immediate and cannot be undone. All requests using that key will fail.
+</Warning>
+
+### Rotate Keys
+
+Best practice: Rotate API keys every 90 days.
+
+1. Create a new API key
+2. Update your application with the new key
+3. Test thoroughly
+4. Revoke the old key after 24-48 hours
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Environment Variables" icon="terminal">
+    Store keys in `.env` files, not in code
+  </Card>
+  <Card title="Separate Keys Per Environment" icon="layer-group">
+    Different keys for dev, staging, and production
+  </Card>
+  <Card title="Rotate Regularly" icon="rotate">
+    Generate new keys every 90 days
+  </Card>
+  <Card title="Monitor Usage" icon="chart-line">
+    Review key activity weekly
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="shield" href="/pages/authentication">
+    Learn about authentication methods
+  </Card>
+  <Card title="Quick Start" icon="rocket" href="/pages/quickstart">
+    Make your first API call
+  </Card>
+</CardGroup>

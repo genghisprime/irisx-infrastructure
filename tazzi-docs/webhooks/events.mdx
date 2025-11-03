@@ -1,0 +1,58 @@
+---
+title: 'Webhook Events'
+description: 'All available webhook event types'
+---
+
+# Webhook Events
+
+Complete list of webhook events you can subscribe to.
+
+## Voice & Calls
+
+| Event | Description |
+|-------|-------------|
+| `call.created` | New call initiated |
+| `call.ringing` | Call is ringing |
+| `call.answered` | Call answered |
+| `call.completed` | Call ended |
+| `call.failed` | Call failed |
+
+## SMS & MMS
+
+| Event | Description |
+|-------|-------------|
+| `sms.received` | Inbound SMS |
+| `sms.sent` | SMS queued |
+| `sms.delivered` | SMS delivered |
+| `sms.failed` | SMS failed |
+
+## Email
+
+| Event | Description |
+|-------|-------------|
+| `email.sent` | Email queued |
+| `email.delivered` | Email delivered |
+| `email.opened` | Email opened |
+| `email.clicked` | Link clicked |
+| `email.bounced` | Email bounced |
+
+## WhatsApp
+
+| Event | Description |
+|-------|-------------|
+| `whatsapp.received` | Inbound message |
+| `whatsapp.delivered` | Message delivered |
+| `whatsapp.read` | Message read |
+| `whatsapp.failed` | Message failed |
+
+## Conversations
+
+| Event | Description |
+|-------|-------------|
+| `conversation.created` | New conversation |
+| `conversation.assigned` | Assigned to agent |
+| `conversation.closed` | Conversation closed |
+
+## Example Payloads
+
+See [Webhook Security](/webhooks/security) for signature verification.

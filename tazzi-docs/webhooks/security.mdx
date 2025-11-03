@@ -1,0 +1,56 @@
+---
+title: 'Webhook Security'
+description: 'Verify webhook signatures'
+---
+
+# Webhook Security
+
+Verify that webhooks come from Tazzi using signature validation.
+
+## Signature Verification
+
+Every webhook includes an `X-Tazzi-Signature` header:
+
+```javascript
+const crypto = require('crypto');
+
+function verifyWebhook(payload, signature, secret) {
+  const hash = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex');
+    
+  return hash === signature;
+}
+
+// Usage
+app.post('/webhooks/tazzi', (req, res) => {
+  const signature = req.headers['x-tazzi-signature'];
+  const secret = process.env.WEBHOOK_SECRET;
+  
+  if (!verifyWebhook(req.body, signature, secret)) {
+    return res.status(401).send('Invalid signature');
+  }
+  
+  // Process webhook
+  res.sendStatus(200);
+});
+```
+
+## Best Practices
+
+1. Always verify signatures
+2. Respond quickly (within 5 seconds)
+3. Process asynchronously
+4. Return 200 OK immediately
+5. Implement retry logic
+6. Use HTTPS URLs only
+
+## Retry Logic
+
+Tazzi retries failed webhooks:
+- Immediate retry
+- 1 minute later
+- 5 minutes later
+- 15 minutes later
+- 1 hour later

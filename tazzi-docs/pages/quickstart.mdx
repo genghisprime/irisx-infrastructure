@@ -1,0 +1,391 @@
+---
+title: 'Quick Start'
+description: 'Make your first API call in 5 minutes'
+---
+
+# Quick Start Guide
+
+Get started with Tazzi in just a few steps. This guide will walk you through creating your account, getting your API key, and making your first API call.
+
+## Step 1: Create Your Account
+
+1. Visit [app.tazzi.com/signup](https://app.tazzi.com/signup)
+2. Fill out the signup form with your company details
+3. Verify your email address
+4. You'll receive **14 days free trial** with **$50 in credits**!
+
+<Info>
+  **No credit card required** - Start building immediately with your free trial.
+</Info>
+
+## Step 2: Get Your API Key
+
+Once you're logged in to the dashboard:
+
+1. Navigate to **Settings → API Keys**
+2. Click **Create API Key**
+3. Give your key a descriptive name (e.g., "Development Key")
+4. Copy your API key - it starts with `tazzi_live_` or `tazzi_test_`
+
+<Warning>
+  **Keep your API key secure!** Never expose it in client-side code or commit it to version control.
+</Warning>
+
+## Step 3: Make Your First API Call
+
+Choose your preferred channel to get started:
+
+<Tabs>
+  <Tab title="Send SMS">
+    Send your first SMS message:
+
+    <CodeGroup>
+    ```bash cURL
+    curl -X POST https://api.tazzi.com/v1/sms/send \
+      -H "Content-Type: application/json" \
+      -H "X-API-Key: YOUR_API_KEY" \
+      -d '{
+        "to": "+15551234567",
+        "from": "+15559876543",
+        "body": "Hello from Tazzi!"
+      }'
+    ```
+
+    ```javascript Node.js
+    const axios = require('axios');
+
+    const response = await axios.post('https://api.tazzi.com/v1/sms/send', {
+      to: '+15551234567',
+      from: '+15559876543',
+      body: 'Hello from Tazzi!'
+    }, {
+      headers: {
+        'X-API-Key': 'YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log(response.data);
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.post('https://api.tazzi.com/v1/sms/send',
+      json={
+        'to': '+15551234567',
+        'from': '+15559876543',
+        'body': 'Hello from Tazzi!'
+      },
+      headers={
+        'X-API-Key': 'YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      }
+    )
+
+    print(response.json())
+    ```
+
+    ```php PHP
+    <?php
+    $ch = curl_init('https://api.tazzi.com/v1/sms/send');
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+      'X-API-Key: YOUR_API_KEY',
+      'Content-Type: application/json'
+    ]);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+      'to' => '+15551234567',
+      'from' => '+15559876543',
+      'body' => 'Hello from Tazzi!'
+    ]));
+
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    print_r(json_decode($response));
+    ?>
+    ```
+    </CodeGroup>
+
+    **Expected Response:**
+    ```json
+    {
+      "success": true,
+      "message_id": "msg_abc123xyz",
+      "status": "queued",
+      "to": "+15551234567",
+      "from": "+15559876543",
+      "segments": 1,
+      "provider": "twilio"
+    }
+    ```
+  </Tab>
+
+  <Tab title="Make a Call">
+    Make your first voice call:
+
+    <CodeGroup>
+    ```bash cURL
+    curl -X POST https://api.tazzi.com/v1/calls \
+      -H "Content-Type: application/json" \
+      -H "X-API-Key: YOUR_API_KEY" \
+      -d '{
+        "to": "+15551234567",
+        "from": "+15559876543",
+        "url": "https://yourdomain.com/call-instructions.xml"
+      }'
+    ```
+
+    ```javascript Node.js
+    const axios = require('axios');
+
+    const response = await axios.post('https://api.tazzi.com/v1/calls', {
+      to: '+15551234567',
+      from: '+15559876543',
+      url: 'https://yourdomain.com/call-instructions.xml'
+    }, {
+      headers: {
+        'X-API-Key': 'YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log(response.data);
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.post('https://api.tazzi.com/v1/calls',
+      json={
+        'to': '+15551234567',
+        'from': '+15559876543',
+        'url': 'https://yourdomain.com/call-instructions.xml'
+      },
+      headers={
+        'X-API-Key': 'YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      }
+    )
+
+    print(response.json())
+    ```
+    </CodeGroup>
+
+    **Expected Response:**
+    ```json
+    {
+      "success": true,
+      "call_id": "call_abc123xyz",
+      "status": "queued",
+      "to": "+15551234567",
+      "from": "+15559876543",
+      "direction": "outbound"
+    }
+    ```
+  </Tab>
+
+  <Tab title="Send Email">
+    Send a transactional email:
+
+    <CodeGroup>
+    ```bash cURL
+    curl -X POST https://api.tazzi.com/v1/email/send \
+      -H "Content-Type: application/json" \
+      -H "X-API-Key: YOUR_API_KEY" \
+      -d '{
+        "to": "customer@example.com",
+        "from": "noreply@yourdomain.com",
+        "subject": "Welcome to Our Service!",
+        "html": "<h1>Welcome!</h1><p>Thanks for signing up.</p>"
+      }'
+    ```
+
+    ```javascript Node.js
+    const axios = require('axios');
+
+    const response = await axios.post('https://api.tazzi.com/v1/email/send', {
+      to: 'customer@example.com',
+      from: 'noreply@yourdomain.com',
+      subject: 'Welcome to Our Service!',
+      html: '<h1>Welcome!</h1><p>Thanks for signing up.</p>'
+    }, {
+      headers: {
+        'X-API-Key': 'YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log(response.data);
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.post('https://api.tazzi.com/v1/email/send',
+      json={
+        'to': 'customer@example.com',
+        'from': 'noreply@yourdomain.com',
+        'subject': 'Welcome to Our Service!',
+        'html': '<h1>Welcome!</h1><p>Thanks for signing up.</p>'
+      },
+      headers={
+        'X-API-Key': 'YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      }
+    )
+
+    print(response.json())
+    ```
+    </CodeGroup>
+
+    **Expected Response:**
+    ```json
+    {
+      "success": true,
+      "email_id": "email_abc123xyz",
+      "status": "queued",
+      "to": "customer@example.com",
+      "from": "noreply@yourdomain.com"
+    }
+    ```
+  </Tab>
+
+  <Tab title="WhatsApp">
+    Send a WhatsApp message:
+
+    <CodeGroup>
+    ```bash cURL
+    curl -X POST https://api.tazzi.com/v1/whatsapp/send/text \
+      -H "Content-Type: application/json" \
+      -H "X-API-Key: YOUR_API_KEY" \
+      -d '{
+        "to": "15551234567",
+        "body": "Hello from Tazzi!"
+      }'
+    ```
+
+    ```javascript Node.js
+    const axios = require('axios');
+
+    const response = await axios.post('https://api.tazzi.com/v1/whatsapp/send/text', {
+      to: '15551234567',
+      body: 'Hello from Tazzi!'
+    }, {
+      headers: {
+        'X-API-Key': 'YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log(response.data);
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.post('https://api.tazzi.com/v1/whatsapp/send/text',
+      json={
+        'to': '15551234567',
+        'body': 'Hello from Tazzi!'
+      },
+      headers={
+        'X-API-Key': 'YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      }
+    )
+
+    print(response.json())
+    ```
+    </CodeGroup>
+
+    <Info>
+      WhatsApp messages require a verified WhatsApp Business Account. See our [WhatsApp setup guide](/guides/whatsapp-integration).
+    </Info>
+  </Tab>
+</Tabs>
+
+## Step 4: Set Up Webhooks (Optional)
+
+Receive real-time notifications when events occur:
+
+1. Go to **Settings → Webhooks** in your dashboard
+2. Click **Add Webhook Endpoint**
+3. Enter your webhook URL (e.g., `https://yourdomain.com/webhooks/tazzi`)
+4. Select the event types you want to receive:
+   - `sms.received` - Inbound SMS messages
+   - `sms.delivered` - SMS delivery confirmations
+   - `call.completed` - Call ended events
+   - `email.opened` - Email open tracking
+   - And 20+ more events!
+5. Save and test your webhook
+
+**Example webhook payload:**
+```json
+{
+  "event": "sms.received",
+  "timestamp": "2025-11-03T04:30:00Z",
+  "data": {
+    "message_id": "msg_xyz789",
+    "from": "+15551234567",
+    "to": "+15559876543",
+    "body": "Hello!",
+    "received_at": "2025-11-03T04:30:00Z"
+  }
+}
+```
+
+[Learn more about webhooks →](/webhooks/overview)
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card title="Make Your First Call" icon="phone" href="/guides/first-call">
+    Learn how to make voice calls and build IVR systems
+  </Card>
+  <Card title="Send SMS Messages" icon="message" href="/guides/send-sms">
+    Send SMS and MMS messages with delivery tracking
+  </Card>
+  <Card title="Email Campaigns" icon="envelope" href="/guides/send-email">
+    Send transactional and marketing emails
+  </Card>
+  <Card title="WhatsApp Business" icon="whatsapp" href="/guides/whatsapp-integration">
+    Integrate WhatsApp Business API
+  </Card>
+  <Card title="Unified Inbox" icon="inbox" href="/guides/unified-inbox">
+    Build a multi-channel customer support inbox
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/calls">
+    Browse all 200+ API endpoints
+  </Card>
+</CardGroup>
+
+## Need Help?
+
+- **Documentation**: Browse our complete [API Reference](/api-reference/calls)
+- **Community**: Join our [Discord](https://discord.gg/tazzi)
+- **Support**: Email [support@tazzi.com](mailto:support@tazzi.com)
+- **Status**: Check [status.tazzi.com](https://status.tazzi.com)
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized Error">
+    Make sure your API key is correct and included in the `X-API-Key` header. Check that your API key hasn't expired.
+  </Accordion>
+
+  <Accordion title="Phone Number Format">
+    Phone numbers must be in E.164 format (e.g., `+15551234567`). Include the `+` and country code.
+  </Accordion>
+
+  <Accordion title="Rate Limiting">
+    If you see `429 Too Many Requests`, you've exceeded your rate limit. Check the `X-RateLimit-Reset` header to see when you can retry.
+  </Accordion>
+
+  <Accordion title="Webhook Not Receiving Events">
+    Ensure your webhook URL is publicly accessible (not localhost). Check your webhook logs in the dashboard for delivery status and retry attempts.
+  </Accordion>
+</AccordionGroup>

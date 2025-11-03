@@ -1,0 +1,306 @@
+---
+title: 'Authentication'
+description: 'How to authenticate API requests with Tazzi'
+---
+
+# Authentication
+
+Tazzi uses API keys to authenticate requests. Your API keys carry many privileges, so be sure to keep them secure! Do not share your secret API keys in publicly accessible areas such as GitHub, client-side code, and so forth.
+
+## API Key Types
+
+Tazzi provides two types of API keys for different environments:
+
+<CardGroup cols={2}>
+  <Card title="Test Keys" icon="flask">
+    **Prefix:** `tazzi_test_`
+
+    Use for development and testing. Test keys interact with a sandbox environment and won't send real messages or make actual calls.
+  </Card>
+  <Card title="Live Keys" icon="rocket">
+    **Prefix:** `tazzi_live_`
+
+    Use in production. Live keys send real messages, make actual calls, and incur charges.
+  </Card>
+</CardGroup>
+
+<Warning>
+  **Always use test keys during development** to avoid accidentally sending messages to customers or incurring charges.
+</Warning>
+
+## Making Authenticated Requests
+
+Include your API key in the `X-API-Key` header of every request:
+
+```bash
+curl https://api.tazzi.com/v1/calls \
+  -H "X-API-Key: tazzi_live_abc123..."
+```
+
+### Authentication Examples
+
+<CodeGroup>
+```bash cURL
+curl -X GET https://api.tazzi.com/v1/calls \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+const response = await axios.get('https://api.tazzi.com/v1/calls', {
+  headers: {
+    'X-API-Key': process.env.TAZZI_API_KEY
+  }
+});
+```
+
+```python Python
+import requests
+import os
+
+response = requests.get('https://api.tazzi.com/v1/calls',
+  headers={
+    'X-API-Key': os.environ.get('TAZZI_API_KEY')
+  }
+)
+```
+
+```php PHP
+<?php
+$ch = curl_init('https://api.tazzi.com/v1/calls');
+
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+  'X-API-Key: ' . getenv('TAZZI_API_KEY')
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+?>
+```
+</CodeGroup>
+
+## Error Responses
+
+If your API key is missing or invalid, you'll receive a `401 Unauthorized` response:
+
+```json
+{
+  "error": "Unauthorized",
+  "message": "Invalid API key provided",
+  "code": "invalid_api_key"
+}
+```
+
+Common authentication errors:
+
+| Status Code | Error Code | Description |
+|-------------|------------|-------------|
+| `401` | `missing_api_key` | No API key provided in request |
+| `401` | `invalid_api_key` | API key is invalid or has been revoked |
+| `401` | `expired_api_key` | API key has expired (Enterprise only) |
+| `403` | `insufficient_permissions` | API key doesn't have required permissions |
+| `403` | `ip_not_whitelisted` | Request IP not in whitelist (Enterprise only) |
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="1. Keep API Keys Secret" icon="lock">
+    **Never** expose API keys in:
+    - Client-side code (JavaScript, mobile apps)
+    - Public repositories (GitHub, GitLab, etc.)
+    - Log files or error messages
+    - Screenshots or documentation
+
+    **Do:**
+    - Store keys in environment variables
+    - Use secret management tools (AWS Secrets Manager, HashiCorp Vault)
+    - Restrict access to production keys
+  </Accordion>
+
+  <Accordion title="2. Use Environment Variables" icon="terminal">
+    Store API keys in environment variables, not hardcoded in source code:
+
+    ```bash .env
+    TAZZI_API_KEY=tazzi_live_abc123...
+    ```
+
+    ```javascript Node.js
+    const apiKey = process.env.TAZZI_API_KEY;
+    ```
+
+    ```python Python
+    import os
+    api_key = os.environ.get('TAZZI_API_KEY')
+    ```
+
+    Add `.env` to your `.gitignore` file.
+  </Accordion>
+
+  <Accordion title="3. Rotate Keys Regularly" icon="rotate">
+    Periodically generate new API keys and revoke old ones:
+
+    1. Create a new API key in the dashboard
+    2. Update your application to use the new key
+    3. Test thoroughly in staging
+    4. Deploy to production
+    5. Revoke the old key after 24-48 hours
+
+    **Recommended rotation schedule:**
+    - Production keys: Every 90 days
+    - Development keys: Every 180 days
+  </Accordion>
+
+  <Accordion title="4. Use Separate Keys Per Environment" icon="layer-group">
+    Create different API keys for each environment:
+
+    - **Development**: `tazzi_test_dev_...`
+    - **Staging**: `tazzi_test_staging_...`
+    - **Production**: `tazzi_live_prod_...`
+
+    This makes it easy to revoke keys for specific environments without affecting others.
+  </Accordion>
+
+  <Accordion title="5. Monitor API Key Usage" icon="chart-line">
+    Regularly review API key activity in your dashboard:
+
+    - Check for unexpected usage patterns
+    - Monitor for failed authentication attempts
+    - Set up alerts for suspicious activity
+    - Review access logs weekly
+  </Accordion>
+
+  <Accordion title="6. Use IP Whitelisting (Enterprise)" icon="shield">
+    Restrict API key usage to specific IP addresses:
+
+    1. Go to **Settings → API Keys**
+    2. Select your API key
+    3. Click **Configure IP Whitelist**
+    4. Add allowed IP addresses/ranges
+    5. Save changes
+
+    Only requests from whitelisted IPs will be accepted.
+  </Accordion>
+</AccordionGroup>
+
+## API Key Permissions
+
+<Info>
+  **Enterprise Feature** - Fine-grained permissions are available on Enterprise plans. Standard plans have full access.
+</Info>
+
+You can create restricted API keys with limited permissions:
+
+| Permission | Description |
+|------------|-------------|
+| `calls:read` | View call logs and details |
+| `calls:write` | Make outbound calls |
+| `sms:read` | View SMS messages |
+| `sms:write` | Send SMS messages |
+| `email:read` | View emails |
+| `email:write` | Send emails |
+| `whatsapp:read` | View WhatsApp messages |
+| `whatsapp:write` | Send WhatsApp messages |
+| `webhooks:read` | View webhook configurations |
+| `webhooks:write` | Create and modify webhooks |
+
+**Example:** Create an API key that can only send SMS messages but not view call logs.
+
+## Rate Limiting
+
+All API requests are rate-limited to ensure platform stability:
+
+| Plan | Rate Limit | Burst Limit |
+|------|-----------|-------------|
+| **Free Trial** | 60 requests/minute | 100 requests/minute |
+| **Starter** | 600 requests/minute | 1,000 requests/minute |
+| **Professional** | 6,000 requests/minute | 10,000 requests/minute |
+| **Enterprise** | Custom | Custom |
+
+### Rate Limit Headers
+
+Every API response includes rate limit information:
+
+```http
+X-RateLimit-Limit: 600
+X-RateLimit-Remaining: 599
+X-RateLimit-Reset: 1635724800
+```
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests allowed per minute |
+| `X-RateLimit-Remaining` | Requests remaining in current window |
+| `X-RateLimit-Reset` | Unix timestamp when limit resets |
+
+### Handling Rate Limits
+
+When you exceed your rate limit, you'll receive a `429 Too Many Requests` response:
+
+```json
+{
+  "error": "Rate limit exceeded",
+  "message": "You have exceeded the rate limit. Please try again in 42 seconds.",
+  "retry_after": 42
+}
+```
+
+**Best practices:**
+- Implement exponential backoff
+- Respect the `Retry-After` header
+- Cache responses when possible
+- Use webhooks instead of polling
+- Contact sales for higher limits
+
+## Testing Authentication
+
+Use the `/v1/auth/verify` endpoint to test your API key:
+
+```bash
+curl https://api.tazzi.com/v1/auth/verify \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+**Success response:**
+```json
+{
+  "valid": true,
+  "key_id": "key_abc123",
+  "tenant_id": "tenant_xyz789",
+  "permissions": ["*"],
+  "environment": "production",
+  "expires_at": null
+}
+```
+
+## Revoking API Keys
+
+If your API key is compromised:
+
+1. **Immediately revoke the key** in your dashboard
+2. **Generate a new key** with a different name
+3. **Update your application** with the new key
+4. **Monitor logs** for unauthorized usage
+5. **Review recent activity** for the compromised key
+
+<Warning>
+  **Revoking a key is immediate** - All requests using that key will fail instantly.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Keys Guide" icon="key" href="/pages/api-keys">
+    Learn how to create and manage API keys
+  </Card>
+  <Card title="Quick Start" icon="rocket" href="/pages/quickstart">
+    Make your first API call in 5 minutes
+  </Card>
+  <Card title="Webhooks Security" icon="shield" href="/webhooks/security">
+    Secure your webhook endpoints
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/calls">
+    Browse all API endpoints
+  </Card>
+</CardGroup>

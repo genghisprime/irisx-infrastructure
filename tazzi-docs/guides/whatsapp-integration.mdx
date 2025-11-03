@@ -1,0 +1,58 @@
+---
+title: 'WhatsApp Business Integration'
+description: 'Integrate WhatsApp Business API'
+---
+
+# WhatsApp Business Integration
+
+Send and receive WhatsApp messages using Tazzi.
+
+## Prerequisites
+
+- WhatsApp Business Account verified
+- WhatsApp phone number added to your Tazzi account
+
+## Send WhatsApp Message
+
+```bash
+curl -X POST https://api.tazzi.com/v1/whatsapp/send/text \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -d '{
+    "to": "15551234567",
+    "body": "Hello via WhatsApp!"
+  }'
+```
+
+## Send Template Message
+
+```bash
+curl -X POST https://api.tazzi.com/v1/whatsapp/send/template \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -d '{
+    "to": "15551234567",
+    "template_name": "order_confirmation",
+    "language": "en",
+    "parameters": ["12345", "John Doe"]
+  }'
+```
+
+## Handle Incoming Messages
+
+```javascript
+app.post('/webhooks/whatsapp', (req, res) => {
+  const { from, body, type } = req.body;
+  
+  if (type === 'text') {
+    console.log(`WhatsApp from ${from}: ${body}`);
+  }
+  
+  res.sendStatus(200);
+});
+```
+
+## Next Steps
+
+- [Unified Inbox](/guides/unified-inbox)
+- [API Reference: WhatsApp](/api-reference/whatsapp)

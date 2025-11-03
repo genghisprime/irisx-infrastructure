@@ -1,0 +1,57 @@
+---
+title: 'Send SMS Messages'
+description: 'Learn how to send SMS and MMS messages'
+---
+
+# Send SMS Messages
+
+Send SMS and MMS messages using the Tazzi API.
+
+## Send a Simple SMS
+
+```bash
+curl -X POST https://api.tazzi.com/v1/sms/send \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -d '{
+    "to": "+15551234567",
+    "from": "+15559876543",
+    "body": "Hello from Tazzi!"
+  }'
+```
+
+## Send MMS with Image
+
+```bash
+curl -X POST https://api.tazzi.com/v1/sms/send \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key": YOUR_API_KEY" \
+  -d '{
+    "to": "+15551234567",
+    "from": "+15559876543",
+    "body": "Check out this image!",
+    "media_url": "https://example.com/image.jpg"
+  }'
+```
+
+## Handle Inbound Messages
+
+```javascript
+app.post('/webhooks/sms-received', (req, res) => {
+  const { from, body, message_id } = req.body;
+  
+  console.log(`Message from ${from}: ${body}`);
+  
+  // Auto-reply
+  if (body.toLowerCase().includes('help')) {
+    // Send response
+  }
+  
+  res.sendStatus(200);
+});
+```
+
+## Next Steps
+
+- [WhatsApp Integration](/guides/whatsapp-integration)
+- [API Reference: SMS](/api-reference/sms)

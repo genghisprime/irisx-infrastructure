@@ -1,0 +1,77 @@
+---
+title: 'Making Your First Call'
+description: 'Learn how to make voice calls with Tazzi'
+---
+
+# Making Your First Call
+
+This guide walks you through making your first voice call using the Tazzi API.
+
+## Prerequisites
+
+- Tazzi account with API key
+- Phone number provisioned in your account
+- Webhook URL for call instructions (optional)
+
+## Step 1: Make an Outbound Call
+
+```bash
+curl -X POST https://api.tazzi.com/v1/calls \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -d '{
+    "to": "+15551234567",
+    "from": "+15559876543",
+    "url": "https://yourdomain.com/call-flow.xml"
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "call_id": "call_abc123",
+  "status": "queued",
+  "to": "+15551234567",
+  "from": "+15559876543"
+}
+```
+
+## Step 2: Create Call Instructions
+
+Create an XML file at your webhook URL with TwiML-compatible instructions:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice">Hello! Thanks for calling Tazzi.</Say>
+    <Gather numDigits="1" action="/handle-input">
+        <Say>Press 1 for sales, 2 for support.</Say>
+    </Gather>
+</Response>
+```
+
+## Step 3: Handle Call Events
+
+Set up webhooks to receive call status updates:
+
+```javascript
+// Webhook endpoint example (Node.js)
+app.post('/webhooks/call-status', (req, res) => {
+  const { call_id, status, duration } = req.body;
+  
+  console.log(`Call ${call_id} status: ${status}`);
+  
+  if (status === 'completed') {
+    console.log(`Call duration: ${duration} seconds`);
+  }
+  
+  res.sendStatus(200);
+});
+```
+
+## Next Steps
+
+- [Send SMS Messages](/guides/send-sms)
+- [API Reference: Calls](/api-reference/calls)
+- [Webhook Events](/webhooks/events)

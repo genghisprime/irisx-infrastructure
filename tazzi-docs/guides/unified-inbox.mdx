@@ -1,0 +1,43 @@
+---
+title: 'Unified Inbox Integration'
+description: 'Build a multi-channel inbox'
+---
+
+# Unified Inbox
+
+Consolidate messages from all channels into one inbox.
+
+## List Conversations
+
+```bash
+curl https://api.tazzi.com/v1/conversations?status=open \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+## Get Conversation Messages
+
+```bash
+curl https://api.tazzi.com/v1/conversations/{id} \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+## Send Reply
+
+```bash
+curl -X POST https://api.tazzi.com/v1/conversations/{id}/messages \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -d '{
+    "body": "Thanks for contacting us!",
+    "agent_id": "agent_123"
+  }'
+```
+
+## Assign to Agent
+
+```bash
+curl -X PATCH https://api.tazzi.com/v1/conversations/{id}/assign \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -d '{"agent_id": "agent_123"}'
+```
