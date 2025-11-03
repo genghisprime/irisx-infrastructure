@@ -170,9 +170,7 @@ app.use('*', logger());
 
 // CORS Configuration - Security Enhanced
 const ALLOWED_ORIGINS = [
-  'https://admin.irisx.com',
-  'https://app.irisx.com',
-  'https://agent.irisx.com',
+  'http://irisx-agent-desktop-prod.s3-website-us-east-1.amazonaws.com', // Agent Desktop S3
   'http://localhost:5173', // Admin Portal dev
   'http://localhost:5174', // Customer Portal dev
   'http://localhost:5175', // Agent Desktop dev
