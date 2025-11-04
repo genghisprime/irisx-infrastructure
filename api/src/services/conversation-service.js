@@ -4,7 +4,7 @@
  * Part of Unified Inbox implementation
  */
 
-import pool from '../config/database.js';
+import pool from '../db/connection.js';
 
 /**
  * Find or create a conversation for an inbound message

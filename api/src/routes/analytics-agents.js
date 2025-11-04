@@ -6,7 +6,7 @@
  */
 
 import { Hono } from 'hono';
-import pool from '../config/database.js';
+import pool from '../db/connection.js';
 
 const agentAnalytics = new Hono();
 

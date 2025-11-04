@@ -4,7 +4,7 @@
  * Week 13-14 Phase 5: Email Automation Engine
  */
 
-import pool from '../config/database.js';
+import pool from '../db/connection.js';
 import { sendTemplateEmail } from './email.js';
 
 /**

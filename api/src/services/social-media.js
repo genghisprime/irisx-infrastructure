@@ -4,7 +4,7 @@
  * Week 17-18: Social Media Integration
  */
 
-import pool from '../config/database.js';
+import pool from '../db/connection.js';
 import fetch from 'node-fetch';
 import * as conversationService from './conversation-service.js';
 

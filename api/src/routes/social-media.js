@@ -7,7 +7,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import * as socialService from '../services/social-media.js';
-import pool from '../config/database.js';
+import pool from '../db/connection.js';
 import crypto from 'crypto';
 
 const social = new Hono();

@@ -8,7 +8,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import * as whatsappService from '../services/whatsapp.js';
 import * as conversationService from '../services/conversation-service.js';
-import pool from '../config/database.js';
+import pool from '../db/connection.js';
 
 const whatsapp = new Hono();
 

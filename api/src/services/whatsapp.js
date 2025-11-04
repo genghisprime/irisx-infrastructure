@@ -4,7 +4,7 @@
  * Week 15-16 Phase 2: WhatsApp Integration
  */
 
-import pool from '../config/database.js';
+import pool from '../db/connection.js';
 import fetch from 'node-fetch';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';

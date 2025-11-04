@@ -5,7 +5,7 @@
  */
 
 import crypto from 'crypto';
-import pool from '../config/database.js';
+import pool from '../db/connection.js';
 
 /**
  * Generate a new API key

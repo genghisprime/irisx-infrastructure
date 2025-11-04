@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono'
 import { z } from 'zod'
-import pool from '../db.js'
+import pool from '../db/connection.js'
 
 const campaigns = new Hono()
 
