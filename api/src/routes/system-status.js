@@ -6,7 +6,7 @@
 
 import { Hono } from 'hono';
 import pool from '../db/connection.js';
-import redis from '../config/redis.js';
+import redis from '../db/redis.js';
 import { authenticateAdmin } from './admin-auth.js';
 import { z } from 'zod';
 
