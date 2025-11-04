@@ -179,15 +179,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { useFirebase } from '../../composables/useFirebase'
 import Softphone from '../../components/Softphone.vue'
 import AgentStatusSelector from '../../components/AgentStatusSelector.vue'
 import CallDispositionModal from '../../components/CallDispositionModal.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { initialize: initializeFirebase, updatePresence, presenceStatus, onlineAgents } = useFirebase()
 
 // State
 const agentStatus = ref('available')
@@ -203,13 +205,31 @@ const stats = ref({
   avgDuration: 0
 })
 
+// Initialize Firebase on mount
+onMounted(async () => {
+  console.log('[AgentDashboard] Initializing Firebase...')
+  await initializeFirebase()
+})
+
 // Methods
-function handleStatusChange(status) {
+async function handleStatusChange(status) {
   console.log('Agent status changed to:', status)
-  // In Phase 3, this would sync to Firebase Realtime DB
+
+  // Map agent status to Firebase presence status
+  const firebaseStatus = {
+    'available': 'online',
+    'on_call': 'busy',
+    'break': 'away',
+    'offline': 'offline'
+  }[status] || 'online'
+
+  // Sync to Firebase Realtime DB
+  await updatePresence(firebaseStatus)
 }
 
 async function handleLogout() {
+  // Set presence to offline before logout
+  await updatePresence('offline')
   await authStore.logout()
   router.push('/login')
 }
