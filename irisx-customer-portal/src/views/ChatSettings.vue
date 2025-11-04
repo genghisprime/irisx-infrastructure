@@ -399,8 +399,11 @@ function resetForm() {
 
 // Get installation code
 function getInstallationCode(widgetKey) {
+  const scriptTag = '<' + 'script>';
+  const closeScriptTag = '<' + '/script>';
+
   return `<!-- Tazzi Live Chat Widget -->
-<script>
+${scriptTag}
 (function() {
   var WIDGET_KEY = '${widgetKey}';
   var API_URL = '${API_URL}/v1/chat';
@@ -416,7 +419,7 @@ function getInstallationCode(widgetKey) {
   };
   document.body.appendChild(script);
 })();
-</script>`;
+${closeScriptTag}`;
 }
 
 // Copy to clipboard
