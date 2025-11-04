@@ -17,7 +17,7 @@ const app = new Hono();
  * Comprehensive system health check
  * Returns status of all critical components
  */
-app.get('/health', authenticateAdmin(), async (c) => {
+app.get('/health', authenticateAdmin, async (c) => {
   const startTime = Date.now();
   const health = {
     status: 'healthy',
@@ -158,7 +158,7 @@ app.get('/health', authenticateAdmin(), async (c) => {
  * GET /admin/system/metrics
  * Platform-wide metrics and statistics
  */
-app.get('/metrics', authenticateAdmin(), async (c) => {
+app.get('/metrics', authenticateAdmin, async (c) => {
   try {
     // Get overall platform metrics
     const result = await pool.query(`
@@ -232,7 +232,7 @@ app.get('/metrics', authenticateAdmin(), async (c) => {
  * GET /admin/system/performance
  * System performance metrics
  */
-app.get('/performance', authenticateAdmin(), async (c) => {
+app.get('/performance', authenticateAdmin, async (c) => {
   try {
     // Get slow queries (queries taking > 1 second)
     const slowQueriesResult = await pool.query(`
@@ -327,7 +327,7 @@ app.get('/performance', authenticateAdmin(), async (c) => {
  * GET /admin/system/errors
  * Recent system errors and issues
  */
-app.get('/errors', authenticateAdmin(), async (c) => {
+app.get('/errors', authenticateAdmin, async (c) => {
   try {
     const { hours = 24 } = c.req.query();
     const hoursInt = parseInt(hours);
@@ -446,7 +446,7 @@ app.get('/errors', authenticateAdmin(), async (c) => {
  * GET /admin/system/capacity
  * System capacity and resource utilization
  */
-app.get('/capacity', authenticateAdmin(), async (c) => {
+app.get('/capacity', authenticateAdmin, async (c) => {
   try {
     // Database capacity
     const dbCapacityResult = await pool.query(`
@@ -532,7 +532,7 @@ app.get('/capacity', authenticateAdmin(), async (c) => {
  * GET /admin/system/uptime
  * System uptime and availability metrics
  */
-app.get('/uptime', authenticateAdmin(), async (c) => {
+app.get('/uptime', authenticateAdmin, async (c) => {
   try {
     // Calculate uptime based on oldest active session or call
     const uptimeResult = await pool.query(`
