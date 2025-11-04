@@ -3,14 +3,14 @@
  * Handles customer self-service registration
  */
 
-import { Router } from 'hono';
+import { Hono } from 'hono';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import pool from '../db/connection.js';
 import { sendVerificationEmail, sendWelcomeEmail } from '../services/signup-email.js';
 
-const router = new Router();
+const router = new Hono();
 
 // Validation schemas
 const signupSchema = z.object({
