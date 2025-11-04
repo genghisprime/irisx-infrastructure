@@ -38,7 +38,7 @@ import CallRecordingPlayer from '../views/CallRecordingPlayer.vue'
 import UsageDashboard from '../views/UsageDashboard.vue'
 import BillingHistory from '../views/BillingHistory.vue'
 import ChatInbox from '../views/ChatInbox.vue'
-import ChatSettings from '../views/ChatSettings.vue'
+// import ChatSettings from '../views/ChatSettings.vue' // TEMPORARILY DISABLED - build error
 import CampaignList from '../views/CampaignList.vue'
 import CampaignDashboard from '../views/CampaignDashboard.vue'
 import UnifiedAnalytics from '../views/UnifiedAnalytics.vue'
@@ -196,11 +196,12 @@ const routes = [
         name: 'ChatInbox',
         component: ChatInbox
       },
-      {
-        path: 'chat-settings',
-        name: 'ChatSettings',
-        component: ChatSettings
-      },
+      // TEMPORARILY DISABLED - ChatSettings has build error
+      // {
+      //   path: 'chat-settings',
+      //   name: 'ChatSettings',
+      //   component: ChatSettings
+      // },
       {
         path: 'campaigns',
         name: 'CampaignList',
