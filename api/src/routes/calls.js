@@ -15,7 +15,8 @@ const createCallSchema = z.object({
   to: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (E.164)'),
   from: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (E.164)').optional(),
   record: z.boolean().default(false),
-  metadata: z.record(z.any()).optional()
+  metadata: z.record(z.any()).optional(),
+  dry_run: z.boolean().default(false)  // Dry run mode - skip FreeSWITCH for load testing
 });
 
 calls.post('/', authenticate, strictRateLimit, async (c) => {
@@ -25,7 +26,7 @@ calls.post('/', authenticate, strictRateLimit, async (c) => {
     const freeswitch = c.get('freeswitch');
     const body = await c.req.json();
     const validatedData = createCallSchema.parse(body);
-    const { to, from, record, metadata } = validatedData;
+    const { to, from, record, metadata, dry_run } = validatedData;
 
     let callerIdNumber = from;
     if (!callerIdNumber) {
@@ -67,33 +68,52 @@ calls.post('/', authenticate, strictRateLimit, async (c) => {
       );
       
       await client.query('COMMIT');
-      
-      // **ACTUALLY ORIGINATE THE CALL via FreeSWITCH ESL**
-      try {
-        const originateCmd = `originate {origination_caller_id_number=${callerIdNumber},api_call_sid=${callSid},api_tenant_id=${tenantId}}sofia/gateway/twilio/${to} &playback(/usr/local/freeswitch/share/freeswitch/sounds/en/us/callie/ivr/8000/ivr-welcome_to_freeswitch.wav)`;
-        
-        console.log(`📞 Originating call via FreeSWITCH: ${callerIdNumber} -> ${to}`);
-        const result = await freeswitch.api(originateCmd);
-        
-        // Update call status to 'ringing'
+
+      // **ORIGINATE THE CALL (or simulate if dry_run)**
+      if (!dry_run) {
+        // REAL CALL - Originate via FreeSWITCH ESL
+        try {
+          const originateCmd = `originate {origination_caller_id_number=${callerIdNumber},api_call_sid=${callSid},api_tenant_id=${tenantId}}sofia/gateway/twilio/${to} &playback(/usr/local/freeswitch/share/freeswitch/sounds/en/us/callie/ivr/8000/ivr-welcome_to_freeswitch.wav)`;
+
+          console.log(`📞 Originating call via FreeSWITCH: ${callerIdNumber} -> ${to}`);
+          const result = await freeswitch.api(originateCmd);
+
+          // Update call status to 'ringing'
+          await query('UPDATE calls SET status = $1 WHERE call_sid = $2', ['ringing', callSid]);
+
+          console.log(`✅ Call originated successfully: ${result}`);
+        } catch (fsError) {
+          console.error('FreeSWITCH origination error:', fsError);
+
+          // Update call to failed status
+          await query(
+            'UPDATE calls SET status = $1, ended_at = NOW() WHERE call_sid = $2',
+            ['failed', callSid]
+          );
+
+          return c.json({
+            error: 'Call Origination Failed',
+            message: 'Failed to initiate call through FreeSWITCH',
+            code: 'FREESWITCH_ERROR',
+            sid: callSid
+          }, 500);
+        }
+      } else {
+        // DRY RUN MODE - Simulate call without FreeSWITCH
+        console.log(`🧪 [DRY RUN] Simulated call: ${callerIdNumber} -> ${to} (SID: ${callSid})`);
+
+        // Update to ringing immediately
         await query('UPDATE calls SET status = $1 WHERE call_sid = $2', ['ringing', callSid]);
-        
-        console.log(`✅ Call originated successfully: ${result}`);
-      } catch (fsError) {
-        console.error('FreeSWITCH origination error:', fsError);
-        
-        // Update call to failed status
-        await query(
-          'UPDATE calls SET status = $1, ended_at = NOW() WHERE call_sid = $2',
-          ['failed', callSid]
-        );
-        
-        return c.json({ 
-          error: 'Call Origination Failed', 
-          message: 'Failed to initiate call through FreeSWITCH', 
-          code: 'FREESWITCH_ERROR',
-          sid: callSid
-        }, 500);
+
+        // Simulate call completion after random duration (0-5 seconds)
+        const simulatedDuration = Math.floor(Math.random() * 5) + 1;
+        setTimeout(async () => {
+          await query(
+            'UPDATE calls SET status = $1, ended_at = NOW(), duration = $2 WHERE call_sid = $3',
+            ['completed', simulatedDuration, callSid]
+          );
+          console.log(`🧪 [DRY RUN] Simulated call completed: ${callSid} (${simulatedDuration}s)`);
+        }, simulatedDuration * 1000);
       }
       
       return c.json({ 

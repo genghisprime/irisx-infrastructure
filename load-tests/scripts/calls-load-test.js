@@ -45,6 +45,7 @@ export const options = {
 const API_URL = __ENV.API_URL || 'http://54.160.220.243:3000';
 const API_KEY = __ENV.API_KEY || 'test_api_key';
 const FROM_NUMBER = __ENV.FROM_NUMBER || '+15559876543';
+const DRY_RUN = __ENV.DRY_RUN === 'true';  // Dry run mode - no real calls
 const TO_NUMBERS = [
   '+15551111111',
   '+15552222222',
@@ -60,6 +61,7 @@ export function setup() {
   console.log(`Peak VUs: 100`);
   console.log(`Duration: 30 minutes`);
   console.log(`Target CPS: ~20`);
+  console.log(`DRY RUN: ${DRY_RUN ? 'YES (no real calls)' : 'NO (real calls)'}`);
   console.log('---');
 
   // Verify API is reachable
@@ -80,6 +82,7 @@ export default function () {
     to: toNumber,
     from: FROM_NUMBER,
     record: false,  // Don't record during load test
+    dry_run: DRY_RUN,  // Dry run mode - skip FreeSWITCH
     metadata: {
       load_test: true,
       vu: __VU,

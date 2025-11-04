@@ -37,6 +37,7 @@ export const options = {
 const API_URL = __ENV.API_URL || 'http://54.160.220.243:3000';
 const API_KEY = __ENV.API_KEY || 'test_api_key';
 const FROM_NUMBER = __ENV.FROM_NUMBER || '+15559876543';
+const DRY_RUN = __ENV.DRY_RUN === 'true';  // Dry run mode - no real SMS
 
 const MESSAGE_TEMPLATES = [
   'Hello! This is a test message #{ITER}',
@@ -54,7 +55,8 @@ export default function () {
   const payload = JSON.stringify({
     to: toNumber,
     from: FROM_NUMBER,
-    body: message,
+    message: message,  // Note: API expects 'message' not 'body'
+    dry_run: DRY_RUN,  // Dry run mode - skip Twilio
   });
 
   const params = {

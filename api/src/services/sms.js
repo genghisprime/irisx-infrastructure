@@ -40,7 +40,8 @@ export class SMSService {
       from,
       body,
       mediaUrls = [],
-      metadata = {}
+      metadata = {},
+      dry_run = false  // Dry run mode for load testing
     } = params;
 
     const client = await getClient();
@@ -88,11 +89,27 @@ export class SMSService {
 
       await client.query('COMMIT');
 
-      // Send via Twilio (async)
-      this.sendViaTwilio(message.id, messageSid, from, to, body, mediaUrls)
-        .catch(err => console.error('Twilio send error:', err));
+      // Send via Twilio (async) or simulate if dry_run
+      if (!dry_run) {
+        // REAL SMS - Send via Twilio
+        this.sendViaTwilio(message.id, messageSid, from, to, body, mediaUrls)
+          .catch(err => console.error('Twilio send error:', err));
+        console.log(`📤 SMS queued: ${messageSid} from ${from} to ${to}`);
+      } else {
+        // DRY RUN MODE - Simulate SMS without Twilio
+        console.log(`🧪 [DRY RUN] Simulated SMS: ${messageSid} from ${from} to ${to}`);
 
-      console.log(`📤 SMS queued: ${messageSid} from ${from} to ${to}`);
+        // Simulate sending after short delay
+        setTimeout(async () => {
+          await query(
+            `UPDATE sms_messages
+             SET status = $1, sent_at = NOW(), price = $2, price_unit = $3
+             WHERE message_sid = $4`,
+            ['sent', 0.0075, 'USD', messageSid]
+          );
+          console.log(`🧪 [DRY RUN] Simulated SMS sent: ${messageSid}`);
+        }, Math.random() * 1000); // Random 0-1 sec delay
+      }
 
       return {
         sid: messageSid,
@@ -111,6 +128,17 @@ export class SMSService {
     } finally {
       client.release();
     }
+  }
+
+  /**
+   * sendSMS - Alias for sendMessage (for backwards compatibility with routes)
+   */
+  async sendSMS(params) {
+    // Map old parameter names to new ones
+    return this.sendMessage({
+      ...params,
+      body: params.message || params.body  // Support both 'message' and 'body' parameters
+    });
   }
 
   /**

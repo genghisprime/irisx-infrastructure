@@ -21,7 +21,7 @@ sms.post('/send', async (c) => {
     const tenantId = c.get('tenantId') || 1;
     const body = await c.req.json();
 
-    const { from, to, message, mediaUrls = [] } = body;
+    const { from, to, message, mediaUrls = [], dry_run = false } = body;
 
     // Validation
     if (!from || !to || !message) {
@@ -34,7 +34,8 @@ sms.post('/send', async (c) => {
       from,
       to,
       message,
-      mediaUrls
+      mediaUrls,
+      dry_run
     });
 
     return c.json({
@@ -56,7 +57,7 @@ sms.post('/send-bulk', async (c) => {
     const tenantId = c.get('tenantId') || 1;
     const body = await c.req.json();
 
-    const { from, recipients, message, mediaUrls = [] } = body;
+    const { from, recipients, message, mediaUrls = [], dry_run = false } = body;
 
     // Validation
     if (!from || !recipients || !Array.isArray(recipients) || recipients.length === 0) {
@@ -79,7 +80,8 @@ sms.post('/send-bulk', async (c) => {
           from,
           to,
           message,
-          mediaUrls
+          mediaUrls,
+          dry_run
         })
       )
     );
