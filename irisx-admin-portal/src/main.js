@@ -21,7 +21,14 @@ app.use(router)
 
 // Initialize auth store (check if user is logged in)
 const authStore = useAdminAuthStore()
-authStore.initialize().finally(() => {
-  // Mount app after auth check completes
+
+// The store automatically restores from localStorage on creation
+// Just fetch current admin data to verify token is still valid
+if (authStore.token) {
+  authStore.fetchCurrentAdmin().finally(() => {
+    app.mount('#app')
+  })
+} else {
+  // No token, just mount the app (will redirect to login)
   app.mount('#app')
-})
+}
