@@ -37,6 +37,7 @@ import EmailTemplateLibrary from '../views/EmailTemplateLibrary.vue'
 import CallRecordingPlayer from '../views/CallRecordingPlayer.vue'
 import UsageDashboard from '../views/UsageDashboard.vue'
 import BillingHistory from '../views/BillingHistory.vue'
+import DataImport from '../views/DataImport.vue'
 import ChatInbox from '../views/ChatInbox.vue'
 import ChatSettings from '../views/ChatSettings.vue'
 import CampaignList from '../views/CampaignList.vue'
@@ -150,6 +151,11 @@ const routes = [
         path: 'billing-history',
         name: 'BillingHistory',
         component: BillingHistory
+      },
+      {
+        path: 'data-import',
+        name: 'DataImport',
+        component: DataImport
       },
       {
         path: 'agents',

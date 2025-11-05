@@ -151,27 +151,26 @@ adminDashboard.get('/stats', async (c) => {
       WHERE 1=1 ${timeFilter}
     `);
 
-    // Email statistics
+    // Email statistics (emails table doesn't have direction - all are outbound)
     const emailResult = await pool.query(`
       SELECT
         COUNT(*) as total_emails,
-        COUNT(CASE WHEN direction = 'outbound' THEN 1 END) as outbound_emails,
-        COUNT(CASE WHEN direction = 'inbound' THEN 1 END) as inbound_emails,
+        COUNT(*) as outbound_emails,
+        0 as inbound_emails,
         COUNT(CASE WHEN status = 'sent' OR status = 'delivered' THEN 1 END) as sent_emails,
         COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_emails
       FROM emails
       WHERE 1=1 ${timeFilter}
     `);
 
-    // WhatsApp statistics
-    const whatsappResult = await pool.query(`
-      SELECT
-        COUNT(*) as total_whatsapp,
-        COUNT(CASE WHEN direction = 'outbound' THEN 1 END) as outbound_whatsapp,
-        COUNT(CASE WHEN direction = 'inbound' THEN 1 END) as inbound_whatsapp
-      FROM whatsapp_messages
-      WHERE 1=1 ${timeFilter}
-    `);
+    // WhatsApp statistics (table doesn't exist yet - return zeros)
+    const whatsappResult = {
+      rows: [{
+        total_whatsapp: 0,
+        outbound_whatsapp: 0,
+        inbound_whatsapp: 0
+      }]
+    };
 
     return c.json({
       time_range: timeRange,
@@ -209,7 +208,7 @@ adminDashboard.get('/charts/daily-activity', async (c) => {
         COALESCE(c.call_count, 0) as calls,
         COALESCE(s.sms_count, 0) as sms,
         COALESCE(e.email_count, 0) as emails,
-        COALESCE(w.whatsapp_count, 0) as whatsapp
+        0 as whatsapp
       FROM dates d
       LEFT JOIN (
         SELECT DATE(initiated_at) as date, COUNT(*) as call_count
@@ -229,12 +228,6 @@ adminDashboard.get('/charts/daily-activity', async (c) => {
         WHERE created_at >= NOW() - INTERVAL '30 days'
         GROUP BY DATE(created_at)
       ) e ON d.date = e.date
-      LEFT JOIN (
-        SELECT DATE(created_at) as date, COUNT(*) as whatsapp_count
-        FROM whatsapp_messages
-        WHERE created_at >= NOW() - INTERVAL '30 days'
-        GROUP BY DATE(created_at)
-      ) w ON d.date = w.date
       ORDER BY d.date ASC
     `);
 
@@ -343,10 +336,10 @@ adminDashboard.get('/revenue', async (c) => {
 });
 
 /**
- * GET /admin/dashboard/recent-activity
+ * GET /admin/dashboard/recent-activity (or /activity)
  * Recent platform activity (last 50 events)
  */
-adminDashboard.get('/recent-activity', async (c) => {
+const recentActivityHandler = async (c) => {
   try {
     const admin = c.get('admin');
     const limit = Math.min(parseInt(c.req.query('limit') || '50'), 200);
@@ -387,7 +380,11 @@ adminDashboard.get('/recent-activity', async (c) => {
     console.error('Recent activity error:', err);
     return c.json({ error: 'Failed to load recent activity' }, 500);
   }
-});
+};
+
+// Register both /activity and /recent-activity routes
+adminDashboard.get('/activity', recentActivityHandler);
+adminDashboard.get('/recent-activity', recentActivityHandler);
 
 /**
  * GET /admin/dashboard/system-health

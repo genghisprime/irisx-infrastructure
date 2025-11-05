@@ -57,6 +57,8 @@ import adminPhoneNumbers from './routes/admin-phone-numbers.js';
 import adminSettings from './routes/admin-settings.js';
 import systemStatus from './routes/system-status.js'; // Temporarily disabled - has parse-time errors
 import publicSignup from './routes/public-signup.js'; // Temporarily disabled - has parse-time errors
+import imports from './routes/imports.js';
+import { initWebSocket } from './services/websocket.js';
 
 dotenv.config();
 
@@ -375,6 +377,8 @@ app.route('/admin/phone-numbers', adminPhoneNumbers); // Phone Number Provisioni
 app.route('/admin/settings', adminSettings); // Feature Flags & System Config
 app.route('/admin/system', systemStatus); // Temporarily disabled - has parse-time errors
 app.route('/public', publicSignup); // Temporarily disabled - has parse-time errors
+app.route('/v1/imports', imports); // Data Import System (Week 28)
+app.route('/v1/exports', imports); // Data Export System (Week 28)
 
 // 404 handler
 app.notFound((c) => {
@@ -425,9 +429,13 @@ console.log('🗄️ Database:', process.env.DB_HOST);
 console.log('💾 Redis:', process.env.REDIS_HOST || 'pending');
 console.log('📞 FreeSWITCH:', process.env.FREESWITCH_HOST);
 
-serve({
+const server = serve({
   fetch: app.fetch,
   port
 }, (info) => {
   console.log('✓ Server running at http://localhost:' + info.port);
+
+  // Initialize WebSocket server for real-time import progress
+  initWebSocket(server);
+  console.log('✓ WebSocket server initialized on /ws/imports');
 });

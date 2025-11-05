@@ -102,6 +102,20 @@ const routes = [
         name: 'SystemSettings',
         component: () => import('../views/admin/settings/SystemSettings.vue'),
         meta: { requiresRole: 'superadmin' }
+      },
+      // Alerts
+      {
+        path: 'alerts',
+        name: 'AlertManagement',
+        component: () => import('../views/admin/AlertManagement.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // Data Import
+      {
+        path: 'data-import',
+        name: 'DataImport',
+        component: () => import('../views/admin/DataImport.vue'),
+        meta: { requiresRole: 'admin' }
       }
     ]
   }
