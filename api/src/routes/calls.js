@@ -2,10 +2,34 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { query, getClient } from '../db/connection.js';
 import { authenticate } from '../middleware/auth.js';
+import { authenticateJWT } from '../middleware/authMiddleware.js';
 import { strictRateLimit } from '../middleware/rateLimit.js';
 import crypto from 'crypto';
 
 const calls = new Hono();
+
+// Middleware that supports both API Key and JWT authentication
+const authenticateBoth = async (c, next) => {
+  const authHeader = c.req.header('Authorization');
+  const apiKey = c.req.header('X-API-Key');
+
+  // Try JWT first if Authorization header present
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authenticateJWT(c, next);
+  }
+
+  // Fall back to API key authentication
+  if (apiKey) {
+    return authenticate(c, next);
+  }
+
+  // No authentication provided
+  return c.json({
+    error: 'Unauthorized',
+    message: 'Missing authentication (Bearer token or X-API-Key)',
+    code: 'MISSING_AUTH'
+  }, 401);
+};
 
 const generateCallSid = () => {
   return 'CA' + crypto.randomBytes(16).toString('hex');
@@ -199,7 +223,7 @@ calls.post('/:sid/hangup', authenticate, async (c) => {
   }
 });
 
-calls.get('/:sid', authenticate, async (c) => {
+calls.get('/:sid', authenticateBoth, async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const { sid } = c.req.param();
@@ -218,7 +242,7 @@ calls.get('/:sid', authenticate, async (c) => {
   }
 });
 
-calls.get('/', authenticate, async (c) => {
+calls.get('/', authenticateBoth, async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const limit = Math.min(parseInt(c.req.query('limit') || '50'), 100);

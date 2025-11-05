@@ -17,6 +17,7 @@
 import { Hono } from 'hono';
 import { query } from '../db/connection.js';
 import webhookService from '../services/webhook.js';
+import { authenticateJWT } from '../middleware/authMiddleware.js';
 import crypto from 'crypto';
 
 const webhooks = new Hono();
@@ -25,7 +26,7 @@ const webhooks = new Hono();
  * Create a new webhook
  * POST /v1/webhooks
  */
-webhooks.post('/', async (c) => {
+webhooks.post('/', authenticateJWT, async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const body = await c.req.json();
@@ -104,27 +105,34 @@ webhooks.post('/', async (c) => {
  * List webhooks for tenant
  * GET /v1/webhooks
  */
-webhooks.get('/', async (c) => {
+webhooks.get('/', authenticateJWT, async (c) => {
   try {
     const tenantId = c.get('tenantId');
 
     const result = await query(
-      `SELECT id, url, description, events, is_active, is_verified,
+      `SELECT id, url, name, description, events, status,
               total_deliveries, successful_deliveries, failed_deliveries,
               last_delivery_at, last_success_at, last_failure_at,
               created_at, updated_at
        FROM webhooks
-       WHERE tenant_id = $1
+       WHERE tenant_id = $1 AND deleted_at IS NULL
        ORDER BY created_at DESC`,
       [tenantId]
     );
 
     return c.json({
-      webhooks: result.rows
+      success: true,
+      data: {
+        webhooks: result.rows,
+        total: result.rows.length
+      }
     });
   } catch (error) {
     console.error('[API] Error listing webhooks:', error);
-    return c.json({ error: 'Internal server error' }, 500);
+    return c.json({
+      error: 'Failed to fetch webhooks',
+      message: error.message
+    }, 500);
   }
 });
 
@@ -132,7 +140,7 @@ webhooks.get('/', async (c) => {
  * Get webhook by ID
  * GET /v1/webhooks/:id
  */
-webhooks.get('/:id', async (c) => {
+webhooks.get('/:id', authenticateJWT, async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const webhookId = c.req.param('id');
@@ -169,7 +177,7 @@ webhooks.get('/:id', async (c) => {
  * Update webhook
  * PUT /v1/webhooks/:id
  */
-webhooks.put('/:id', async (c) => {
+webhooks.put('/:id', authenticateJWT, async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const webhookId = c.req.param('id');
@@ -255,7 +263,7 @@ webhooks.put('/:id', async (c) => {
  * Delete webhook
  * DELETE /v1/webhooks/:id
  */
-webhooks.delete('/:id', async (c) => {
+webhooks.delete('/:id', authenticateJWT, async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const webhookId = c.req.param('id');
@@ -284,7 +292,7 @@ webhooks.delete('/:id', async (c) => {
  * List webhook deliveries
  * GET /v1/webhooks/:id/deliveries
  */
-webhooks.get('/:id/deliveries', async (c) => {
+webhooks.get('/:id/deliveries', authenticateJWT, async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const webhookId = c.req.param('id');
@@ -348,7 +356,7 @@ webhooks.get('/:id/deliveries', async (c) => {
  * Test webhook with sample event
  * POST /v1/webhooks/:id/test
  */
-webhooks.post('/:id/test', async (c) => {
+webhooks.post('/:id/test', authenticateJWT, async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const webhookId = c.req.param('id');
@@ -401,7 +409,7 @@ webhooks.post('/:id/test', async (c) => {
  * Retry failed delivery
  * POST /v1/webhooks/deliveries/:id/retry
  */
-webhooks.post('/deliveries/:id/retry', async (c) => {
+webhooks.post('/deliveries/:id/retry', authenticateJWT, async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const deliveryId = c.req.param('id');
@@ -439,7 +447,7 @@ webhooks.post('/deliveries/:id/retry', async (c) => {
  * List available webhook event types
  * GET /v1/webhooks/event-types
  */
-webhooks.get('/event-types', async (c) => {
+webhooks.get('/event-types', authenticateJWT, async (c) => {
   try {
     const result = await query(
       `SELECT event_type, category, description

@@ -216,7 +216,11 @@ async function fetchDashboardData() {
   try {
     // Fetch stats
     const statsResponse = await apiClient.get('/v1/analytics/stats')
-    stats.value = statsResponse.data
+    // API returns { success: true, data: {...} }
+    stats.value = {
+      ...stats.value,
+      ...(statsResponse.data.data || statsResponse.data)
+    }
 
     // Fetch recent calls
     const callsResponse = await apiClient.get('/v1/calls?limit=10')

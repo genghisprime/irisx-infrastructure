@@ -42,6 +42,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { query } from '../db/connection.js';
 import { authenticate } from '../middleware/auth.js';
+import { authenticateJWT } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 import { parse as parseCSV } from 'csv-parse/sync';
 import * as XLSX from 'xlsx';
@@ -59,6 +60,29 @@ import {
 } from '../services/google-sheets.js';
 
 const app = new Hono();
+
+// Middleware that supports both API Key and JWT authentication
+const authenticateBoth = async (c, next) => {
+  const authHeader = c.req.header('Authorization');
+  const apiKey = c.req.header('X-API-Key');
+
+  // Try JWT first if Authorization header present
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authenticateJWT(c, next);
+  }
+
+  // Fall back to API key authentication
+  if (apiKey) {
+    return authenticate(c, next);
+  }
+
+  // No authentication provided
+  return c.json({
+    error: 'Unauthorized',
+    message: 'Missing authentication (Bearer token or X-API-Key)',
+    code: 'MISSING_AUTH'
+  }, 401);
+};
 
 // File upload configuration
 const upload = multer({
@@ -118,7 +142,7 @@ const fieldMappingSchema = z.object({
  * - Importing from your app's database
  * - Automated imports via cron jobs
  */
-app.post('/bulk', authenticate, async (c) => {
+app.post('/bulk', authenticateBoth, async (c) => {
   try {
     const body = await c.req.json();
     const validated = bulkImportSchema.parse(body);
@@ -185,7 +209,7 @@ app.post('/bulk', authenticate, async (c) => {
  * - duplicate_strategy: skip/update/create_new
  * - webhook_url: callback URL for completion
  */
-app.post('/upload', authenticate, async (c) => {
+app.post('/upload', authenticateBoth, async (c) => {
   try {
     const tenantId = c.get('tenantId');
 
@@ -321,7 +345,7 @@ app.post('/upload', authenticate, async (c) => {
  *
  * Returns real-time progress for polling
  */
-app.get('/:id', authenticate, async (c) => {
+app.get('/:id', authenticateBoth, async (c) => {
   try {
     const jobId = c.req.param('id');
     const tenantId = c.get('tenantId');
@@ -365,7 +389,7 @@ app.get('/:id', authenticate, async (c) => {
  * GET /v1/imports
  * List all import jobs for tenant
  */
-app.get('/', authenticate, async (c) => {
+app.get('/', authenticateBoth, async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const limit = parseInt(c.req.query('limit') || '50');
@@ -413,7 +437,7 @@ app.get('/', authenticate, async (c) => {
  * DELETE /v1/imports/:id
  * Cancel or delete an import job
  */
-app.delete('/:id', authenticate, async (c) => {
+app.delete('/:id', authenticateBoth, async (c) => {
   try {
     const jobId = c.req.param('id');
     const tenantId = c.get('tenantId');
@@ -453,7 +477,7 @@ app.delete('/:id', authenticate, async (c) => {
  * POST /v1/imports/:id/map
  * Submit field mapping and start processing uploaded file
  */
-app.post('/:id/map', authenticate, async (c) => {
+app.post('/:id/map', authenticateBoth, async (c) => {
   try {
     const jobId = c.req.param('id');
     const tenantId = c.get('tenantId');
@@ -515,7 +539,7 @@ app.post('/:id/map', authenticate, async (c) => {
  * GET /v1/imports/:id/errors
  * Download errors as CSV
  */
-app.get('/:id/errors', authenticate, async (c) => {
+app.get('/:id/errors', authenticateBoth, async (c) => {
   try {
     const jobId = c.req.param('id');
     const tenantId = c.get('tenantId');
@@ -550,7 +574,7 @@ app.get('/:id/errors', authenticate, async (c) => {
  * GET /v1/exports/contacts?format=csv&list_id=123
  * Export contacts to CSV, Excel, or JSON
  */
-app.get('/exports/contacts', authenticate, async (c) => {
+app.get('/exports/contacts', authenticateBoth, async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const format = c.req.query('format') || 'csv'; // csv, excel, json
@@ -1384,7 +1408,7 @@ async function processFileImport(jobId) {
  * GET /v1/imports/google/auth
  * Initiate Google Sheets OAuth flow
  */
-app.get('/google/auth', authenticate, async (c) => {
+app.get('/google/auth', authenticateBoth, async (c) => {
   try {
     const user = c.get('user');
 
@@ -1504,7 +1528,7 @@ app.get('/google/callback', async (c) => {
  *   duplicate_strategy: "skip"
  * }
  */
-app.post('/google/sheet', authenticate, async (c) => {
+app.post('/google/sheet', authenticateBoth, async (c) => {
   try {
     const user = c.get('user');
     const body = await c.req.json();

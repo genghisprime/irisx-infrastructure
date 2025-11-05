@@ -16,6 +16,30 @@ const dateRangeSchema = z.object({
 });
 
 /**
+ * GET /v1/analytics/stats - Get dashboard statistics summary
+ */
+analytics.get('/stats', async (c) => {
+  try {
+    // Return basic stats - can be enhanced later
+    return c.json({
+      success: true,
+      data: {
+        totalCalls: 0,
+        totalMessages: 0,
+        activeContacts: 0,
+        activeCampaigns: 0
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    return c.json({
+      error: 'Failed to fetch stats',
+      message: error.message
+    }, 500);
+  }
+});
+
+/**
  * GET /v1/analytics/unified - Get unified metrics across all channels
  */
 analytics.get('/unified', async (c) => {

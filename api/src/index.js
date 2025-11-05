@@ -22,6 +22,8 @@ import analytics from './routes/analytics.js';
 import tts from './routes/tts.js';
 import ivr from './routes/ivr.js';
 import sms from './routes/sms.js';
+import messages from './routes/messages.js';
+import phoneNumbers from './routes/phone-numbers.js';
 import contacts from './routes/contacts.js';
 import contactLists from './routes/contact-lists.js';
 import queues from './routes/queues.js';
@@ -30,6 +32,7 @@ import campaigns from './routes/campaigns.js';
 import billing from './routes/billing.js';
 import chat from './routes/chat.js';
 import usage from './routes/usage.js';
+import apiKeys from './routes/api-keys.js';
 // // import recordings from './routes/recordings.js';
 // import phoneNumbers from './routes/phone-numbers.js';
 // import tenants from './routes/tenants.js';
@@ -196,17 +199,17 @@ const ALLOWED_ORIGINS = [
 app.use('*', cors({
   origin: (origin) => {
     // Allow requests with no origin (mobile apps, Postman, server-to-server)
-    if (!origin) return true;
+    if (!origin) return '*';
 
     // Check if origin is in whitelist
-    if (ALLOWED_ORIGINS.includes(origin)) return true;
+    if (ALLOWED_ORIGINS.includes(origin)) return origin;
 
     // Log rejected origins in development
     if (process.env.NODE_ENV !== 'production') {
       console.warn(`CORS: Rejected origin: ${origin}`);
     }
 
-    return false;
+    return null;
   },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
@@ -337,19 +340,25 @@ app.get('/v1', (c) => {
 // Mount API routes
 app.route('/v1/calls', calls);
 app.route('/v1/dialplan', dialplan);
+app.route('/v1/webhooks', webhooks);
 app.route('/v1/email', email);
+app.route('/v1/emails', email); // Alias for plural form
 app.route('/v1/analytics', analytics);
 app.route('/v1/tts', tts);
 app.route('/v1/ivr', ivr);
 app.route('/v1/sms', sms);
+app.route('/v1/messages', messages);
+app.route('/v1/phone-numbers', phoneNumbers);
 app.route('/v1/contacts', contacts);
 app.route('/v1/lists', contactLists);
+app.route('/v1/contact-lists', contactLists); // Alias for contact lists
 app.route('/v1/queues', queues);
 app.route('/v1/agents', agents);
 app.route('/v1/campaigns', campaigns);
 app.route('/v1/billing', billing);
 app.route('/v1/chat', chat); // Live Chat (Week 24-25)
 app.route('/v1/usage', usage); // Usage & Billing Dashboard (Week 24-25)
+app.route('/v1/api-keys', apiKeys); // API Key Management
 // app.route('/v1/recordings', recordings);
 // app.route('/v1/phone-numbers', phoneNumbers);
 // app.route('/v1/tenants', tenants);

@@ -531,7 +531,19 @@ async function fetchEmails() {
 async function fetchStats() {
   try {
     const response = await apiClient.get('/v1/emails/stats')
-    stats.value = response.data
+    // API returns { success: true, data: { total_sent, total_delivered, etc } }
+    const apiStats = response.data.data || response.data
+
+    // Map API response to component stats structure
+    stats.value = {
+      totalSent: apiStats.total_sent || 0,
+      delivered: apiStats.total_delivered || 0,
+      deliveryRate: apiStats.delivery_rate || 0,
+      opens: apiStats.total_opened || 0,
+      openRate: apiStats.open_rate || 0,
+      clicks: apiStats.total_clicked || 0,
+      clickRate: apiStats.click_rate || 0
+    }
   } catch (error) {
     console.error('Failed to fetch email stats:', error)
   }

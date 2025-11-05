@@ -32,12 +32,13 @@ export async function createApiKey(tenantId, name, description = null) {
   const apiKey = generateApiKey('live');
   const hashedKey = hashApiKey(apiKey);
   const keyPrefix = apiKey.substring(0, 20); // Store first 20 chars for display
+  const keyHint = apiKey.substring(apiKey.length - 8); // Last 8 chars as hint
 
   const result = await pool.query(
-    `INSERT INTO api_keys (tenant_id, key_hash, key_prefix, name, description, is_active, created_at)
-     VALUES ($1, $2, $3, $4, $5, true, NOW())
-     RETURNING id, tenant_id, key_prefix, name, description, is_active, created_at, last_used_at`,
-    [tenantId, hashedKey, keyPrefix, name, description]
+    `INSERT INTO api_keys (tenant_id, key_hash, key_prefix, key_hint, name, status, created_at)
+     VALUES ($1, $2, $3, $4, $5, 'active', NOW())
+     RETURNING id, tenant_id, key_prefix, key_hint, name, status, created_at, last_used_at`,
+    [tenantId, hashedKey, keyPrefix, keyHint, name]
   );
 
   return {
@@ -51,16 +52,16 @@ export async function createApiKey(tenantId, name, description = null) {
  */
 export async function getApiKeys(tenantId) {
   const result = await pool.query(
-    `SELECT id, tenant_id, key_prefix, name, description, is_active, created_at, last_used_at
+    `SELECT id, tenant_id, key_prefix, key_hint, name, status, created_at, last_used_at
      FROM api_keys
-     WHERE tenant_id = $1
+     WHERE tenant_id = $1 AND revoked_at IS NULL
      ORDER BY created_at DESC`,
     [tenantId]
   );
 
   return result.rows.map(row => ({
     ...row,
-    key_masked: row.key_prefix + '••••••••••••••••••••••••••••••••••••••••',
+    key_masked: row.key_prefix + '••••••••' + row.key_hint,
   }));
 }
 
@@ -70,7 +71,7 @@ export async function getApiKeys(tenantId) {
 export async function revokeApiKey(tenantId, keyId) {
   const result = await pool.query(
     `UPDATE api_keys
-     SET is_active = false
+     SET status = 'revoked', revoked_at = NOW()
      WHERE id = $1 AND tenant_id = $2
      RETURNING id`,
     [keyId, tenantId]
@@ -86,9 +87,9 @@ export async function validateApiKey(apiKey) {
   const hashedKey = hashApiKey(apiKey);
 
   const result = await pool.query(
-    `SELECT id, tenant_id, is_active
+    `SELECT id, tenant_id, status
      FROM api_keys
-     WHERE key_hash = $1 AND is_active = true`,
+     WHERE key_hash = $1 AND status = 'active' AND revoked_at IS NULL`,
     [hashedKey]
   );
 

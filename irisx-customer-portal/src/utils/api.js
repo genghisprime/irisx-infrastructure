@@ -45,21 +45,38 @@ apiClient.interceptors.response.use(
 
       // Try to refresh token
       try {
-        const response = await axios.post(`${API_BASE_URL}/v1/auth/refresh`, {}, {
+        const refreshToken = localStorage.getItem('refresh_token')
+        if (!refreshToken) {
+          // No refresh token available, redirect to login
+          localStorage.removeItem('token')
+          window.location.href = '/login'
+          return Promise.reject(error)
+        }
+
+        const response = await axios.post(`${API_BASE_URL}/v1/auth/refresh`, {
+          refresh_token: refreshToken
+        }, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            'Content-Type': 'application/json'
           }
         })
 
-        const { token } = response.data
-        localStorage.setItem('token', token)
+        // API returns: { success: true, data: { access_token, refresh_token } }
+        const { data } = response.data
+        const newToken = data.access_token || data.token
+
+        localStorage.setItem('token', newToken)
+        if (data.refresh_token) {
+          localStorage.setItem('refresh_token', data.refresh_token)
+        }
 
         // Retry original request with new token
-        originalRequest.headers.Authorization = `Bearer ${token}`
+        originalRequest.headers.Authorization = `Bearer ${newToken}`
         return apiClient(originalRequest)
       } catch (refreshError) {
         // Refresh failed, logout user
         localStorage.removeItem('token')
+        localStorage.removeItem('refresh_token')
         window.location.href = '/login'
         return Promise.reject(refreshError)
       }

@@ -11,7 +11,7 @@ export const useAuthStore = defineStore('auth', () => {
   // State
   const user = ref(null)
   const token = ref(localStorage.getItem('token') || null)
-  const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const isAuthenticated = computed(() => !!token.value)  // Only check token, user will be fetched
   const isLoading = ref(false)
   const error = ref(null)
 
@@ -26,16 +26,21 @@ export const useAuthStore = defineStore('auth', () => {
         password
       })
 
-      const { token: authToken, user: userData } = response.data
+      // API returns: { success: true, data: { user: {...}, tokens: { access_token, refresh_token } } }
+      const { data } = response.data
+      const authToken = data.tokens.access_token
+      const userData = data.user
 
       // Store token and user data
       token.value = authToken
       user.value = userData
       localStorage.setItem('token', authToken)
+      localStorage.setItem('refresh_token', data.tokens.refresh_token)
 
       return { success: true }
     } catch (err) {
-      error.value = err.response?.data?.message || 'Login failed'
+      console.error('Login error:', err)
+      error.value = err.response?.data?.error || err.response?.data?.message || 'Login failed'
       return { success: false, error: error.value }
     } finally {
       isLoading.value = false
@@ -70,6 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     user.value = null
     localStorage.removeItem('token')
+    localStorage.removeItem('refresh_token')
   }
 
   async function fetchUser() {
@@ -80,10 +86,12 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const response = await apiClient.get('/v1/auth/me')
-      user.value = response.data.user
+      // API returns: { success: true, data: { ...userData } }
+      user.value = response.data.data || response.data.user
       return { success: true }
     } catch (err) {
-      error.value = err.response?.data?.message || 'Failed to fetch user'
+      console.error('Fetch user error:', err)
+      error.value = err.response?.data?.error || err.response?.data?.message || 'Failed to fetch user'
       // If token is invalid, logout
       if (err.response?.status === 401) {
         await logout()
@@ -98,14 +106,24 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return
 
     try {
-      const response = await apiClient.post('/v1/auth/refresh')
-      const { token: newToken } = response.data
+      const refreshTokenValue = localStorage.getItem('refresh_token')
+      const response = await apiClient.post('/v1/auth/refresh', {
+        refresh_token: refreshTokenValue
+      })
+
+      // API returns: { success: true, data: { access_token, refresh_token } }
+      const { data } = response.data
+      const newToken = data.access_token || data.token
 
       token.value = newToken
       localStorage.setItem('token', newToken)
+      if (data.refresh_token) {
+        localStorage.setItem('refresh_token', data.refresh_token)
+      }
 
       return { success: true }
     } catch (err) {
+      console.error('Token refresh error:', err)
       // If refresh fails, logout
       await logout()
       return { success: false }

@@ -8,6 +8,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import * as apiKeysService from '../services/api-keys.js';
 import { apiKeyCreationRateLimit } from '../middleware/rate-limit.js';
+import { authenticateJWT } from '../middleware/authMiddleware.js';
 
 const apiKeys = new Hono();
 
@@ -53,7 +54,7 @@ async function extractTenantId(c, next) {
  * Create a new API key
  * Rate limited: 10 keys per hour per tenant
  */
-apiKeys.post('/', apiKeyCreationRateLimit, extractTenantId, async (c) => {
+apiKeys.post('/', authenticateJWT, apiKeyCreationRateLimit, extractTenantId, async (c) => {
   try {
     const body = await c.req.json();
     const validation = createKeySchema.safeParse(body);
@@ -94,7 +95,7 @@ apiKeys.post('/', apiKeyCreationRateLimit, extractTenantId, async (c) => {
  * GET /v1/api-keys
  * List all API keys for the authenticated tenant
  */
-apiKeys.get('/', extractTenantId, async (c) => {
+apiKeys.get('/', authenticateJWT, extractTenantId, async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const keys = await apiKeysService.getApiKeys(tenantId);
@@ -116,7 +117,7 @@ apiKeys.get('/', extractTenantId, async (c) => {
  * DELETE /v1/api-keys/:id
  * Revoke (deactivate) an API key
  */
-apiKeys.delete('/:id', extractTenantId, async (c) => {
+apiKeys.delete('/:id', authenticateJWT, extractTenantId, async (c) => {
   try {
     const keyId = c.req.param('id');
     const tenantId = c.get('tenantId');

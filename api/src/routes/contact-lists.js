@@ -12,6 +12,7 @@
 
 import { Hono } from 'hono';
 import contactListService from '../services/contact-lists.js';
+import { authenticateJWT } from '../middleware/authMiddleware.js';
 
 const lists = new Hono();
 
@@ -19,7 +20,7 @@ const lists = new Hono();
  * @route POST /v1/lists
  * @desc Create a new contact list
  */
-lists.post('/', async (c) => {
+lists.post('/', authenticateJWT, async (c) => {
   try {
     const tenantId = c.get('tenantId') || 1;
     const body = await c.req.json();
@@ -37,7 +38,7 @@ lists.post('/', async (c) => {
  * @route GET /v1/lists
  * @desc List all contact lists
  */
-lists.get('/', async (c) => {
+lists.get('/', authenticateJWT, async (c) => {
   try {
     const tenantId = c.get('tenantId') || 1;
     const { page = 1, limit = 50, type } = c.req.query();
@@ -59,7 +60,7 @@ lists.get('/', async (c) => {
  * @route GET /v1/lists/:id
  * @desc Get list by ID
  */
-lists.get('/:id', async (c) => {
+lists.get('/:id', authenticateJWT, async (c) => {
   try {
     const listId = c.req.param('id');
     const tenantId = c.get('tenantId') || 1;
@@ -81,7 +82,7 @@ lists.get('/:id', async (c) => {
  * @route PUT /v1/lists/:id
  * @desc Update list
  */
-lists.put('/:id', async (c) => {
+lists.put('/:id', authenticateJWT, async (c) => {
   try {
     const listId = c.req.param('id');
     const tenantId = c.get('tenantId') || 1;
@@ -100,7 +101,7 @@ lists.put('/:id', async (c) => {
  * @route DELETE /v1/lists/:id
  * @desc Delete list
  */
-lists.delete('/:id', async (c) => {
+lists.delete('/:id', authenticateJWT, async (c) => {
   try {
     const listId = c.req.param('id');
     const tenantId = c.get('tenantId') || 1;

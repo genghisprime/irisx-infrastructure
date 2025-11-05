@@ -392,7 +392,7 @@ export default {
   name: 'Conversations',
   setup() {
     const router = useRouter()
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://3.83.53.69:3000'
+    const API_BASE = import.meta.env.VITE_API_URL || 'https://api.tazzi.com'
 
     // State
     const loading = ref(false)
@@ -431,7 +431,7 @@ export default {
 
     // Get JWT token
     const getToken = () => {
-      return localStorage.getItem('auth_token')
+      return localStorage.getItem('token')
     }
 
     // API Helper
@@ -452,7 +452,8 @@ export default {
       })
 
       if (response.status === 401) {
-        localStorage.removeItem('auth_token')
+        localStorage.removeItem('token')
+        localStorage.removeItem('refresh_token')
         router.push('/login')
         throw new Error('Session expired')
       }
