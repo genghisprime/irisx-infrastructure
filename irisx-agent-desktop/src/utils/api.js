@@ -6,7 +6,9 @@
 import axios from 'axios'
 
 // API base URL - configurable via environment variable
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://3.83.53.69:3000'
+// Use HTTPS for production, detect protocol based on page
+const API_BASE_URL = import.meta.env.VITE_API_URL ||
+  (window.location.protocol === 'https:' ? 'https://api.tazzi.com' : 'http://3.83.53.69:3000')
 
 // Create axios instance
 export const apiClient = axios.create({

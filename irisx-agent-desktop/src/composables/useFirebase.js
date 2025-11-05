@@ -59,7 +59,8 @@ export function useFirebase() {
    */
   async function registerTokenWithBackend(token) {
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://3.83.53.69:3000';
+      const API_URL = import.meta.env.VITE_API_URL ||
+        (window.location.protocol === 'https:' ? 'https://api.tazzi.com' : 'http://3.83.53.69:3000');
 
       await axios.post(
         `${API_URL}/v1/notifications/register-token`,
@@ -88,7 +89,8 @@ export function useFirebase() {
       }
 
       const agentId = authStore.agent.id;
-      const API_URL = import.meta.env.VITE_API_URL || 'http://3.83.53.69:3000';
+      const API_URL = import.meta.env.VITE_API_URL ||
+        (window.location.protocol === 'https:' ? 'https://api.tazzi.com' : 'http://3.83.53.69:3000');
 
       // Update on backend
       await axios.post(
