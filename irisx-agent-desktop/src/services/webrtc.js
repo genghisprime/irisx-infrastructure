@@ -107,8 +107,16 @@ class WebRTCService {
         throw new Error('Failed to create SIP URI')
       }
 
+      // Use WSS/WS depending on page protocol
+      // When HTTPS, use api.tazzi.com/ws which proxies to FreeSWITCH
+      // When HTTP (dev), connect directly to FreeSWITCH server
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      const wsServer = window.location.protocol === 'https:'
+        ? 'api.tazzi.com/ws'
+        : `${sipServer}:8066`
+
       const transportOptions = {
-        server: `ws://${sipServer}:8066`, // Use WS via Nginx proxy (stable)
+        server: `${protocol}//${wsServer}`,
         // Nginx proxies to FreeSWITCH port 5066 internally
       }
 
