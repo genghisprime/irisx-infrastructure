@@ -120,6 +120,8 @@ class WebRTCService {
         // Nginx proxies to FreeSWITCH port 5066 internally
       }
 
+      console.log('🔌 Connecting to WebSocket:', transportOptions.server)
+
       // UserAgent configuration
       const userAgentOptions = {
         uri,
