@@ -60,8 +60,8 @@
             <DocumentTextIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/email-templates') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Email Templates
           </router-link>
-          <router-link to="/dashboard/email-builder" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/email-builder') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
-            <PencilSquareIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/email-builder') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+          <router-link to="/dashboard/email-campaign-builder" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/email-campaign-builder') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <PencilSquareIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/email-campaign-builder') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Email Builder
           </router-link>
           <router-link to="/dashboard/email-analytics" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/email-analytics') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
@@ -281,7 +281,7 @@ const pageTitle = computed(() => {
     '/dashboard/social': 'Social Media',
     '/dashboard/emails': 'Emails',
     '/dashboard/email-templates': 'Email Templates',
-    '/dashboard/email-builder': 'Email Builder',
+    '/dashboard/email-campaign-builder': 'Email Builder',
     '/dashboard/email-analytics': 'Email Analytics',
     '/dashboard/email-automation': 'Email Automation',
     '/dashboard/email-deliverability': 'Email Deliverability',
