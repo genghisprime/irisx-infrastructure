@@ -474,6 +474,8 @@ watch(selectedContact, () => {
   display: flex;
   flex-direction: column;
   background: #f0f2f5;
+  margin: -24px -32px;
+  padding: 24px 32px;
 }
 
 .page-header {
