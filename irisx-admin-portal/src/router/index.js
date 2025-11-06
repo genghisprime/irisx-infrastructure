@@ -32,6 +32,12 @@ const routes = [
         name: 'AuditLog',
         component: () => import('../views/admin/dashboard/AuditLog.vue')
       },
+      {
+        path: 'usage-analytics',
+        name: 'UsageAnalytics',
+        component: () => import('../views/admin/analytics/UsageAnalytics.vue'),
+        meta: { requiresRole: 'admin' }
+      },
       // Tenants
       {
         path: 'tenants',
