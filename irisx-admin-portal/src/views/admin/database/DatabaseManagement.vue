@@ -156,25 +156,7 @@ async function fetchStats() {
     backups.value = backupsRes.data
   } catch (err) {
     console.error('Failed to fetch database stats:', err)
-    // Mock data
-    stats.value = {
-      total_size: 42949672960, // 40 GB
-      active_connections: 45,
-      max_connections: 100,
-      queries_per_sec: 1250,
-      cache_hit_rate: 94.5
-    }
-    tenantSizes.value = [
-      { tenant_id: 7, tenant_name: 'Demo Corp', size: 12884901888, percentage: 30 },
-      { tenant_id: 8, tenant_name: 'TechStart Inc', size: 8589934592, percentage: 20 }
-    ]
-    connections.value = { active: 45, idle: 35, waiting: 0, max_pool_size: 100 }
-    slowQueries.value = [
-      { query: 'SELECT * FROM conversations WHERE tenant_id = ? AND created_at > ?', exec_time: 2150, count: 23, last_seen: '2025-11-06T19:50:00Z' }
-    ]
-    backups.value = [
-      { id: 1, name: 'backup-2025-11-06.sql', size: 42949672960, created_at: '2025-11-06T02:00:00Z', status: 'completed' }
-    ]
+    error.value = 'Failed to load database stats'
   } finally {
     loading.value = false
   }

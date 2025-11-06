@@ -157,10 +157,7 @@ async function fetchTrunks() {
     trunks.value = response.data
   } catch (err) {
     console.error('Failed to fetch trunks:', err)
-    trunks.value = [
-      { id: 1, name: 'Twilio Primary', provider: 'Twilio', sip_uri: 'sip:trunk@twilio.com', active_channels: 12, max_channels: 100, codec: 'PCMU,PCMA', status: 'registered', description: 'Main Twilio trunk' },
-      { id: 2, name: 'Bandwidth Backup', provider: 'Bandwidth', sip_uri: 'sip:trunk@bandwidth.com', active_channels: 0, max_channels: 50, codec: 'OPUS,PCMU', status: 'registered', description: 'Failover trunk' }
-    ]
+    error.value = 'Failed to load SIP trunks'
   } finally {
     loading.value = false
   }

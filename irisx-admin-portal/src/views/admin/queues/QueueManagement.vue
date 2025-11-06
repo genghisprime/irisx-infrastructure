@@ -300,62 +300,6 @@ async function fetchQueues() {
   } catch (err) {
     console.error('Failed to fetch queues:', err)
     error.value = 'Failed to load queues'
-    // Mock data for development
-    queues.value = [
-      {
-        id: 1,
-        name: 'Sales Queue',
-        description: 'Main sales inquiries',
-        tenant_id: 7,
-        tenant_name: 'Demo Corp',
-        strategy: 'round-robin',
-        priority: 8,
-        agents_total: 12,
-        agents_online: 10,
-        agents_available: 7,
-        active_calls: 5,
-        waiting_calls: 2,
-        avg_wait_time: 45,
-        max_wait_time: 180,
-        status: 'active',
-        calls_today: 234,
-        service_level: 87.5,
-        abandon_rate: 3.2,
-        calls_answered: 226,
-        calls_abandoned: 8,
-        calls_voicemail: 12,
-        answer_rate: 96.6,
-        agent_stats: [
-          { id: 1, name: 'Agent Smith', status: 'On Call', calls_handled: 32, avg_handle_time: 245 },
-          { id: 2, name: 'Agent Jones', status: 'Available', calls_handled: 28, avg_handle_time: 198 }
-        ]
-      },
-      {
-        id: 2,
-        name: 'Support Queue',
-        description: 'Technical support',
-        tenant_id: 7,
-        tenant_name: 'Demo Corp',
-        strategy: 'longest-idle',
-        priority: 10,
-        agents_total: 8,
-        agents_online: 6,
-        agents_available: 4,
-        active_calls: 3,
-        waiting_calls: 5,
-        avg_wait_time: 120,
-        max_wait_time: 420,
-        status: 'active',
-        calls_today: 178,
-        service_level: 72.3,
-        abandon_rate: 8.1,
-        calls_answered: 163,
-        calls_abandoned: 15,
-        calls_voicemail: 8,
-        answer_rate: 91.6,
-        agent_stats: []
-      }
-    ]
   } finally {
     loading.value = false
   }

@@ -134,11 +134,7 @@ async function fetchWebhooks() {
     webhooks.value = response.data
   } catch (err) {
     console.error('Failed to fetch webhooks:', err)
-    webhooks.value = [
-      { id: 1, tenant_id: 7, tenant_name: 'Demo Corp', event_type: 'call.completed', url: 'https://demo.com/webhooks/calls', success_rate: 98.5, deliveries_24h: 234, last_delivery: '2025-11-06T19:45:00Z', status: 'active' },
-      { id: 2, tenant_id: 7, tenant_name: 'Demo Corp', event_type: 'sms.received', url: 'https://demo.com/webhooks/sms', success_rate: 75.2, deliveries_24h: 89, last_delivery: '2025-11-06T19:30:00Z', status: 'active' }
-    ]
-    stats.value = { successful: 312, failed: 11 }
+    error.value = 'Failed to load webhooks'
   } finally {
     loading.value = false
   }
@@ -160,11 +156,7 @@ async function viewLogs(webhook) {
     webhookLogs.value = response.data
   } catch (err) {
     console.error('Failed to fetch logs:', err)
-    webhookLogs.value = [
-      { id: 1, timestamp: '2025-11-06T19:45:00Z', success: true, response_time: 145 },
-      { id: 2, timestamp: '2025-11-06T19:44:00Z', success: false, response_time: 5000, error: 'Timeout after 5000ms' },
-      { id: 3, timestamp: '2025-11-06T19:43:00Z', success: true, response_time: 98 }
-    ]
+    webhookLogs.value = []
   }
   showLogsModal.value = true
 }

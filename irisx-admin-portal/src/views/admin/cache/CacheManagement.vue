@@ -158,28 +158,7 @@ async function fetchStats() {
     sessions.value = sessionsRes.data
   } catch (err) {
     console.error('Failed to fetch cache stats:', err)
-    // Mock data
-    stats.value = {
-      memory_used: 536870912, // 512 MB
-      memory_max: 2147483648, // 2 GB
-      memory_percentage: 25,
-      total_keys: 45238,
-      hit_rate: 92.3,
-      ops_per_sec: 3450
-    }
-    cachePatterns.value = [
-      { pattern: 'session:*', keys: 1234, memory: 52428800, hit_rate: 98.5, avg_ttl: 3600 },
-      { pattern: 'user:*', keys: 5678, memory: 104857600, hit_rate: 95.2, avg_ttl: 7200 },
-      { pattern: 'tenant:*', keys: 234, memory: 10485760, hit_rate: 99.1, avg_ttl: 1800 }
-    ]
-    sessions.value = [
-      { id: 'sess_abc123...', user_email: 'user@demo.com', tenant_name: 'Demo Corp', created_at: '2025-11-06T18:00:00Z', expires_at: '2025-11-07T18:00:00Z' }
-    ]
-    evictionStats.value = {
-      total_evictions: 1523,
-      eviction_policy: 'allkeys-lru',
-      expired_keys: 8932
-    }
+    error.value = 'Failed to load cache stats'
   } finally {
     loading.value = false
   }

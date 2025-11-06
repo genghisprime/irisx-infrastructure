@@ -167,56 +167,7 @@ async function fetchCampaigns() {
     calculateStats()
   } catch (err) {
     console.error('Failed to fetch campaigns:', err)
-    // Mock data
-    campaigns.value = [
-      {
-        id: 1,
-        name: 'Summer Promotion 2025',
-        tenant_id: 7,
-        tenant_name: 'Demo Corp',
-        type: 'SMS',
-        total_contacts: 10000,
-        contacts_reached: 7500,
-        progress: 75,
-        response_rate: 12.5,
-        compliance_status: 'compliant',
-        status: 'active',
-        started_at: '2025-11-01T10:00:00Z'
-      },
-      {
-        id: 2,
-        name: 'Customer Survey',
-        tenant_id: 7,
-        tenant_name: 'Demo Corp',
-        type: 'Email',
-        total_contacts: 5000,
-        contacts_reached: 5000,
-        progress: 100,
-        response_rate: 8.3,
-        compliance_status: 'compliant',
-        status: 'completed',
-        started_at: '2025-10-25T09:00:00Z'
-      },
-      {
-        id: 3,
-        name: 'Product Launch',
-        tenant_id: 8,
-        tenant_name: 'TechStart Inc',
-        type: 'Voice',
-        total_contacts: 2500,
-        contacts_reached: 500,
-        progress: 20,
-        response_rate: 5.2,
-        compliance_status: 'violation',
-        compliance_issues: 'High opt-out rate detected',
-        status: 'paused',
-        started_at: '2025-11-05T14:00:00Z'
-      }
-    ]
-    complianceAlerts.value = [
-      { id: 1, campaign_id: 3, message: 'Campaign "Product Launch" has high opt-out rate (15%) - Possible TCPA violation' }
-    ]
-    calculateStats()
+    error.value = 'Failed to load campaigns'
   } finally {
     loading.value = false
   }
