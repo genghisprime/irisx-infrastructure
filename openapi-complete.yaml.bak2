@@ -1,0 +1,4418 @@
+openapi: 3.1.0
+info:
+  title: Tazzi Communications Platform API
+  version: 1.0.0
+  description: |
+    Complete API specification for the Tazzi Communications Platform - A unified communications platform
+    supporting voice, SMS, email, WhatsApp, and multi-channel messaging.
+
+    ## Authentication
+
+    The API supports two authentication methods:
+    - **Bearer JWT Token**: Use `Authorization: Bearer <token>` header
+    - **API Key**: Use `X-API-Key: <api-key>` header
+
+    ## Base URL
+
+    Production: `https://api.tazzi.app`
+
+    ## Rate Limiting
+
+    API requests are rate-limited per tenant. Rate limit information is returned in response headers:
+    - `X-RateLimit-Limit`: Maximum requests allowed
+    - `X-RateLimit-Remaining`: Remaining requests
+    - `X-RateLimit-Reset`: Time when limit resets (Unix timestamp)
+
+  contact:
+    name: Tazzi API Support
+    email: support@tazzi.app
+    url: https://tazzi.app
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.tazzi.app/v1
+    description: Production server
+  - url: http://localhost:3000/v1
+    description: Development server
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Calls
+    description: Voice call management
+  - name: SMS
+    description: SMS messaging operations
+  - name: Email
+    description: Email communication
+  - name: Email Automation
+    description: Email automation rules and workflows
+  - name: WhatsApp
+    description: WhatsApp Business API integration
+  - name: Phone Numbers
+    description: Phone number management
+  - name: Contacts
+    description: Contact management
+  - name: Contact Lists
+    description: Contact list operations
+  - name: Campaigns
+    description: Outbound calling campaigns
+  - name: Messages
+    description: Unified message management
+  - name: Conversations
+    description: Unified inbox and conversation management
+  - name: Chat
+    description: Live chat widget
+  - name: Webhooks
+    description: Webhook management
+  - name: Analytics
+    description: Analytics and reporting
+  - name: Agent Analytics
+    description: Agent performance metrics
+  - name: Agents
+    description: Agent management
+  - name: Queues
+    description: Call queue management
+  - name: IVR
+    description: Interactive Voice Response
+  - name: Dialplan
+    description: Dynamic dialplan configuration
+  - name: TTS
+    description: Text-to-Speech
+  - name: Billing
+    description: Billing and usage
+  - name: API Keys
+    description: API key management
+  - name: Usage
+    description: Usage tracking and invoices
+  - name: Imports
+    description: Data import and export
+  - name: System Status
+    description: System health and monitoring
+
+paths:
+  # ==================== AUTHENTICATION ====================
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register new tenant account
+      description: Create a new tenant account with admin user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [company_name, email, password, first_name, last_name]
+              properties:
+                company_name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                first_name:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                last_name:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                phone:
+                  type: string
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: Email already registered
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login with email and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                      refresh_token:
+                        type: string
+                      user:
+                        $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout and revoke refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Logout successful
+
+  /auth/forgot-password:
+    post:
+      tags: [Authentication]
+      summary: Request password reset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Password reset email sent if account exists
+
+  /auth/reset-password:
+    post:
+      tags: [Authentication]
+      summary: Reset password using reset token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reset_token, new_password]
+              properties:
+                reset_token:
+                  type: string
+                new_password:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: Password reset successful
+        '400':
+          description: Invalid or expired reset token
+
+  /auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get current authenticated user
+      responses:
+        '200':
+          description: User data retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/User'
+
+  /auth/change-password:
+    post:
+      tags: [Authentication]
+      summary: Change password for authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, new_password]
+              properties:
+                current_password:
+                  type: string
+                new_password:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: Password changed successfully
+        '401':
+          description: Current password is incorrect
+
+  # ==================== CALLS ====================
+  /calls:
+    post:
+      tags: [Calls]
+      summary: Initiate outbound call
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to]
+              properties:
+                to:
+                  type: string
+                  pattern: '^\+?[1-9]\d{1,14}$'
+                  description: Destination phone number in E.164 format
+                from:
+                  type: string
+                  pattern: '^\+?[1-9]\d{1,14}$'
+                  description: Caller ID number (must be owned by tenant)
+                record:
+                  type: boolean
+                  default: false
+                metadata:
+                  type: object
+                  additionalProperties: true
+                dry_run:
+                  type: boolean
+                  default: false
+                  description: Dry run mode for testing (no actual call)
+      responses:
+        '201':
+          description: Call initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Call'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: Invalid caller ID
+
+    get:
+      tags: [Calls]
+      summary: List calls
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [initiated, ringing, answered, completed, failed]
+      responses:
+        '200':
+          description: List of calls
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calls:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Call'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /calls/{sid}:
+    get:
+      tags: [Calls]
+      summary: Get call details
+      parameters:
+        - name: sid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Call SID
+      responses:
+        '200':
+          description: Call details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Call'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /calls/{sid}/hangup:
+    post:
+      tags: [Calls]
+      summary: Hangup active call
+      parameters:
+        - name: sid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Call hung up
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== SMS ====================
+  /sms/send:
+    post:
+      tags: [SMS]
+      summary: Send SMS message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to, message]
+              properties:
+                from:
+                  type: string
+                to:
+                  type: string
+                message:
+                  type: string
+                mediaUrls:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                dry_run:
+                  type: boolean
+                  default: false
+      responses:
+        '201':
+          description: SMS sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  sms:
+                    $ref: '#/components/schemas/SMS'
+
+  /sms/send-bulk:
+    post:
+      tags: [SMS]
+      summary: Send SMS to multiple recipients
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, recipients, message]
+              properties:
+                from:
+                  type: string
+                recipients:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 1000
+                message:
+                  type: string
+                mediaUrls:
+                  type: array
+                  items:
+                    type: string
+                dry_run:
+                  type: boolean
+      responses:
+        '201':
+          description: Bulk SMS queued
+
+  /sms:
+    get:
+      tags: [SMS]
+      summary: List SMS messages
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: direction
+          in: query
+          schema:
+            type: string
+            enum: [inbound, outbound]
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of SMS messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SMS'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /sms/{id}:
+    get:
+      tags: [SMS]
+      summary: Get SMS message details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: SMS message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    $ref: '#/components/schemas/SMS'
+
+  /sms/templates:
+    post:
+      tags: [SMS]
+      summary: Create SMS template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, content]
+              properties:
+                name:
+                  type: string
+                content:
+                  type: string
+                  description: Template content with {{variables}}
+                variables:
+                  type: array
+                  items:
+                    type: string
+                category:
+                  type: string
+                  default: general
+      responses:
+        '201':
+          description: Template created
+
+    get:
+      tags: [SMS]
+      summary: List SMS templates
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of templates
+
+  /sms/send-template:
+    post:
+      tags: [SMS]
+      summary: Send SMS using template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [templateId, from, to]
+              properties:
+                templateId:
+                  type: integer
+                from:
+                  type: string
+                to:
+                  type: string
+                variables:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '201':
+          description: Template SMS sent
+
+  /sms/schedule:
+    post:
+      tags: [SMS]
+      summary: Schedule SMS for future delivery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to, message, scheduledFor]
+              properties:
+                from:
+                  type: string
+                to:
+                  type: string
+                message:
+                  type: string
+                mediaUrls:
+                  type: array
+                  items:
+                    type: string
+                scheduledFor:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: SMS scheduled
+
+  /sms/scheduled:
+    get:
+      tags: [SMS]
+      summary: List scheduled SMS messages
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            default: pending
+      responses:
+        '200':
+          description: List of scheduled messages
+
+  /sms/scheduled/{id}:
+    delete:
+      tags: [SMS]
+      summary: Cancel scheduled SMS
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Scheduled SMS cancelled
+
+  /sms/stats:
+    get:
+      tags: [SMS]
+      summary: Get SMS statistics
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: SMS statistics
+
+  /sms/opt-out:
+    post:
+      tags: [SMS]
+      summary: Add phone number to opt-out list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber]
+              properties:
+                phoneNumber:
+                  type: string
+                reason:
+                  type: string
+                  default: user_request
+      responses:
+        '201':
+          description: Phone number opted out
+
+  /sms/opt-outs:
+    get:
+      tags: [SMS]
+      summary: List opt-out phone numbers
+      responses:
+        '200':
+          description: List of opt-outs
+
+  # ==================== EMAIL ====================
+  /email/send:
+    post:
+      tags: [Email]
+      summary: Send email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailSendRequest'
+      responses:
+        '201':
+          description: Email sent
+
+  /email/send-template:
+    post:
+      tags: [Email]
+      summary: Send email using template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [templateSlug, to]
+              properties:
+                templateSlug:
+                  type: string
+                to:
+                  type: string
+                  format: email
+                toName:
+                  type: string
+                variables:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '201':
+          description: Template email sent
+
+  /email:
+    get:
+      tags: [Email]
+      summary: List emails
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of emails
+
+  /email/{id}:
+    get:
+      tags: [Email]
+      summary: Get email details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Email details
+
+  /email/stats:
+    get:
+      tags: [Email]
+      summary: Get email statistics
+      responses:
+        '200':
+          description: Email statistics
+
+  /email/templates:
+    post:
+      tags: [Email]
+      summary: Create email template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, slug, subject]
+              properties:
+                name:
+                  type: string
+                slug:
+                  type: string
+                description:
+                  type: string
+                subject:
+                  type: string
+                bodyText:
+                  type: string
+                bodyHtml:
+                  type: string
+                variables:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Template created
+
+    get:
+      tags: [Email]
+      summary: List email templates
+      responses:
+        '200':
+          description: List of templates
+
+  /email/templates/{slug}:
+    get:
+      tags: [Email]
+      summary: Get email template
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template details
+
+    put:
+      tags: [Email]
+      summary: Update email template
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Template updated
+
+    delete:
+      tags: [Email]
+      summary: Delete email template
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template deleted
+
+  /email/webhooks/sendgrid:
+    post:
+      tags: [Email]
+      summary: SendGrid webhook handler
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+      responses:
+        '200':
+          description: Webhook processed
+
+  /email/unsubscribe:
+    post:
+      tags: [Email]
+      summary: Unsubscribe email address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Email unsubscribed
+
+  # ==================== EMAIL AUTOMATION ====================
+  /email/automation/rules:
+    get:
+      tags: [Email Automation]
+      summary: List automation rules
+      parameters:
+        - name: enabled
+          in: query
+          schema:
+            type: boolean
+        - name: trigger_type
+          in: query
+          schema:
+            type: string
+            enum: [event, time, behavior]
+      responses:
+        '200':
+          description: List of automation rules
+
+    post:
+      tags: [Email Automation]
+      summary: Create automation rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationRule'
+      responses:
+        '201':
+          description: Rule created
+
+  /email/automation/rules/{id}:
+    get:
+      tags: [Email Automation]
+      summary: Get automation rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rule details
+
+    put:
+      tags: [Email Automation]
+      summary: Update automation rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationRule'
+      responses:
+        '200':
+          description: Rule updated
+
+    delete:
+      tags: [Email Automation]
+      summary: Delete automation rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rule deleted
+
+  /email/automation/rules/{id}/toggle:
+    patch:
+      tags: [Email Automation]
+      summary: Toggle automation rule enabled status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rule toggled
+
+  /email/automation/executions:
+    get:
+      tags: [Email Automation]
+      summary: List automation executions
+      parameters:
+        - name: rule_id
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: List of executions
+
+  /email/automation/stats:
+    get:
+      tags: [Email Automation]
+      summary: Get automation statistics
+      parameters:
+        - name: rule_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Statistics
+
+  /email/automation/rules/{id}/test:
+    post:
+      tags: [Email Automation]
+      summary: Test automation rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                test_data:
+                  type: object
+      responses:
+        '200':
+          description: Test result
+
+  /email/automation/trigger:
+    post:
+      tags: [Email Automation]
+      summary: Manually trigger automation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_name, event_data]
+              properties:
+                event_name:
+                  type: string
+                event_data:
+                  type: object
+      responses:
+        '200':
+          description: Automation triggered
+
+  /email/automation/templates:
+    get:
+      tags: [Email Automation]
+      summary: Get automation templates
+      responses:
+        '200':
+          description: List of templates
+
+  # ==================== WHATSAPP ====================
+  /whatsapp/webhook:
+    get:
+      tags: [WhatsApp]
+      summary: WhatsApp webhook verification
+      security: []
+      parameters:
+        - name: hub.mode
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: hub.verify_token
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: hub.challenge
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification successful
+
+    post:
+      tags: [WhatsApp]
+      summary: Receive WhatsApp webhook events
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Event processed
+
+  /whatsapp/send/text:
+    post:
+      tags: [WhatsApp]
+      summary: Send text message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, text]
+              properties:
+                to:
+                  type: string
+                text:
+                  type: string
+                  maxLength: 4096
+                context_message_id:
+                  type: string
+      responses:
+        '200':
+          description: Message sent
+
+  /whatsapp/send/template:
+    post:
+      tags: [WhatsApp]
+      summary: Send template message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, template_name]
+              properties:
+                to:
+                  type: string
+                template_name:
+                  type: string
+                language:
+                  type: string
+                  default: en_US
+                components:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        '200':
+          description: Template message sent
+
+  /whatsapp/send/image:
+    post:
+      tags: [WhatsApp]
+      summary: Send image message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, media_url]
+              properties:
+                to:
+                  type: string
+                media_url:
+                  type: string
+                  format: uri
+                caption:
+                  type: string
+      responses:
+        '200':
+          description: Image sent
+
+  /whatsapp/send/document:
+    post:
+      tags: [WhatsApp]
+      summary: Send document message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, media_url, filename]
+              properties:
+                to:
+                  type: string
+                media_url:
+                  type: string
+                  format: uri
+                filename:
+                  type: string
+                caption:
+                  type: string
+      responses:
+        '200':
+          description: Document sent
+
+  /whatsapp/send/buttons:
+    post:
+      tags: [WhatsApp]
+      summary: Send interactive button message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, body, buttons]
+              properties:
+                to:
+                  type: string
+                body:
+                  type: string
+                  maxLength: 1024
+                buttons:
+                  type: array
+                  minItems: 1
+                  maxItems: 3
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      text:
+                        type: string
+                        maxLength: 20
+                header:
+                  type: string
+                  maxLength: 60
+                footer:
+                  type: string
+                  maxLength: 60
+      responses:
+        '200':
+          description: Button message sent
+
+  /whatsapp/messages/{id}/read:
+    post:
+      tags: [WhatsApp]
+      summary: Mark message as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Message marked as read
+
+  /whatsapp/messages:
+    get:
+      tags: [WhatsApp]
+      summary: Get all WhatsApp messages
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - name: phone_number
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of messages
+
+  /whatsapp/conversations/{phone_number}:
+    get:
+      tags: [WhatsApp]
+      summary: Get conversation with specific phone number
+      parameters:
+        - name: phone_number
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Conversation messages
+
+  /whatsapp/contacts:
+    get:
+      tags: [WhatsApp]
+      summary: Get all WhatsApp contacts
+      responses:
+        '200':
+          description: List of contacts
+
+  /whatsapp/templates:
+    get:
+      tags: [WhatsApp]
+      summary: Get message templates
+      responses:
+        '200':
+          description: List of templates
+
+  /whatsapp/account:
+    get:
+      tags: [WhatsApp]
+      summary: Get WhatsApp account info
+      responses:
+        '200':
+          description: Account information
+
+  /whatsapp/stats:
+    get:
+      tags: [WhatsApp]
+      summary: Get WhatsApp statistics
+      responses:
+        '200':
+          description: Statistics
+
+  # ==================== PHONE NUMBERS ====================
+  /phone-numbers:
+    get:
+      tags: [Phone Numbers]
+      summary: List phone numbers
+      responses:
+        '200':
+          description: List of phone numbers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      phone_numbers:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PhoneNumber'
+                      total:
+                        type: integer
+
+  /phone-numbers/{id}:
+    get:
+      tags: [Phone Numbers]
+      summary: Get phone number details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Phone number details
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== CONTACTS ====================
+  /contacts:
+    post:
+      tags: [Contacts]
+      summary: Create contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInput'
+      responses:
+        '201':
+          description: Contact created
+
+    get:
+      tags: [Contacts]
+      summary: List contacts
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: tags
+          in: query
+          schema:
+            type: string
+        - name: list_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of contacts
+
+  /contacts/{id}:
+    get:
+      tags: [Contacts]
+      summary: Get contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contact details
+
+    put:
+      tags: [Contacts]
+      summary: Update contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInput'
+      responses:
+        '200':
+          description: Contact updated
+
+    delete:
+      tags: [Contacts]
+      summary: Delete contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contact deleted
+
+  /contacts/{id}/tags:
+    post:
+      tags: [Contacts]
+      summary: Add tags to contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tags]
+              properties:
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Tags added
+
+    delete:
+      tags: [Contacts]
+      summary: Remove tags from contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tags]
+              properties:
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Tags removed
+
+  /contacts/{id}/activity:
+    get:
+      tags: [Contacts]
+      summary: Get contact activity timeline
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Contact activity
+
+  /contacts/import:
+    post:
+      tags: [Contacts]
+      summary: Bulk import contacts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contacts]
+              properties:
+                contacts:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ContactInput'
+      responses:
+        '200':
+          description: Import completed
+
+  /contacts/lists/{id}:
+    get:
+      tags: [Contacts]
+      summary: Get contacts in a list
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: List of contacts
+
+  /contacts/lists/{id}/add:
+    post:
+      tags: [Contacts]
+      summary: Add contacts to list
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contact_ids]
+              properties:
+                contact_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Contacts added
+
+  /contacts/lists/{id}/remove:
+    delete:
+      tags: [Contacts]
+      summary: Remove contacts from list
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contact_ids]
+              properties:
+                contact_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Contacts removed
+
+  # ==================== CONTACT LISTS ====================
+  /lists:
+    post:
+      tags: [Contact Lists]
+      summary: Create contact list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: List created
+
+    get:
+      tags: [Contact Lists]
+      summary: List all contact lists
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contact lists
+
+  /lists/{id}:
+    get:
+      tags: [Contact Lists]
+      summary: Get list by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List details
+
+    put:
+      tags: [Contact Lists]
+      summary: Update list
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: List updated
+
+    delete:
+      tags: [Contact Lists]
+      summary: Delete list
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List deleted
+
+  # ==================== CAMPAIGNS ====================
+  /campaigns:
+    get:
+      tags: [Campaigns]
+      summary: List campaigns
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, scheduled, running, paused, completed, cancelled]
+      responses:
+        '200':
+          description: List of campaigns
+
+    post:
+      tags: [Campaigns]
+      summary: Create campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Campaign'
+      responses:
+        '201':
+          description: Campaign created
+
+  /campaigns/{id}:
+    get:
+      tags: [Campaigns]
+      summary: Get campaign details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Campaign details
+
+    patch:
+      tags: [Campaigns]
+      summary: Update campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Campaign'
+      responses:
+        '200':
+          description: Campaign updated
+
+    delete:
+      tags: [Campaigns]
+      summary: Delete campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Campaign deleted
+
+  /campaigns/{id}/contacts:
+    post:
+      tags: [Campaigns]
+      summary: Upload contacts to campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contacts]
+              properties:
+                contacts:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        '200':
+          description: Contacts uploaded
+
+    get:
+      tags: [Campaigns]
+      summary: List campaign contacts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Campaign contacts
+
+  /campaigns/{id}/start:
+    post:
+      tags: [Campaigns]
+      summary: Start campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Campaign started
+
+  /campaigns/{id}/pause:
+    post:
+      tags: [Campaigns]
+      summary: Pause campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Campaign paused
+
+  /campaigns/{id}/stats:
+    get:
+      tags: [Campaigns]
+      summary: Get campaign statistics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Campaign statistics
+
+  # ==================== MESSAGES ====================
+  /messages:
+    get:
+      tags: [Messages]
+      summary: List messages
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: direction
+          in: query
+          schema:
+            type: string
+            enum: [inbound, outbound]
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of messages
+
+    post:
+      tags: [Messages]
+      summary: Send message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to, message]
+              properties:
+                from:
+                  type: string
+                to:
+                  type: string
+                message:
+                  type: string
+                mediaUrls:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Message sent
+
+  /messages/{id}:
+    get:
+      tags: [Messages]
+      summary: Get message details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Message details
+
+  /messages/stats:
+    get:
+      tags: [Messages]
+      summary: Get message statistics
+      responses:
+        '200':
+          description: Message statistics
+
+  # ==================== CONVERSATIONS ====================
+  /conversations:
+    get:
+      tags: [Conversations]
+      summary: List conversations
+      parameters:
+        - name: channel
+          in: query
+          schema:
+            type: string
+            enum: [sms, email, whatsapp, discord, slack, telegram, teams, voice, all]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, pending, closed, snoozed, all]
+            default: open
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [urgent, high, normal, low, all]
+        - name: assigned_to
+          in: query
+          schema:
+            type: string
+            enum: [me, unassigned, all]
+            default: me
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of conversations
+
+  /conversations/{id}:
+    get:
+      tags: [Conversations]
+      summary: Get conversation details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Conversation details
+
+    patch:
+      tags: [Conversations]
+      summary: Update conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                priority:
+                  type: string
+                  enum: [urgent, high, normal, low]
+                tags:
+                  type: array
+                  items:
+                    type: string
+                category:
+                  type: string
+                subject:
+                  type: string
+      responses:
+        '200':
+          description: Conversation updated
+
+    delete:
+      tags: [Conversations]
+      summary: Delete/archive conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Conversation deleted
+
+  /conversations/{id}/messages:
+    post:
+      tags: [Conversations]
+      summary: Send message in conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                content_type:
+                  type: string
+                  enum: [text, image, file, audio, video]
+                  default: text
+                is_internal_note:
+                  type: boolean
+                  default: false
+                attachments:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        '201':
+          description: Message sent
+
+  /conversations/{id}/assign:
+    patch:
+      tags: [Conversations]
+      summary: Assign conversation to agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [agent_id]
+              properties:
+                agent_id:
+                  type: integer
+                  nullable: true
+      responses:
+        '200':
+          description: Conversation assigned
+
+  /conversations/{id}/status:
+    patch:
+      tags: [Conversations]
+      summary: Update conversation status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [open, pending, closed, snoozed]
+                snoozed_until:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Status updated
+
+  # ==================== CHAT ====================
+  /chat/widget/{widgetKey}:
+    get:
+      tags: [Chat]
+      summary: Get widget configuration
+      security: []
+      parameters:
+        - name: widgetKey
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Widget configuration
+
+  /chat/conversation/start:
+    post:
+      tags: [Chat]
+      summary: Start chat conversation
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [widgetKey]
+              properties:
+                widgetKey:
+                  type: string
+                visitorId:
+                  type: string
+                visitorName:
+                  type: string
+                visitorEmail:
+                  type: string
+                  format: email
+                pageUrl:
+                  type: string
+                  format: uri
+                pageTitle:
+                  type: string
+      responses:
+        '200':
+          description: Conversation started
+
+  /chat/message/send:
+    post:
+      tags: [Chat]
+      summary: Send chat message
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [conversationId, senderType]
+              properties:
+                conversationId:
+                  type: string
+                senderType:
+                  type: string
+                  enum: [visitor, agent]
+                messageText:
+                  type: string
+                messageType:
+                  type: string
+                  enum: [text, image, file, system]
+                  default: text
+      responses:
+        '200':
+          description: Message sent
+
+  /chat/conversation/{conversationId}/messages:
+    get:
+      tags: [Chat]
+      summary: Get conversation messages
+      security: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Conversation messages
+
+  /chat/conversation/{conversationId}/rate:
+    post:
+      tags: [Chat]
+      summary: Rate conversation
+      security: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating]
+              properties:
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                feedback:
+                  type: string
+      responses:
+        '200':
+          description: Conversation rated
+
+  /chat/conversation/{conversationId}/close:
+    post:
+      tags: [Chat]
+      summary: Close conversation
+      security: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Conversation closed
+
+  /chat/widgets:
+    post:
+      tags: [Chat]
+      summary: Create chat widget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                primaryColor:
+                  type: string
+                widgetPosition:
+                  type: string
+                  enum: [bottom-right, bottom-left, top-right, top-left]
+                greetingMessage:
+                  type: string
+      responses:
+        '200':
+          description: Widget created
+
+  /chat/agent/conversations:
+    get:
+      tags: [Chat]
+      summary: Get agent conversations
+      responses:
+        '200':
+          description: Agent conversations
+
+  /chat/queue:
+    get:
+      tags: [Chat]
+      summary: Get unassigned conversations
+      responses:
+        '200':
+          description: Queue conversations
+
+  /chat/agent/presence:
+    post:
+      tags: [Chat]
+      summary: Update agent presence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                socketId:
+                  type: string
+      responses:
+        '200':
+          description: Presence updated
+
+  /chat/stats:
+    get:
+      tags: [Chat]
+      summary: Get chat statistics
+      parameters:
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Chat statistics
+
+  # ==================== WEBHOOKS ====================
+  /webhooks:
+    post:
+      tags: [Webhooks]
+      summary: Create webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, events]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                events:
+                  type: array
+                  items:
+                    type: string
+                description:
+                  type: string
+                is_active:
+                  type: boolean
+                  default: true
+                max_retries:
+                  type: integer
+                  default: 5
+                timeout_seconds:
+                  type: integer
+                  default: 10
+      responses:
+        '201':
+          description: Webhook created
+
+    get:
+      tags: [Webhooks]
+      summary: List webhooks
+      responses:
+        '200':
+          description: List of webhooks
+
+  /webhooks/{id}:
+    get:
+      tags: [Webhooks]
+      summary: Get webhook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook details
+
+    put:
+      tags: [Webhooks]
+      summary: Update webhook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook updated
+
+    delete:
+      tags: [Webhooks]
+      summary: Delete webhook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook deleted
+
+  /webhooks/{id}/deliveries:
+    get:
+      tags: [Webhooks]
+      summary: List webhook deliveries
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of deliveries
+
+  /webhooks/{id}/test:
+    post:
+      tags: [Webhooks]
+      summary: Test webhook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Test webhook triggered
+
+  /webhooks/deliveries/{id}/retry:
+    post:
+      tags: [Webhooks]
+      summary: Retry failed delivery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Delivery retry initiated
+
+  /webhooks/event-types:
+    get:
+      tags: [Webhooks]
+      summary: List available event types
+      responses:
+        '200':
+          description: Event types
+
+  # ==================== ANALYTICS ====================
+  /analytics/stats:
+    get:
+      tags: [Analytics]
+      summary: Get dashboard statistics
+      responses:
+        '200':
+          description: Dashboard statistics
+
+  /analytics/unified:
+    get:
+      tags: [Analytics]
+      summary: Get unified metrics
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Unified metrics
+
+  /analytics/overview:
+    get:
+      tags: [Analytics]
+      summary: Get overview metrics
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Overview metrics
+
+  /analytics/trends:
+    get:
+      tags: [Analytics]
+      summary: Get trend data
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Trend data
+
+  /analytics/cost:
+    get:
+      tags: [Analytics]
+      summary: Get cost analysis
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Cost analysis
+
+  /analytics/voice:
+    get:
+      tags: [Analytics]
+      summary: Get voice metrics
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Voice metrics
+
+  /analytics/sms:
+    get:
+      tags: [Analytics]
+      summary: Get SMS metrics
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: SMS metrics
+
+  /analytics/email:
+    get:
+      tags: [Analytics]
+      summary: Get email metrics
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Email metrics
+
+  /analytics/whatsapp:
+    get:
+      tags: [Analytics]
+      summary: Get WhatsApp metrics
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: WhatsApp metrics
+
+  /analytics/social:
+    get:
+      tags: [Analytics]
+      summary: Get social media metrics
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Social media metrics
+
+  # ==================== AGENT ANALYTICS ====================
+  /analytics/agents/overview:
+    get:
+      tags: [Agent Analytics]
+      summary: Get agent overview statistics
+      parameters:
+        - name: timeRange
+          in: query
+          schema:
+            type: string
+            enum: [24h, 7d, 30d, all]
+            default: 24h
+      responses:
+        '200':
+          description: Agent overview
+
+  /analytics/agents/list:
+    get:
+      tags: [Agent Analytics]
+      summary: List agents with performance metrics
+      parameters:
+        - name: timeRange
+          in: query
+          schema:
+            type: string
+            default: 24h
+      responses:
+        '200':
+          description: Agents with metrics
+
+  /analytics/agents/{agentId}/details:
+    get:
+      tags: [Agent Analytics]
+      summary: Get agent performance details
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: timeRange
+          in: query
+          schema:
+            type: string
+            default: 7d
+      responses:
+        '200':
+          description: Agent details
+
+  /analytics/agents/leaderboard:
+    get:
+      tags: [Agent Analytics]
+      summary: Get top performing agents
+      parameters:
+        - name: timeRange
+          in: query
+          schema:
+            type: string
+            default: 24h
+        - name: metric
+          in: query
+          schema:
+            type: string
+            enum: [calls, duration, answered]
+            default: calls
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Agent leaderboard
+
+  /analytics/agents/charts/calls-by-hour:
+    get:
+      tags: [Agent Analytics]
+      summary: Get calls distribution by hour
+      parameters:
+        - name: timeRange
+          in: query
+          schema:
+            type: string
+            default: 7d
+      responses:
+        '200':
+          description: Hourly call distribution
+
+  # ==================== AGENTS ====================
+  /agents:
+    post:
+      tags: [Agents]
+      summary: Create agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, extension]
+              properties:
+                name:
+                  type: string
+                extension:
+                  type: string
+      responses:
+        '201':
+          description: Agent created
+
+    get:
+      tags: [Agents]
+      summary: List agents
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: queue_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of agents
+
+  /agents/{id}:
+    get:
+      tags: [Agents]
+      summary: Get agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent details
+
+    put:
+      tags: [Agents]
+      summary: Update agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Agent updated
+
+    delete:
+      tags: [Agents]
+      summary: Delete agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent deleted
+
+  /agents/{id}/queues:
+    post:
+      tags: [Agents]
+      summary: Assign agent to queue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [queue_id]
+              properties:
+                queue_id:
+                  type: integer
+                priority:
+                  type: integer
+      responses:
+        '200':
+          description: Agent assigned to queue
+
+  /agents/{id}/queues/{queue_id}:
+    delete:
+      tags: [Agents]
+      summary: Remove agent from queue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: queue_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent removed from queue
+
+  /agents/{id}/stats:
+    get:
+      tags: [Agents]
+      summary: Get agent statistics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [today, week, month]
+            default: today
+      responses:
+        '200':
+          description: Agent statistics
+
+  /agents/{id}/activity:
+    get:
+      tags: [Agents]
+      summary: Get agent activity log
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Agent activity
+
+  /agents/{id}/heartbeat:
+    post:
+      tags: [Agents]
+      summary: Agent heartbeat (presence)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Heartbeat received
+
+  /agents/{id}/status:
+    post:
+      tags: [Agents]
+      summary: Set agent status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [available, busy, away, offline]
+      responses:
+        '200':
+          description: Status updated
+
+    get:
+      tags: [Agents]
+      summary: Get agent status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent status
+
+  # ==================== QUEUES ====================
+  /queues:
+    post:
+      tags: [Queues]
+      summary: Create queue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                strategy:
+                  type: string
+                  enum: [round-robin, longest-idle, most-idle, random]
+                  default: round-robin
+                max_wait_time:
+                  type: integer
+                  default: 300
+                max_queue_size:
+                  type: integer
+                  default: 100
+      responses:
+        '201':
+          description: Queue created
+
+    get:
+      tags: [Queues]
+      summary: List queues
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of queues
+
+  /queues/{id}:
+    get:
+      tags: [Queues]
+      summary: Get queue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Queue details
+
+    put:
+      tags: [Queues]
+      summary: Update queue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Queue updated
+
+    delete:
+      tags: [Queues]
+      summary: Delete queue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Queue deleted
+
+  /queues/{id}/stats:
+    get:
+      tags: [Queues]
+      summary: Get queue statistics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Queue statistics
+
+  /queues/{id}/members:
+    get:
+      tags: [Queues]
+      summary: Get queue members
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Queue members
+
+  /queues/{id}/enqueue:
+    post:
+      tags: [Queues]
+      summary: Add call to queue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [call_uuid, caller_id]
+              properties:
+                call_uuid:
+                  type: string
+                caller_id:
+                  type: string
+                caller_name:
+                  type: string
+                priority:
+                  type: integer
+                call_id:
+                  type: integer
+      responses:
+        '200':
+          description: Call enqueued
+
+  /queues/{id}/dequeue:
+    post:
+      tags: [Queues]
+      summary: Dequeue next caller
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                strategy:
+                  type: string
+      responses:
+        '200':
+          description: Caller dequeued
+
+  /queues/{id}/position/{call_uuid}:
+    get:
+      tags: [Queues]
+      summary: Get caller position in queue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: call_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Caller position
+
+  /queues/{id}/remove/{call_uuid}:
+    delete:
+      tags: [Queues]
+      summary: Remove caller from queue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: call_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: reason
+          in: query
+          schema:
+            type: string
+            default: abandoned
+      responses:
+        '200':
+          description: Caller removed
+
+  # ==================== IVR ====================
+  /ivr/menus:
+    get:
+      tags: [IVR]
+      summary: List IVR menus
+      responses:
+        '200':
+          description: List of IVR menus
+
+    post:
+      tags: [IVR]
+      summary: Create IVR menu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                greeting_text:
+                  type: string
+                greeting_audio:
+                  type: string
+                greeting_voice:
+                  type: string
+                  default: alloy
+                max_digits:
+                  type: integer
+                  default: 1
+      responses:
+        '201':
+          description: IVR menu created
+
+  /ivr/menus/{id}:
+    get:
+      tags: [IVR]
+      summary: Get IVR menu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: IVR menu details
+
+    put:
+      tags: [IVR]
+      summary: Update IVR menu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: IVR menu updated
+
+    delete:
+      tags: [IVR]
+      summary: Delete IVR menu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: IVR menu deleted
+
+  /ivr/menus/{id}/options:
+    post:
+      tags: [IVR]
+      summary: Add option to IVR menu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [digit_pattern, action_type]
+              properties:
+                digit_pattern:
+                  type: string
+                description:
+                  type: string
+                action_type:
+                  type: string
+                  enum: [submenu, transfer, hangup, repeat, return, webhook, voicemail]
+                action_value:
+                  type: string
+      responses:
+        '201':
+          description: Menu option created
+
+  /ivr/menus/{menuId}/options/{optionId}:
+    put:
+      tags: [IVR]
+      summary: Update menu option
+      parameters:
+        - name: menuId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: optionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Option updated
+
+    delete:
+      tags: [IVR]
+      summary: Delete menu option
+      parameters:
+        - name: menuId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: optionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Option deleted
+
+  /ivr/sessions:
+    get:
+      tags: [IVR]
+      summary: List active IVR sessions
+      responses:
+        '200':
+          description: Active IVR sessions
+
+  /ivr/analytics:
+    get:
+      tags: [IVR]
+      summary: Get IVR analytics
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: menuId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: IVR analytics
+
+  # ==================== TTS ====================
+  /tts/generate:
+    post:
+      tags: [TTS]
+      summary: Generate speech from text
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  maxLength: 4096
+                voice:
+                  type: string
+                provider:
+                  type: string
+                  enum: [openai, elevenlabs, aws_polly]
+                cache:
+                  type: boolean
+                  default: true
+      responses:
+        '200':
+          description: Speech generated
+
+  /tts/voices:
+    get:
+      tags: [TTS]
+      summary: List available voices
+      parameters:
+        - name: provider
+          in: query
+          schema:
+            type: string
+            default: openai
+      responses:
+        '200':
+          description: List of voices
+
+  /tts/providers:
+    get:
+      tags: [TTS]
+      summary: List TTS providers
+      responses:
+        '200':
+          description: List of providers
+
+  # ==================== BILLING ====================
+  /billing/rates:
+    post:
+      tags: [Billing]
+      summary: Create rate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prefix, destination_name, cost_per_minute]
+              properties:
+                prefix:
+                  type: string
+                destination_name:
+                  type: string
+                cost_per_minute:
+                  type: number
+      responses:
+        '201':
+          description: Rate created
+
+    get:
+      tags: [Billing]
+      summary: List rates
+      parameters:
+        - name: prefix
+          in: query
+          schema:
+            type: string
+        - name: carrier_name
+          in: query
+          schema:
+            type: string
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: List of rates
+
+  /billing/rates/{id}:
+    get:
+      tags: [Billing]
+      summary: Get rate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rate details
+
+    put:
+      tags: [Billing]
+      summary: Update rate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Rate updated
+
+    delete:
+      tags: [Billing]
+      summary: Delete rate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rate deleted
+
+  /billing/rates/lookup:
+    post:
+      tags: [Billing]
+      summary: Find rate for destination
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [destination_number]
+              properties:
+                destination_number:
+                  type: string
+      responses:
+        '200':
+          description: Rate found
+
+  /billing/usage:
+    get:
+      tags: [Billing]
+      summary: Get usage tracking
+      parameters:
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Usage data
+
+  /billing/usage/current-month:
+    get:
+      tags: [Billing]
+      summary: Get current month usage
+      responses:
+        '200':
+          description: Current month usage
+
+  /billing/usage/today:
+    get:
+      tags: [Billing]
+      summary: Get today usage
+      responses:
+        '200':
+          description: Today's usage
+
+  /billing/spend-limit:
+    post:
+      tags: [Billing]
+      summary: Create or update spend limit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Spend limit set
+
+    get:
+      tags: [Billing]
+      summary: Get spend limit
+      responses:
+        '200':
+          description: Spend limit
+
+  /billing/spend-limit/check:
+    get:
+      tags: [Billing]
+      summary: Check if spend limit exceeded
+      responses:
+        '200':
+          description: Spend limit check
+
+  /billing/invoices:
+    post:
+      tags: [Billing]
+      summary: Create invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Invoice created
+
+    get:
+      tags: [Billing]
+      summary: List invoices
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: List of invoices
+
+  /billing/invoices/generate:
+    post:
+      tags: [Billing]
+      summary: Generate monthly invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [year, month]
+              properties:
+                year:
+                  type: integer
+                month:
+                  type: integer
+      responses:
+        '201':
+          description: Invoice generated
+
+  /billing/invoices/{id}:
+    get:
+      tags: [Billing]
+      summary: Get invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice details
+
+  /billing/invoices/{id}/status:
+    patch:
+      tags: [Billing]
+      summary: Update invoice status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Invoice status updated
+
+  /billing/payment-methods:
+    post:
+      tags: [Billing]
+      summary: Create payment method
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider, provider_payment_method_id]
+              properties:
+                provider:
+                  type: string
+                provider_payment_method_id:
+                  type: string
+      responses:
+        '201':
+          description: Payment method created
+
+    get:
+      tags: [Billing]
+      summary: List payment methods
+      responses:
+        '200':
+          description: Payment methods
+
+  /billing/payment-methods/{id}:
+    get:
+      tags: [Billing]
+      summary: Get payment method
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment method details
+
+    delete:
+      tags: [Billing]
+      summary: Delete payment method
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment method deleted
+
+  /billing/payment-methods/{id}/set-default:
+    patch:
+      tags: [Billing]
+      summary: Set default payment method
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Default payment method set
+
+  # ==================== API KEYS ====================
+  /api-keys:
+    post:
+      tags: [API Keys]
+      summary: Create API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                description:
+                  type: string
+                  maxLength: 500
+      responses:
+        '201':
+          description: API key created
+
+    get:
+      tags: [API Keys]
+      summary: List API keys
+      responses:
+        '200':
+          description: List of API keys
+
+  /api-keys/{id}:
+    delete:
+      tags: [API Keys]
+      summary: Revoke API key
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: API key revoked
+
+  # ==================== USAGE ====================
+  /usage/current-period:
+    get:
+      tags: [Usage]
+      summary: Get current period usage
+      responses:
+        '200':
+          description: Current period usage
+
+  /usage/history:
+    get:
+      tags: [Usage]
+      summary: Get usage history
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Usage history
+
+      responses:
+        '200':
+          description: List of invoices
+
+  /billing/invoice/{id}:
+    get:
+      tags: [Usage]
+      summary: Get invoice details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice details
+
+  # ==================== IMPORTS ====================
+  /imports/bulk:
+    post:
+      tags: [Imports]
+      summary: Bulk import contacts via JSON
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contacts]
+              properties:
+                contacts:
+                  type: array
+                  minItems: 1
+                  maxItems: 10000
+                  items:
+                    type: object
+                list_id:
+                  type: string
+                  format: uuid
+                duplicate_strategy:
+                  type: string
+                  enum: [skip, update, create_new]
+                  default: skip
+                webhook_url:
+                  type: string
+                  format: uri
+      responses:
+        '202':
+          description: Import job created
+
+  /imports/upload:
+    post:
+      tags: [Imports]
+      summary: Upload CSV or Excel file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                use_ai_mapping:
+                  type: boolean
+                list_id:
+                  type: string
+                duplicate_strategy:
+                  type: string
+                webhook_url:
+                  type: string
+      responses:
+        '200':
+          description: File uploaded
+
+  /imports/{id}:
+    get:
+      tags: [Imports]
+      summary: Get import job status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Import job status
+
+    delete:
+      tags: [Imports]
+      summary: Cancel or delete import job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Import job cancelled/deleted
+
+  /imports:
+    get:
+      tags: [Imports]
+      summary: List import jobs
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of import jobs
+
+  /imports/{id}/map:
+    post:
+      tags: [Imports]
+      summary: Submit field mapping
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mapping]
+              properties:
+                mapping:
+                  type: object
+                  additionalProperties:
+                    type: string
+                duplicate_strategy:
+                  type: string
+                  enum: [skip, update, create_new]
+      responses:
+        '202':
+          description: Processing started
+
+  /imports/{id}/errors:
+    get:
+      tags: [Imports]
+      summary: Download import errors
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Errors CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+
+  /imports/exports/contacts:
+    get:
+      tags: [Imports]
+      summary: Export contacts
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [csv, excel, json]
+            default: csv
+        - name: list_id
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10000
+      responses:
+        '200':
+          description: Contacts exported
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login
+
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key obtained from /api-keys
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+    Offset:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              code:
+                type: string
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Unauthorized
+              message:
+                type: string
+              code:
+                type: string
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Not Found
+              message:
+                type: string
+              code:
+                type: string
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: Validation error
+              details:
+                type: array
+                items:
+                  type: object
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        has_more:
+          type: boolean
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        tenant_id:
+          type: integer
+        role:
+          type: string
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Call:
+      type: object
+      properties:
+        sid:
+          type: string
+        direction:
+          type: string
+          enum: [inbound, outbound]
+        from:
+          type: string
+        to:
+          type: string
+        status:
+          type: string
+          enum: [initiated, ringing, answered, completed, failed]
+        duration:
+          type: integer
+          description: Call duration in seconds
+        recording_url:
+          type: string
+          format: uri
+        answered_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+        initiated_at:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+
+    SMS:
+      type: object
+      properties:
+        id:
+          type: integer
+        from_number:
+          type: string
+        to_number:
+          type: string
+        body:
+          type: string
+        direction:
+          type: string
+          enum: [inbound, outbound]
+        status:
+          type: string
+        segments:
+          type: integer
+        media_urls:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+
+    EmailSendRequest:
+      type: object
+      required: [to, subject]
+      properties:
+        from:
+          type: string
+          format: email
+        fromName:
+          type: string
+        to:
+          type: string
+          format: email
+        toName:
+          type: string
+        cc:
+          type: array
+          items:
+            type: string
+        bcc:
+          type: array
+          items:
+            type: string
+        subject:
+          type: string
+        bodyText:
+          type: string
+        bodyHtml:
+          type: string
+        attachments:
+          type: array
+          items:
+            type: object
+
+    PhoneNumber:
+      type: object
+      properties:
+        id:
+          type: integer
+        phone_number:
+          type: string
+        friendly_name:
+          type: string
+        country_code:
+          type: string
+        status:
+          type: string
+        carrier:
+          type: string
+        sms_enabled:
+          type: boolean
+        voice_enabled:
+          type: boolean
+        mms_enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    ContactInput:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        phone_2:
+          type: string
+        company:
+          type: string
+        title:
+          type: string
+        address_line1:
+          type: string
+        address_line2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postal_code:
+          type: string
+        country:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        custom_fields:
+          type: object
+
+    Campaign:
+      type: object
+      required: [name, caller_id]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        caller_id:
+          type: string
+          pattern: '^\+?[1-9]\d{1,14}$'
+        max_concurrent_calls:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 5
+        max_retries:
+          type: integer
+          minimum: 0
+          maximum: 10
+          default: 3
+        retry_delay:
+          type: integer
+          minimum: 60
+          maximum: 86400
+          default: 3600
+        schedule_start:
+          type: string
+          format: date-time
+        schedule_end:
+          type: string
+          format: date-time
+        call_script:
+          type: string
+
+    AutomationRule:
+      type: object
+      required: [name, trigger_type, trigger_config, actions]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        trigger_type:
+          type: string
+          enum: [event, time, behavior]
+        trigger_config:
+          type: object
+        conditions:
+          type: object
+        actions:
+          type: array
+          minItems: 1
+          items:
+            type: object
+        enabled:
+          type: boolean
+          default: true
+        priority:
+          type: integer
+          default: 0

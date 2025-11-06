@@ -1,385 +1,218 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <div style="display: flex; min-height: 100vh; background-color: #f3f4f6;">
     <!-- Sidebar -->
-    <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg">
+    <aside style="position: fixed; top: 0; left: 0; bottom: 0; width: 256px; background-color: white; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; z-index: 40;">
       <!-- Logo -->
-      <div class="flex items-center justify-center h-16 px-4 bg-indigo-600">
-        <h1 class="text-2xl font-bold text-white">Tazzi</h1>
+      <div style="display: flex; align-items: center; justify-content: center; height: 64px; padding: 0 16px; background-color: #4f46e5;">
+        <h1 style="font-size: 24px; font-weight: bold; color: white;">Tazzi</h1>
       </div>
 
       <!-- Navigation -->
-      <nav class="mt-5 px-2 space-y-1 overflow-y-auto h-[calc(100vh-8rem)]">
+      <nav style="flex: 1; overflow-y: auto; padding: 20px 8px 80px 8px;">
         <!-- Dashboard -->
         <router-link
           to="/dashboard"
-          class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-          :class="isActive('/dashboard') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
+          style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;"
+          :style="isActive('/dashboard') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'"
         >
-          <HomeIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard') ? 'text-indigo-600' : 'text-gray-400'" />
+          <HomeIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
           Dashboard
         </router-link>
 
         <!-- Communications Section -->
-        <div class="pt-4">
-          <h3 class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Communications</h3>
-          <div class="mt-2 space-y-1">
-            <router-link
-              to="/dashboard/conversations"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/conversations') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <ChatBubbleLeftRightIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/conversations') ? 'text-indigo-600' : 'text-gray-400'" />
-              Conversations
-            </router-link>
+        <div style="padding-top: 16px;">
+          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Communications</h3>
 
-            <router-link
-              to="/dashboard/call-logs"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/call-logs') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <PhoneIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/call-logs') ? 'text-indigo-600' : 'text-gray-400'" />
-              Call Logs
-            </router-link>
+          <router-link to="/dashboard/conversations" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/conversations') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <ChatBubbleLeftRightIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/conversations') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Conversations
+          </router-link>
 
-            <router-link
-              to="/dashboard/messages"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/messages') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <ChatBubbleBottomCenterTextIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/messages') ? 'text-indigo-600' : 'text-gray-400'" />
-              SMS Messages
-            </router-link>
+          <router-link to="/dashboard/call-logs" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/call-logs') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <PhoneIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/call-logs') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Call Logs
+          </router-link>
 
-            <router-link
-              to="/dashboard/whatsapp"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/whatsapp') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <DevicePhoneMobileIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/whatsapp') ? 'text-indigo-600' : 'text-gray-400'" />
-              WhatsApp
-            </router-link>
+          <router-link to="/dashboard/messages" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/messages') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <ChatBubbleBottomCenterTextIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/messages') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            SMS Messages
+          </router-link>
 
-            <router-link
-              to="/dashboard/social-media"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/social-media') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <GlobeAltIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/social-media') ? 'text-indigo-600' : 'text-gray-400'" />
-              Social Media
-            </router-link>
-          </div>
+          <router-link to="/dashboard/whatsapp" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/whatsapp') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <DevicePhoneMobileIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/whatsapp') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            WhatsApp
+          </router-link>
+
+          <router-link to="/dashboard/social-media" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/social-media') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <GlobeAltIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/social-media') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Social Media
+          </router-link>
         </div>
 
         <!-- Email Section -->
-        <div class="pt-4">
-          <h3 class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</h3>
-          <div class="mt-2 space-y-1">
-            <router-link
-              to="/dashboard/emails"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/emails') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <EnvelopeIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/emails') ? 'text-indigo-600' : 'text-gray-400'" />
-              Emails
-            </router-link>
-
-            <router-link
-              to="/dashboard/email-templates"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/email-templates') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <DocumentTextIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/email-templates') ? 'text-indigo-600' : 'text-gray-400'" />
-              Email Templates
-            </router-link>
-
-            <router-link
-              to="/dashboard/email-builder"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/email-builder') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <PencilSquareIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/email-builder') ? 'text-indigo-600' : 'text-gray-400'" />
-              Email Builder
-            </router-link>
-
-            <router-link
-              to="/dashboard/email-analytics"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/email-analytics') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <ChartBarIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/email-analytics') ? 'text-indigo-600' : 'text-gray-400'" />
-              Email Analytics
-            </router-link>
-
-            <router-link
-              to="/dashboard/email-automation"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/email-automation') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <BoltIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/email-automation') ? 'text-indigo-600' : 'text-gray-400'" />
-              Email Automation
-            </router-link>
-
-            <router-link
-              to="/dashboard/email-deliverability"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/email-deliverability') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <CheckBadgeIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/email-deliverability') ? 'text-indigo-600' : 'text-gray-400'" />
-              Deliverability
-            </router-link>
-          </div>
+        <div style="padding-top: 16px;">
+          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Email</h3>
+          <router-link to="/dashboard/emails" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/emails') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <EnvelopeIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/emails') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Emails
+          </router-link>
+          <router-link to="/dashboard/email-templates" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/email-templates') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <DocumentTextIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/email-templates') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Email Templates
+          </router-link>
+          <router-link to="/dashboard/email-builder" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/email-builder') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <PencilSquareIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/email-builder') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Email Builder
+          </router-link>
+          <router-link to="/dashboard/email-analytics" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/email-analytics') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <ChartBarIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/email-analytics') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Email Analytics
+          </router-link>
+          <router-link to="/dashboard/email-automation" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/email-automation') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <BoltIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/email-automation') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Email Automation
+          </router-link>
+          <router-link to="/dashboard/email-deliverability" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/email-deliverability') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <CheckBadgeIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/email-deliverability') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Deliverability
+          </router-link>
         </div>
 
         <!-- Contacts & Campaigns -->
-        <div class="pt-4">
-          <h3 class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Contacts & Campaigns</h3>
-          <div class="mt-2 space-y-1">
-            <router-link
-              to="/dashboard/contacts"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/contacts') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <UsersIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/contacts') ? 'text-indigo-600' : 'text-gray-400'" />
-              Contacts
-            </router-link>
-
-            <router-link
-              to="/dashboard/lists"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/lists') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <ListBulletIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/lists') ? 'text-indigo-600' : 'text-gray-400'" />
-              Lists
-            </router-link>
-
-            <router-link
-              to="/dashboard/campaigns"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/campaigns') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <MegaphoneIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/campaigns') ? 'text-indigo-600' : 'text-gray-400'" />
-              Campaigns
-            </router-link>
-
-            <router-link
-              to="/dashboard/campaign-dashboard"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/campaign-dashboard') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <PresentationChartLineIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/campaign-dashboard') ? 'text-indigo-600' : 'text-gray-400'" />
-              Campaign Dashboard
-            </router-link>
-          </div>
+        <div style="padding-top: 16px;">
+          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Contacts & Campaigns</h3>
+          <router-link to="/dashboard/contacts" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/contacts') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <UsersIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/contacts') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Contacts
+          </router-link>
+          <router-link to="/dashboard/lists" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/lists') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <ListBulletIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/lists') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Lists
+          </router-link>
+          <router-link to="/dashboard/campaigns" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/campaigns') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <MegaphoneIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/campaigns') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Campaigns
+          </router-link>
+          <router-link to="/dashboard/campaign-dashboard" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/campaign-dashboard') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <PresentationChartLineIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/campaign-dashboard') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Campaign Dashboard
+          </router-link>
         </div>
 
         <!-- Team & Operations -->
-        <div class="pt-4">
-          <h3 class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Team & Operations</h3>
-          <div class="mt-2 space-y-1">
-            <router-link
-              to="/dashboard/agents"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/agents') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <UserGroupIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/agents') ? 'text-indigo-600' : 'text-gray-400'" />
-              Agents
-            </router-link>
-
-            <router-link
-              to="/dashboard/agent-management"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/agent-management') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <UserCircleIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/agent-management') ? 'text-indigo-600' : 'text-gray-400'" />
-              Agent Management
-            </router-link>
-
-            <router-link
-              to="/dashboard/agent-performance"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/agent-performance') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <TrophyIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/agent-performance') ? 'text-indigo-600' : 'text-gray-400'" />
-              Agent Performance
-            </router-link>
-
-            <router-link
-              to="/dashboard/queues"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/queues') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <QueueListIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/queues') ? 'text-indigo-600' : 'text-gray-400'" />
-              Queues
-            </router-link>
-
-            <router-link
-              to="/dashboard/queue-management"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/queue-management') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <Cog6ToothIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/queue-management') ? 'text-indigo-600' : 'text-gray-400'" />
-              Queue Management
-            </router-link>
-          </div>
+        <div style="padding-top: 16px;">
+          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Team & Operations</h3>
+          <router-link to="/dashboard/agents" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/agents') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <UserGroupIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/agents') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Agents
+          </router-link>
+          <router-link to="/dashboard/agent-management" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/agent-management') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <UserCircleIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/agent-management') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Agent Management
+          </router-link>
+          <router-link to="/dashboard/agent-performance" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/agent-performance') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <TrophyIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/agent-performance') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Agent Performance
+          </router-link>
+          <router-link to="/dashboard/queues" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/queues') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <QueueListIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/queues') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Queues
+          </router-link>
+          <router-link to="/dashboard/queue-management" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/queue-management') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <Cog6ToothIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/queue-management') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Queue Management
+          </router-link>
         </div>
 
         <!-- Analytics -->
-        <div class="pt-4">
-          <h3 class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Analytics</h3>
-          <div class="mt-2 space-y-1">
-            <router-link
-              to="/dashboard/analytics"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/analytics') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <ChartPieIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/analytics') ? 'text-indigo-600' : 'text-gray-400'" />
-              Analytics
-            </router-link>
-
-            <router-link
-              to="/dashboard/advanced-analytics"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/advanced-analytics') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <PresentationChartBarIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/advanced-analytics') ? 'text-indigo-600' : 'text-gray-400'" />
-              Advanced Analytics
-            </router-link>
-
-            <router-link
-              to="/dashboard/unified-analytics"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/unified-analytics') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <CircleStackIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/unified-analytics') ? 'text-indigo-600' : 'text-gray-400'" />
-              Unified Analytics
-            </router-link>
-          </div>
+        <div style="padding-top: 16px;">
+          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Analytics</h3>
+          <router-link to="/dashboard/analytics" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/analytics') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <ChartPieIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/analytics') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Analytics
+          </router-link>
+          <router-link to="/dashboard/advanced-analytics" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/advanced-analytics') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <PresentationChartBarIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/advanced-analytics') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Advanced Analytics
+          </router-link>
+          <router-link to="/dashboard/unified-analytics" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/unified-analytics') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <CircleStackIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/unified-analytics') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Unified Analytics
+          </router-link>
         </div>
 
         <!-- Chat & Support -->
-        <div class="pt-4">
-          <h3 class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Chat & Support</h3>
-          <div class="mt-2 space-y-1">
-            <router-link
-              to="/dashboard/chat-inbox"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/chat-inbox') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <InboxIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/chat-inbox') ? 'text-indigo-600' : 'text-gray-400'" />
-              Chat Inbox
-            </router-link>
-
-            <router-link
-              to="/dashboard/chat-settings"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/chat-settings') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <AdjustmentsHorizontalIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/chat-settings') ? 'text-indigo-600' : 'text-gray-400'" />
-              Chat Settings
-            </router-link>
-          </div>
+        <div style="padding-top: 16px;">
+          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Chat & Support</h3>
+          <router-link to="/dashboard/chat-inbox" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/chat-inbox') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <InboxIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/chat-inbox') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Chat Inbox
+          </router-link>
+          <router-link to="/dashboard/chat-settings" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/chat-settings') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <AdjustmentsHorizontalIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/chat-settings') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Chat Settings
+          </router-link>
         </div>
 
         <!-- Settings & API -->
-        <div class="pt-4 pb-4">
-          <h3 class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Settings & API</h3>
-          <div class="mt-2 space-y-1">
-            <router-link
-              to="/dashboard/webhooks"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/webhooks') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <ArrowPathIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/webhooks') ? 'text-indigo-600' : 'text-gray-400'" />
-              Webhooks
-            </router-link>
-
-            <router-link
-              to="/dashboard/webhook-config"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/webhook-config') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <WrenchScrewdriverIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/webhook-config') ? 'text-indigo-600' : 'text-gray-400'" />
-              Webhook Config
-            </router-link>
-
-            <router-link
-              to="/dashboard/call-recording"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/call-recording') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <MicrophoneIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/call-recording') ? 'text-indigo-600' : 'text-gray-400'" />
-              Call Recording
-            </router-link>
-
-            <router-link
-              to="/dashboard/usage"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/usage') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <ArrowTrendingUpIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/usage') ? 'text-indigo-600' : 'text-gray-400'" />
-              Usage
-            </router-link>
-
-            <router-link
-              to="/dashboard/billing"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/billing') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <CreditCardIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/billing') ? 'text-indigo-600' : 'text-gray-400'" />
-              Billing
-            </router-link>
-
-            <router-link
-              to="/dashboard/data-import"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/data-import') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <ArrowUpTrayIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/data-import') ? 'text-indigo-600' : 'text-gray-400'" />
-              Import Data
-            </router-link>
-
-            <router-link
-              to="/dashboard/api-keys"
-              class="group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              :class="isActive('/dashboard/api-keys') ? 'bg-indigo-100 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'"
-            >
-              <KeyIcon class="mr-3 h-5 w-5 flex-shrink-0" :class="isActive('/dashboard/api-keys') ? 'text-indigo-600' : 'text-gray-400'" />
-              API Keys
-            </router-link>
-          </div>
+        <div style="padding-top: 16px;">
+          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Settings & API</h3>
+          <router-link to="/dashboard/webhooks" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/webhooks') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <ArrowPathIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/webhooks') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Webhooks
+          </router-link>
+          <router-link to="/dashboard/webhook-config" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/webhook-config') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <WrenchScrewdriverIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/webhook-config') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Webhook Config
+          </router-link>
+          <router-link to="/dashboard/call-recording" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/call-recording') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <MicrophoneIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/call-recording') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Call Recording
+          </router-link>
+          <router-link to="/dashboard/usage" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/usage') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <ArrowTrendingUpIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/usage') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Usage
+          </router-link>
+          <router-link to="/dashboard/billing" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/billing') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <CreditCardIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/billing') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Billing
+          </router-link>
+          <router-link to="/dashboard/data-import" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/data-import') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <ArrowUpTrayIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/data-import') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Import Data
+          </router-link>
+          <router-link to="/dashboard/api-keys" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/api-keys') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <KeyIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/api-keys') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            API Keys
+          </router-link>
         </div>
       </nav>
 
       <!-- User Menu -->
-      <div class="absolute bottom-0 w-64 p-4 bg-gray-50 border-t border-gray-200">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center min-w-0">
-            <UserCircleIcon class="h-8 w-8 text-gray-400 flex-shrink-0" />
-            <div class="ml-3 min-w-0">
-              <p class="text-sm font-medium text-gray-700 truncate">{{ authStore.user?.email || 'User' }}</p>
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px; background-color: #f9fafb; border-top: 1px solid #e5e7eb;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
+            <UserCircleIcon style="width: 32px; height: 32px; color: #9ca3af; flex-shrink: 0;" />
+            <div style="margin-left: 12px; min-width: 0; flex: 1;">
+              <p style="font-size: 13px; font-weight: 500; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ authStore.user?.email || 'User' }}</p>
             </div>
           </div>
-          <button
-            @click="handleLogout"
-            class="ml-2 inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex-shrink-0"
-          >
-            Logout
-          </button>
+          <button @click="handleLogout" style="margin-left: 8px; padding: 4px 8px; border: none; font-size: 11px; font-weight: 500; border-radius: 4px; color: #4f46e5; background-color: #e0e7ff; cursor: pointer; flex-shrink: 0;">Logout</button>
         </div>
       </div>
-    </div>
+    </aside>
 
     <!-- Main Content Area -->
-    <div class="ml-64">
+    <div style="margin-left: 256px; flex: 1;">
       <!-- Top Header Bar -->
-      <div class="bg-white shadow-sm">
-        <div class="px-4 sm:px-6 lg:px-8 py-4">
-          <h1 class="text-2xl font-semibold text-gray-900">{{ pageTitle }}</h1>
+      <div style="background-color: white; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
+        <div style="padding: 16px 32px;">
+          <h1 style="font-size: 24px; font-weight: 600; color: #111827;">{{ pageTitle }}</h1>
         </div>
       </div>
 
       <!-- Page Content -->
-      <main class="py-6 px-4 sm:px-6 lg:px-8">
+      <main style="padding: 24px 32px;">
         <router-view />
       </main>
     </div>

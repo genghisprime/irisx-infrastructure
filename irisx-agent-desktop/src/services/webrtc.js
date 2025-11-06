@@ -108,8 +108,8 @@ class WebRTCService {
       }
 
       // Use WSS/WS depending on page protocol
-      // When HTTPS, use api.tazzi.com/ws which proxies to FreeSWITCH
-      // When HTTP (dev), connect directly to FreeSWITCH server
+      // When HTTPS, proxy through api.tazzi.com/ws which forwards to FreeSWITCH WSS
+      // When HTTP (dev), connect directly to FreeSWITCH WS on port 8066
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const wsServer = window.location.protocol === 'https:'
         ? 'api.tazzi.com/ws'
@@ -117,7 +117,7 @@ class WebRTCService {
 
       const transportOptions = {
         server: `${protocol}//${wsServer}`,
-        // Nginx proxies to FreeSWITCH port 5066 internally
+        // API nginx proxies WSS to FreeSWITCH internal WSS on port 7443
       }
 
       console.log('🔌 Connecting to WebSocket:', transportOptions.server)

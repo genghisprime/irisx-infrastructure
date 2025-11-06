@@ -258,7 +258,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import { useAuthStore } from '../stores/auth';
 
 const authStore = useAuthStore();
