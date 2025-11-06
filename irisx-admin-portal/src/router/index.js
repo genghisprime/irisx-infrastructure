@@ -98,6 +98,12 @@ const routes = [
       },
       // Settings
       {
+        path: 'settings/features',
+        name: 'FeatureFlags',
+        component: () => import('../views/admin/settings/FeatureFlags.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      {
         path: 'settings/system',
         name: 'SystemSettings',
         component: () => import('../views/admin/settings/SystemSettings.vue'),
