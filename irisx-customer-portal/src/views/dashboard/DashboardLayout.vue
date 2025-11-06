@@ -43,8 +43,8 @@
             WhatsApp
           </router-link>
 
-          <router-link to="/dashboard/social-media" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/social-media') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
-            <GlobeAltIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/social-media') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+          <router-link to="/dashboard/social" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/social') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <GlobeAltIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/social') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Social Media
           </router-link>
         </div>
@@ -278,7 +278,7 @@ const pageTitle = computed(() => {
     '/dashboard/call-logs': 'Call Logs',
     '/dashboard/messages': 'SMS Messages',
     '/dashboard/whatsapp': 'WhatsApp',
-    '/dashboard/social-media': 'Social Media',
+    '/dashboard/social': 'Social Media',
     '/dashboard/emails': 'Emails',
     '/dashboard/email-templates': 'Email Templates',
     '/dashboard/email-builder': 'Email Builder',
