@@ -470,10 +470,9 @@ watch(selectedContact, () => {
 
 <style scoped>
 .whatsapp-messages {
-  height: calc(100vh - 4rem);
+  min-height: calc(100vh - 200px);
   display: flex;
   flex-direction: column;
-  padding: 2rem;
   background: #f0f2f5;
 }
 
