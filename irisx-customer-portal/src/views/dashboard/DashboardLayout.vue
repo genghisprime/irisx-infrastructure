@@ -78,24 +78,12 @@
           </router-link>
         </div>
 
-        <!-- Contacts & Campaigns -->
+        <!-- Campaigns -->
         <div style="padding-top: 16px;">
-          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Contacts & Campaigns</h3>
-          <router-link to="/dashboard/contacts" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/contacts') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
-            <UsersIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/contacts') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
-            Contacts
-          </router-link>
-          <router-link to="/dashboard/lists" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/lists') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
-            <ListBulletIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/lists') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
-            Lists
-          </router-link>
+          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Campaigns</h3>
           <router-link to="/dashboard/campaigns" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/campaigns') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
             <MegaphoneIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/campaigns') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
-            Campaigns
-          </router-link>
-          <router-link to="/dashboard/campaign-dashboard" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/campaign-dashboard') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
-            <PresentationChartLineIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/campaign-dashboard') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
-            Campaign Dashboard
+            Campaign Management
           </router-link>
         </div>
 
@@ -104,10 +92,6 @@
           <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Team & Operations</h3>
           <router-link to="/dashboard/agents" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/agents') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
             <UserGroupIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/agents') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
-            Agents
-          </router-link>
-          <router-link to="/dashboard/agent-management" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/agent-management') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
-            <UserCircleIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/agent-management') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Agent Management
           </router-link>
           <router-link to="/dashboard/agent-performance" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/agent-performance') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
@@ -116,10 +100,6 @@
           </router-link>
           <router-link to="/dashboard/queues" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/queues') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
             <QueueListIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/queues') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
-            Queues
-          </router-link>
-          <router-link to="/dashboard/queue-management" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/queue-management') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
-            <Cog6ToothIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/queue-management') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Queue Management
           </router-link>
         </div>
@@ -129,10 +109,6 @@
           <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Analytics</h3>
           <router-link to="/dashboard/analytics" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/analytics') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
             <ChartPieIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/analytics') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
-            Analytics
-          </router-link>
-          <router-link to="/dashboard/advanced-analytics" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/advanced-analytics') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
-            <PresentationChartBarIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/advanced-analytics') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Advanced Analytics
           </router-link>
           <router-link to="/dashboard/unified-analytics" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/unified-analytics') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
@@ -165,17 +141,17 @@
             <WrenchScrewdriverIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/webhook-config') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Webhook Config
           </router-link>
-          <router-link to="/dashboard/call-recording" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/call-recording') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
-            <MicrophoneIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/call-recording') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
-            Call Recording
+          <router-link to="/dashboard/recordings" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/recordings') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <MicrophoneIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/recordings') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Call Recordings
           </router-link>
           <router-link to="/dashboard/usage" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/usage') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
             <ArrowTrendingUpIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/usage') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Usage
           </router-link>
-          <router-link to="/dashboard/billing" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/billing') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
-            <CreditCardIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/billing') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
-            Billing
+          <router-link to="/dashboard/billing-history" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/billing-history') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <CreditCardIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/billing-history') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Billing History
           </router-link>
           <router-link to="/dashboard/data-import" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/data-import') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
             <ArrowUpTrayIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/data-import') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
@@ -285,27 +261,22 @@ const pageTitle = computed(() => {
     '/dashboard/email-analytics': 'Email Analytics',
     '/dashboard/email-automation': 'Email Automation',
     '/dashboard/email-deliverability': 'Email Deliverability',
-    '/dashboard/contacts': 'Contacts',
-    '/dashboard/lists': 'Lists',
-    '/dashboard/campaigns': 'Campaigns',
-    '/dashboard/campaign-dashboard': 'Campaign Dashboard',
-    '/dashboard/agents': 'Agents',
-    '/dashboard/agent-management': 'Agent Management',
+    '/dashboard/campaigns': 'Campaign Management',
+    '/dashboard/agents': 'Agent Management',
     '/dashboard/agent-performance': 'Agent Performance',
-    '/dashboard/queues': 'Queues',
-    '/dashboard/queue-management': 'Queue Management',
-    '/dashboard/analytics': 'Analytics',
-    '/dashboard/advanced-analytics': 'Advanced Analytics',
+    '/dashboard/queues': 'Queue Management',
+    '/dashboard/analytics': 'Advanced Analytics',
     '/dashboard/unified-analytics': 'Unified Analytics',
     '/dashboard/chat-inbox': 'Chat Inbox',
     '/dashboard/chat-settings': 'Chat Settings',
     '/dashboard/webhooks': 'Webhooks',
     '/dashboard/webhook-config': 'Webhook Configuration',
-    '/dashboard/call-recording': 'Call Recording',
+    '/dashboard/recordings': 'Call Recordings',
     '/dashboard/usage': 'Usage Dashboard',
-    '/dashboard/billing': 'Billing History',
+    '/dashboard/billing-history': 'Billing History',
     '/dashboard/data-import': 'Import Data',
-    '/dashboard/api-keys': 'API Keys'
+    '/dashboard/api-keys': 'API Keys',
+    '/dashboard/email-template-library': 'Email Template Library'
   }
   return titles[path] || 'Dashboard'
 })
