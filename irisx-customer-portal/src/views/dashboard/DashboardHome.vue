@@ -9,7 +9,7 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5 mb-8">
+    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.25rem; margin-bottom: 2rem;">
       <!-- Total Calls -->
       <div class="bg-white overflow-hidden shadow rounded-lg">
         <div class="p-5">
