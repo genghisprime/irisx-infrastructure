@@ -63,6 +63,9 @@ import adminCache from './routes/admin-cache.js';
 import adminQueues from './routes/admin-queues.js';
 import adminCampaigns from './routes/admin-campaigns.js';
 import adminWebhooks from './routes/admin-webhooks.js';
+import adminSipTrunks from './routes/admin-sip-trunks.js';
+import adminEmailService from './routes/admin-email-service.js';
+import adminAlerts from './routes/admin-alerts.js';
 import systemStatus from './routes/system-status.js'; // Temporarily disabled - has parse-time errors
 import publicSignup from './routes/public-signup.js'; // Temporarily disabled - has parse-time errors
 import imports from './routes/imports.js';
@@ -394,6 +397,9 @@ app.route('/admin/cache', adminCache); // Redis Cache Management
 app.route('/admin/queues', adminQueues); // Queue Management
 app.route('/admin/campaigns', adminCampaigns); // Campaign Monitoring
 app.route('/admin/webhooks', adminWebhooks); // Webhook Management
+app.route('/admin/sip-trunks', adminSipTrunks); // SIP Trunk Configuration
+app.route('/admin/email-service', adminEmailService); // Email Service Management
+app.route('/admin/alerts', adminAlerts); // Alert Management
 app.route('/admin/system', systemStatus); // Temporarily disabled - has parse-time errors
 app.route('/public', publicSignup); // Temporarily disabled - has parse-time errors
 app.route('/v1/imports', imports); // Data Import System (Week 28)
