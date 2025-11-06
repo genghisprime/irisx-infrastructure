@@ -42,6 +42,13 @@
           >
             Billing
           </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            :to="`/dashboard/tenants/${tenant.id}/features`"
+            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          >
+            Features
+          </RouterLink>
           <button
             v-if="tenant.status === 'active' && authStore.isAdmin"
             @click="suspendTenant"

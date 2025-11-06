@@ -66,6 +66,12 @@ const routes = [
         component: () => import('../views/admin/tenants/TenantBillingConfig.vue'),
         meta: { requiresRole: 'admin' }
       },
+      {
+        path: 'tenants/:id/features',
+        name: 'TenantFeatures',
+        component: () => import('../views/admin/tenants/TenantFeatures.vue'),
+        meta: { requiresRole: 'admin' }
+      },
       // Billing
       {
         path: 'billing/invoices',
