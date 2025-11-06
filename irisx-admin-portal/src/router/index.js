@@ -54,6 +54,12 @@ const routes = [
         name: 'TenantUsers',
         component: () => import('../views/admin/tenants/TenantUsers.vue')
       },
+      {
+        path: 'tenants/:id/api-keys',
+        name: 'TenantApiKeys',
+        component: () => import('../views/admin/tenants/TenantApiKeys.vue'),
+        meta: { requiresRole: 'admin' }
+      },
       // Billing
       {
         path: 'billing/invoices',

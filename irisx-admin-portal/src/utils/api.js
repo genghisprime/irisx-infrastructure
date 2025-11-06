@@ -121,6 +121,11 @@ export const adminAPI = {
   agents: {
     list: (params) => apiClient.get('/admin/agents', { params }),
     bulkImport: (data) => apiClient.post('/admin/agents/bulk-import', data)
+  },
+  apiKeys: {
+    list: (tenantId) => apiClient.get(`/v1/tenants/${tenantId}/api-keys`),
+    create: (tenantId, data) => apiClient.post(`/v1/tenants/${tenantId}/api-keys`, data),
+    revoke: (tenantId, keyId) => apiClient.delete(`/v1/tenants/${tenantId}/api-keys/${keyId}`)
   }
 }
 

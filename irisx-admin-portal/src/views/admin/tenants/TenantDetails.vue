@@ -28,6 +28,13 @@
           >
             Manage Users
           </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            :to="`/dashboard/tenants/${tenant.id}/api-keys`"
+            class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          >
+            API Keys
+          </RouterLink>
           <button
             v-if="tenant.status === 'active' && authStore.isAdmin"
             @click="suspendTenant"
