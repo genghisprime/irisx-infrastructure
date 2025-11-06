@@ -62,7 +62,9 @@ const previewData = ref({
 const editor = useEditor({
   content: formData.value.html_body,
   extensions: [
-    StarterKit,
+    StarterKit.configure({
+      link: false, // Disable built-in link to avoid duplicate
+    }),
     Placeholder.configure({
       placeholder: 'Write your email content here...',
     }),
