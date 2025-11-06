@@ -9,7 +9,7 @@
         </p>
       </div>
       <button @click="showCreateModal = true" class="btn-primary">
-        <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
         Create Automation
@@ -62,7 +62,7 @@
       </div>
 
       <div v-else-if="filteredRules.length === 0" class="empty-state">
-        <svg class="h-6 w-6 empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
         <h3>No automation rules yet</h3>
@@ -92,20 +92,20 @@
                 class="btn-icon"
                 :title="rule.enabled ? 'Disable' : 'Enable'"
               >
-                <svg class="h-6 w-6 icon text-green-500" v-if="rule.enabled"  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon text-green-500" v-if="rule.enabled"  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <svg class="h-6 w-6 icon text-gray-400" v-else  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon text-gray-400" v-else  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
               <button @click="editRule(rule)" class="btn-icon" title="Edit">
-                <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </button>
               <button @click="confirmDelete(rule)" class="btn-icon text-red-500" title="Delete">
-                <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
@@ -154,7 +154,7 @@
         <div class="modal-header">
           <h2>{{ showEditModal ? 'Edit' : 'Create' }} Automation Rule</h2>
           <button @click="closeModal" class="btn-icon">
-            <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -272,7 +272,7 @@
               <div class="action-header">
                 <span class="action-number">Action {{ index + 1 }}</span>
                 <button @click="removeAction(index)" class="btn-icon text-red-500">
-                  <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -382,7 +382,7 @@
         <div class="modal-header">
           <h2>Delete Automation Rule</h2>
           <button @click="showDeleteModal = false" class="btn-icon">
-            <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>

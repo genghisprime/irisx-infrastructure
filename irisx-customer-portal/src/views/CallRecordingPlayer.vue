@@ -66,7 +66,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-12">
-      <svg class="h-6 w-6 animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+      <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
@@ -116,10 +116,10 @@
               @click="togglePlayPause"
               class="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700"
             >
-              <svg class="h-6 w-6 w-5 h-5" v-if="!isPlaying"  fill="currentColor" viewBox="0 0 20 20">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" w-5 h-5" v-if="!isPlaying"  fill="currentColor" viewBox="0 0 20 20">
                 <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
               </svg>
-              <svg class="h-6 w-6 w-5 h-5" v-else  fill="currentColor" viewBox="0 0 20 20">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" w-5 h-5" v-else  fill="currentColor" viewBox="0 0 20 20">
                 <path d="M5.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 007.25 3h-1.5zM12.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75a.75.75 0 00-.75-.75h-1.5z"/>
               </svg>
             </button>
@@ -205,7 +205,7 @@
 
       <!-- Empty State -->
       <div v-if="filteredRecordings.length === 0" class="bg-white rounded-lg shadow p-12 text-center">
-        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg style="width: 48px; height: 48px; min-width: 48px; min-height: 48px; max-width: 48px; max-height: 48px;" class="mx-auto  text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
         </svg>
         <p class="text-gray-500">No recordings found matching your filters</p>

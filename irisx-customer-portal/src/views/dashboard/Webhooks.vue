@@ -15,7 +15,7 @@
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
         <div class="flex">
           <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+            <svg style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px;" class=" text-blue-400" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
             </svg>
           </div>
@@ -36,7 +36,7 @@
         </div>
 
         <div v-else-if="webhooks.length === 0" class="p-8 text-center text-gray-500">
-          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style="width: 48px; height: 48px; min-width: 48px; min-height: 48px; max-width: 48px; max-height: 48px;" class="mx-auto  text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
           <p class="mt-2">No webhooks configured</p>
@@ -134,7 +134,7 @@
               <div class="flex justify-between items-start mb-4">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">Create Webhook</h3>
                 <button type="button" @click="showCreateModal = false" class="text-gray-400 hover:text-gray-500">
-                  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class="" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -234,7 +234,7 @@
             <div class="flex justify-between items-start mb-4">
               <h3 class="text-lg leading-6 font-medium text-gray-900">Webhook Delivery Log</h3>
               <button @click="selectedWebhook = null" class="text-gray-400 hover:text-gray-500">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class="" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>

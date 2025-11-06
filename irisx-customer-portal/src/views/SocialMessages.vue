@@ -23,7 +23,7 @@
         class="platform-tab"
         :class="{ active: selectedPlatform === 'all' }"
       >
-        <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
         All Platforms ({{ allMessagesCount }})
@@ -84,7 +84,7 @@
       <!-- Chat Area -->
       <div class="chat-area">
         <div v-if="!selectedChannel" class="no-channel-selected">
-          <svg class="h-6 w-6 empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
           <h3>Select a channel</h3>
@@ -102,7 +102,7 @@
               </div>
             </div>
             <button @click="refreshMessages" class="btn-icon" title="Refresh">
-              <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
@@ -146,7 +146,7 @@
                     <!-- Attachments -->
                     <div v-if="message.attachments && message.attachments.length > 0" class="message-attachments">
                       <div v-for="(attachment, idx) in parseAttachments(message.attachments)" :key="idx" class="attachment">
-                        <svg class="h-6 w-6 attachment-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" attachment-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                         </svg>
                         <span>{{ attachment.filename || 'Attachment' }}</span>
@@ -180,7 +180,7 @@
               rows="1"
             ></textarea>
             <button @click="sendMessage" class="btn-send" :disabled="!newMessage.trim() || sending">
-              <svg class="h-6 w-6 icon" v-if="!sending"  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" v-if="!sending"  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
               <div v-else class="spinner-sm"></div>

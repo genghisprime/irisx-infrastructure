@@ -83,7 +83,7 @@
         </div>
 
         <div v-else-if="messages.length === 0" class="p-8 text-center text-gray-500">
-          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style="width: 48px; height: 48px; min-width: 48px; min-height: 48px; max-width: 48px; max-height: 48px;" class="mx-auto  text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
           <p class="mt-2">No messages found</p>
@@ -221,7 +221,7 @@
             <div class="flex justify-between items-start mb-4">
               <h3 class="text-lg leading-6 font-medium text-gray-900">Message Details</h3>
               <button @click="selectedMessage = null" class="text-gray-400 hover:text-gray-500">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class="" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -318,7 +318,7 @@
               <div class="flex justify-between items-start mb-4">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">Send SMS Message</h3>
                 <button type="button" @click="showSendModal = false" class="text-gray-400 hover:text-gray-500">
-                  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class="" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>

@@ -9,7 +9,7 @@
         </p>
       </div>
       <button @click="runHealthCheck" class="btn-primary" :disabled="checking">
-        <svg class="h-6 w-6 icon" v-if="!checking"  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" v-if="!checking"  fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <div v-else class="spinner-sm"></div>
@@ -21,7 +21,7 @@
     <div class="overview-cards">
       <div class="stat-card" :class="getScoreClass(overallScore)">
         <div class="stat-icon">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class="" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
@@ -33,7 +33,7 @@
 
       <div class="stat-card">
         <div class="stat-icon bg-blue-100 text-blue-600">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class="" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
@@ -45,7 +45,7 @@
 
       <div class="stat-card">
         <div class="stat-icon bg-green-100 text-green-600">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class="" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
         </div>
@@ -57,7 +57,7 @@
 
       <div class="stat-card">
         <div class="stat-icon bg-red-100 text-red-600">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class="" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
@@ -72,7 +72,7 @@
     <div class="section-card">
       <div class="section-header">
         <h2 class="section-title">
-          <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
           DNS Records Health
@@ -89,23 +89,23 @@
         >
           <div class="record-header">
             <div class="record-title">
-              <svg class="h-6 w-6 status-icon text-green-500" v-if="record.status === 'valid'"  fill="currentColor" viewBox="0 0 20 20">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" status-icon text-green-500" v-if="record.status === 'valid'"  fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
               </svg>
-              <svg class="h-6 w-6 status-icon text-yellow-500" v-else-if="record.status === 'warning'"  fill="currentColor" viewBox="0 0 20 20">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" status-icon text-yellow-500" v-else-if="record.status === 'warning'"  fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" />
               </svg>
-              <svg class="h-6 w-6 status-icon text-red-500" v-else  fill="currentColor" viewBox="0 0 20 20">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" status-icon text-red-500" v-else  fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" />
               </svg>
               <span class="record-type">{{ record.type }}</span>
               <span class="record-status">{{ record.status_text }}</span>
             </div>
             <button @click="toggleRecord(record.type)" class="btn-icon">
-              <svg class="h-6 w-6 icon" v-if="expandedRecords.includes(record.type)"  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" v-if="expandedRecords.includes(record.type)"  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
               </svg>
-              <svg class="h-6 w-6 icon" v-else  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" v-else  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
@@ -137,7 +137,7 @@
     <div class="section-card">
       <div class="section-header">
         <h2 class="section-title">
-          <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Email Address Validator
@@ -161,10 +161,10 @@
 
         <div v-if="validationResult" class="validation-result" :class="validationResult.valid ? 'valid' : 'invalid'">
           <div class="result-header">
-            <svg class="h-6 w-6 result-icon text-green-500" v-if="validationResult.valid"  fill="currentColor" viewBox="0 0 20 20">
+            <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" result-icon text-green-500" v-if="validationResult.valid"  fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
             </svg>
-            <svg class="h-6 w-6 result-icon text-red-500" v-else  fill="currentColor" viewBox="0 0 20 20">
+            <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" result-icon text-red-500" v-else  fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" />
             </svg>
             <span class="result-status">
@@ -174,25 +174,25 @@
 
           <div class="result-checks">
             <div class="check-item" :class="validationResult.syntax_valid ? 'pass' : 'fail'">
-              <svg class="h-6 w-6 check-icon" fill="currentColor" viewBox="0 0 20 20">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" check-icon" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
               </svg>
               <span>Syntax Valid</span>
             </div>
             <div class="check-item" :class="validationResult.mx_records_exist ? 'pass' : 'fail'">
-              <svg class="h-6 w-6 check-icon" fill="currentColor" viewBox="0 0 20 20">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" check-icon" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
               </svg>
               <span>MX Records Exist</span>
             </div>
             <div class="check-item" :class="!validationResult.is_disposable ? 'pass' : 'fail'">
-              <svg class="h-6 w-6 check-icon" fill="currentColor" viewBox="0 0 20 20">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" check-icon" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
               </svg>
               <span>{{ validationResult.is_disposable ? 'Disposable Email' : 'Not Disposable' }}</span>
             </div>
             <div class="check-item" :class="validationResult.risk_score < 50 ? 'pass' : 'fail'">
-              <svg class="h-6 w-6 check-icon" fill="currentColor" viewBox="0 0 20 20">
+              <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" check-icon" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
               </svg>
               <span>Risk Score: {{ validationResult.risk_score }}/100</span>
@@ -210,7 +210,7 @@
     <div class="section-card">
       <div class="section-header">
         <h2 class="section-title">
-          <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
           </svg>
           Suppression List
@@ -295,7 +295,7 @@
     <div class="section-card">
       <div class="section-header">
         <h2 class="section-title">
-          <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
           Bounce Analysis (Last 30 Days)
@@ -347,7 +347,7 @@
         <h3 class="insights-title">Actionable Insights</h3>
         <ul class="insights-list">
           <li v-for="insight in insights" :key="insight.id">
-            <svg class="h-6 w-6 insight-icon" fill="currentColor" viewBox="0 0 20 20">
+            <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" insight-icon" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" />
             </svg>
             <span>{{ insight.text }}</span>
@@ -362,7 +362,7 @@
         <div class="modal-header">
           <h2>Add Email to Suppression List</h2>
           <button @click="showAddSuppressionModal = false" class="btn-icon">
-            <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>

@@ -36,7 +36,7 @@
           </div>
 
           <div v-else-if="filteredContacts.length === 0" class="empty-state-sidebar">
-            <svg class="h-6 w-6 empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
             <p>No conversations yet</p>
@@ -81,7 +81,7 @@
       <!-- Chat Area -->
       <div class="chat-area">
         <div v-if="!selectedContact" class="no-chat-selected">
-          <svg class="h-6 w-6 whatsapp-logo" viewBox="0 0 24 24" fill="currentColor">
+          <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" whatsapp-logo" viewBox="0 0 24 24" fill="currentColor">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
           </svg>
           <h3>Select a conversation</h3>
@@ -107,7 +107,7 @@
             </div>
             <div class="chat-actions">
               <button @click="refreshMessages" class="btn-icon" title="Refresh">
-                <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </button>
@@ -145,7 +145,7 @@
 
                   <!-- Document Message -->
                   <div v-else-if="message.message_type === 'document'" class="message-document">
-                    <svg class="h-6 w-6 document-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" document-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
                     <div class="document-info">
@@ -156,7 +156,7 @@
 
                   <!-- Location Message -->
                   <div v-else-if="message.message_type === 'location'" class="message-location">
-                    <svg class="h-6 w-6 location-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" location-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -182,18 +182,18 @@
                   <div class="message-footer">
                     <span class="message-time">{{ formatMessageTime(message.created_at) }}</span>
                     <span v-if="message.direction === 'outbound'" class="message-status">
-                      <svg class="h-6 w-6 status-icon read" v-if="message.status === 'read'"  fill="currentColor" viewBox="0 0 16 16">
+                      <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" status-icon read" v-if="message.status === 'read'"  fill="currentColor" viewBox="0 0 16 16">
                         <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
                         <path d="M10.854 5.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L3.5 12.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
                       </svg>
-                      <svg class="h-6 w-6 status-icon delivered" v-else-if="message.status === 'delivered'"  fill="currentColor" viewBox="0 0 16 16">
+                      <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" status-icon delivered" v-else-if="message.status === 'delivered'"  fill="currentColor" viewBox="0 0 16 16">
                         <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
                         <path d="M10.854 5.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L3.5 12.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
                       </svg>
-                      <svg class="h-6 w-6 status-icon sent" v-else-if="message.status === 'sent'"  fill="currentColor" viewBox="0 0 16 16">
+                      <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" status-icon sent" v-else-if="message.status === 'sent'"  fill="currentColor" viewBox="0 0 16 16">
                         <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
                       </svg>
-                      <svg class="h-6 w-6 status-icon pending" v-else  fill="currentColor" viewBox="0 0 16 16">
+                      <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" status-icon pending" v-else  fill="currentColor" viewBox="0 0 16 16">
                         <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
                         <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
                       </svg>
@@ -208,13 +208,13 @@
           <div class="message-input-area">
             <div class="message-input-container">
               <button @click="showEmojiPicker = !showEmojiPicker" class="btn-icon">
-                <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
 
               <button @click="showAttachMenu = !showAttachMenu" class="btn-icon">
-                <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                 </svg>
               </button>
@@ -228,7 +228,7 @@
               ></textarea>
 
               <button @click="sendMessage" class="btn-send" :disabled="!newMessage.trim() || sending">
-                <svg class="h-6 w-6 icon" v-if="!sending"  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" v-if="!sending"  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
                 <div v-else class="spinner-sm"></div>
@@ -238,13 +238,13 @@
             <!-- Attach Menu -->
             <div v-if="showAttachMenu" class="attach-menu">
               <button @click="attachImage" class="attach-option">
-                <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <span>Image</span>
               </button>
               <button @click="attachDocument" class="attach-option">
-                <svg class="h-6 w-6 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
                 <span>Document</span>
@@ -724,7 +724,7 @@ watch(selectedContact, () => {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
-  background-image: url('data:image/svg+xml;utf8,<svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23e5ddd5" width="100" height="100"/></svg>');
+  background-image: url('data:image/svg+xml;utf8,<svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class="" xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23e5ddd5" width="100" height="100"/></svg>');
 }
 
 .messages-list {
