@@ -1,0 +1,16 @@
+Missing routes to remove from sidebar:
+- contacts
+- lists
+- campaign-dashboard
+- advanced-analytics
+- agent-management
+- queue-management
+- call-recording (should be "recordings")
+
+Keep these:
+- campaigns (exists)
+- agents (exists) 
+- agent-performance (exists)
+- queues (exists)
+- analytics (exists)
+- unified-analytics (exists)

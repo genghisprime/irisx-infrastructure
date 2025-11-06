@@ -10,7 +10,7 @@
 
     <!-- Filters -->
     <div class="bg-white shadow rounded-lg p-4 mb-6">
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
         <!-- Status Filter -->
         <div>
           <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">
