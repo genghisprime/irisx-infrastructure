@@ -120,6 +120,55 @@ const routes = [
         component: () => import('../views/admin/providers/ProviderCredentials.vue'),
         meta: { requiresRole: 'admin' }
       },
+      // Queues
+      {
+        path: 'queues',
+        name: 'QueueManagement',
+        component: () => import('../views/admin/queues/QueueManagement.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // Campaigns
+      {
+        path: 'campaigns',
+        name: 'CampaignMonitoring',
+        component: () => import('../views/admin/campaigns/CampaignMonitoring.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // SIP Trunks
+      {
+        path: 'sip-trunks',
+        name: 'SipTrunkConfig',
+        component: () => import('../views/admin/sip/SipTrunkConfig.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // Email Service
+      {
+        path: 'email-service',
+        name: 'EmailService',
+        component: () => import('../views/admin/email/EmailService.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // Webhooks
+      {
+        path: 'webhooks',
+        name: 'WebhookManagement',
+        component: () => import('../views/admin/webhooks/WebhookManagement.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // Database
+      {
+        path: 'database',
+        name: 'DatabaseManagement',
+        component: () => import('../views/admin/database/DatabaseManagement.vue'),
+        meta: { requiresRole: 'superadmin' }
+      },
+      // Cache
+      {
+        path: 'cache',
+        name: 'CacheManagement',
+        component: () => import('../views/admin/cache/CacheManagement.vue'),
+        meta: { requiresRole: 'admin' }
+      },
       // Settings
       {
         path: 'settings/features',

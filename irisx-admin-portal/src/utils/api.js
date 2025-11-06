@@ -131,6 +131,50 @@ export const adminAPI = {
   },
   analytics: {
     getUsage: (params) => apiClient.get('/admin/analytics/usage', { params })
+  },
+  queues: {
+    list: (params) => apiClient.get('/admin/queues', { params }),
+    get: (id) => apiClient.get(`/admin/queues/${id}`),
+    create: (data) => apiClient.post('/admin/queues', data),
+    update: (id, data) => apiClient.patch(`/admin/queues/${id}`, data),
+    delete: (id) => apiClient.delete(`/admin/queues/${id}`)
+  },
+  campaigns: {
+    list: (params) => apiClient.get('/admin/campaigns', { params }),
+    get: (id) => apiClient.get(`/admin/campaigns/${id}`),
+    pause: (id) => apiClient.post(`/admin/campaigns/${id}/pause`),
+    resume: (id) => apiClient.post(`/admin/campaigns/${id}/resume`),
+    stop: (id) => apiClient.post(`/admin/campaigns/${id}/stop`)
+  },
+  sipTrunks: {
+    list: (params) => apiClient.get('/admin/sip-trunks', { params }),
+    get: (id) => apiClient.get(`/admin/sip-trunks/${id}`),
+    create: (data) => apiClient.post('/admin/sip-trunks', data),
+    update: (id, data) => apiClient.patch(`/admin/sip-trunks/${id}`, data),
+    test: (id) => apiClient.post(`/admin/sip-trunks/${id}/test`)
+  },
+  emailService: {
+    getConfig: () => apiClient.get('/admin/email-service/config'),
+    updateConfig: (data) => apiClient.patch('/admin/email-service/config', data),
+    verifyDomain: (domain) => apiClient.post('/admin/email-service/verify-domain', { domain }),
+    getDeliverability: () => apiClient.get('/admin/email-service/deliverability')
+  },
+  webhooks: {
+    list: (params) => apiClient.get('/admin/webhooks', { params }),
+    test: (id) => apiClient.post(`/admin/webhooks/${id}/test`),
+    getLogs: (id, params) => apiClient.get(`/admin/webhooks/${id}/logs`, { params }),
+    retry: (id, logId) => apiClient.post(`/admin/webhooks/${id}/logs/${logId}/retry`)
+  },
+  database: {
+    getStats: () => apiClient.get('/admin/database/stats'),
+    getConnections: () => apiClient.get('/admin/database/connections'),
+    getQueries: (params) => apiClient.get('/admin/database/queries', { params }),
+    getBackups: () => apiClient.get('/admin/database/backups')
+  },
+  cache: {
+    getStats: () => apiClient.get('/admin/cache/stats'),
+    clear: (pattern) => apiClient.post('/admin/cache/clear', { pattern }),
+    getSessions: (params) => apiClient.get('/admin/cache/sessions', { params })
   }
 }
 
