@@ -35,6 +35,13 @@
           >
             API Keys
           </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            :to="`/dashboard/tenants/${tenant.id}/billing`"
+            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          >
+            Billing
+          </RouterLink>
           <button
             v-if="tenant.status === 'active' && authStore.isAdmin"
             @click="suspendTenant"

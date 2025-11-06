@@ -76,7 +76,9 @@ export const adminAPI = {
     updateSubscription: (tenantId, data) => apiClient.patch(`/admin/tenants/${tenantId}/subscription`, data),
     extendTrial: (tenantId, data) => apiClient.post(`/admin/tenants/${tenantId}/extend-trial`, data),
     issueRefund: (data) => apiClient.post('/admin/billing/refunds', data),
-    getRevenue: (params) => apiClient.get('/admin/billing/revenue', { params })
+    getRevenue: (params) => apiClient.get('/admin/billing/revenue', { params }),
+    getConfig: (tenantId) => apiClient.get(`/v1/tenants/${tenantId}/billing-config`),
+    updateConfig: (tenantId, data) => apiClient.patch(`/v1/tenants/${tenantId}/billing-config`, data)
   },
   providers: {
     list: (params) => apiClient.get('/admin/providers', { params }),

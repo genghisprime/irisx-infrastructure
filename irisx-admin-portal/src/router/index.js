@@ -60,6 +60,12 @@ const routes = [
         component: () => import('../views/admin/tenants/TenantApiKeys.vue'),
         meta: { requiresRole: 'admin' }
       },
+      {
+        path: 'tenants/:id/billing',
+        name: 'TenantBillingConfig',
+        component: () => import('../views/admin/tenants/TenantBillingConfig.vue'),
+        meta: { requiresRole: 'admin' }
+      },
       // Billing
       {
         path: 'billing/invoices',
