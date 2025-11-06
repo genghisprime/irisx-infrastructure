@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Provider Credentials</h1>
+      <h1 class="text-2xl font-bold text-gray-900">Provider & Carrier Management</h1>
       <button
-        v-if="authStore.isAdmin"
+        v-if="authStore.isAdmin && activeTab === 'credentials'"
         @click="showAddModal = true"
         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
       >
@@ -11,12 +11,50 @@
       </button>
     </div>
 
-    <!-- Info Alert -->
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-      <p class="text-sm text-blue-800">
-        <strong>🔒 Security:</strong> All credentials are encrypted using AES-256-CBC. Only masked values are displayed.
-      </p>
+    <!-- Tabs -->
+    <div class="bg-white rounded-lg shadow mb-6">
+      <div class="border-b border-gray-200">
+        <nav class="flex -mb-px">
+          <button
+            @click="activeTab = 'credentials'"
+            :class="activeTab === 'credentials' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            class="px-6 py-3 border-b-2 font-medium text-sm"
+          >
+            Credentials
+          </button>
+          <button
+            @click="activeTab = 'lcr'"
+            :class="activeTab === 'lcr' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            class="px-6 py-3 border-b-2 font-medium text-sm"
+          >
+            LCR Routing
+          </button>
+          <button
+            @click="activeTab = 'health'"
+            :class="activeTab === 'health' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            class="px-6 py-3 border-b-2 font-medium text-sm"
+          >
+            Health Monitoring
+          </button>
+          <button
+            @click="activeTab = 'failover'"
+            :class="activeTab === 'failover' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            class="px-6 py-3 border-b-2 font-medium text-sm"
+          >
+            Failover
+          </button>
+        </nav>
+      </div>
     </div>
+
+    <!-- Credentials Tab -->
+    <div v-if="activeTab === 'credentials'">
+      <!-- Info Alert -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <p class="text-sm text-blue-800">
+          <strong>🔒 Security:</strong> All credentials are encrypted using AES-256-CBC. Only masked values are displayed.
+        </p>
+      </div>
 
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
@@ -117,6 +155,111 @@
     <div v-if="!loading && !error && credentials.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
       <p class="text-gray-500">No provider credentials found</p>
     </div>
+    </div>
+
+    <!-- LCR Routing Tab -->
+    <div v-if="activeTab === 'lcr'" class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-lg font-semibold mb-4">Least Cost Routing (LCR) Configuration</h2>
+      <p class="text-sm text-gray-600 mb-6">Configure carrier priority and cost routing for optimizing voice call expenses.</p>
+
+      <div class="space-y-4">
+        <div class="border rounded-lg p-4" v-for="(route, index) in lcrRoutes" :key="index">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-medium">Priority {{ route.priority }}</h3>
+            <span class="text-sm text-gray-500">Cost per minute: ${{ route.cost_per_minute }}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span class="text-gray-600">Carrier:</span>
+              <span class="ml-2 font-medium">{{ route.carrier }}</span>
+            </div>
+            <div>
+              <span class="text-gray-600">Success Rate:</span>
+              <span class="ml-2 font-medium">{{ route.success_rate }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Monitoring Tab -->
+    <div v-if="activeTab === 'health'" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow p-6" v-for="carrier in carrierHealth" :key="carrier.name">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold">{{ carrier.name }}</h3>
+            <span
+              :class="carrier.status === 'healthy' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+              class="px-2 py-1 text-xs font-medium rounded-full"
+            >
+              {{ carrier.status }}
+            </span>
+          </div>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-600">Uptime:</span>
+              <span class="font-medium">{{ carrier.uptime }}%</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Avg Latency:</span>
+              <span class="font-medium">{{ carrier.latency }}ms</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Error Rate:</span>
+              <span class="font-medium">{{ carrier.error_rate }}%</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Last Check:</span>
+              <span class="font-medium">{{ carrier.last_check }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Failover Tab -->
+    <div v-if="activeTab === 'failover'" class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-lg font-semibold mb-4">Emergency Failover Configuration</h2>
+      <p class="text-sm text-gray-600 mb-6">Configure automatic failover rules when primary carriers become unavailable.</p>
+
+      <div class="space-y-6">
+        <div class="border rounded-lg p-4">
+          <h3 class="font-medium mb-4">Failover Rules</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between py-2 border-b">
+              <div>
+                <p class="text-sm font-medium">High Error Rate Failover</p>
+                <p class="text-xs text-gray-500">Switch if error rate exceeds 5%</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input v-model="failoverRules.high_error" type="checkbox" class="sr-only peer" />
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+            <div class="flex items-center justify-between py-2 border-b">
+              <div>
+                <p class="text-sm font-medium">Latency Threshold Failover</p>
+                <p class="text-xs text-gray-500">Switch if latency exceeds 200ms</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input v-model="failoverRules.high_latency" type="checkbox" class="sr-only peer" />
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <div>
+                <p class="text-sm font-medium">Carrier Unavailable Failover</p>
+                <p class="text-xs text-gray-500">Switch immediately if carrier is down</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input v-model="failoverRules.carrier_down" type="checkbox" class="sr-only peer" />
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Add Credentials Modal -->
     <div
@@ -182,10 +325,32 @@ import { adminAPI } from '../../../utils/api'
 
 const authStore = useAdminAuthStore()
 
+const activeTab = ref('credentials')
 const loading = ref(true)
 const error = ref(null)
 const credentials = ref([])
 const showAddModal = ref(false)
+
+// LCR Routes data
+const lcrRoutes = ref([
+  { priority: 1, carrier: 'Twilio', cost_per_minute: 0.0085, success_rate: 99.2 },
+  { priority: 2, carrier: 'Telnyx', cost_per_minute: 0.0090, success_rate: 98.8 },
+  { priority: 3, carrier: 'Bandwidth', cost_per_minute: 0.0095, success_rate: 98.5 }
+])
+
+// Carrier Health data
+const carrierHealth = ref([
+  { name: 'Twilio', status: 'healthy', uptime: 99.98, latency: 45, error_rate: 0.2, last_check: '2 mins ago' },
+  { name: 'Telnyx', status: 'healthy', uptime: 99.95, latency: 52, error_rate: 0.4, last_check: '2 mins ago' },
+  { name: 'Bandwidth', status: 'healthy', uptime: 99.92, latency: 48, error_rate: 0.5, last_check: '3 mins ago' }
+])
+
+// Failover Rules
+const failoverRules = ref({
+  high_error: true,
+  high_latency: true,
+  carrier_down: true
+})
 
 const filters = ref({
   type: '',
