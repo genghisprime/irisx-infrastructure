@@ -43,6 +43,8 @@ import ChatSettings from '../views/ChatSettings.vue'
 import CampaignList from '../views/CampaignList.vue'
 import CampaignDashboard from '../views/CampaignDashboard.vue'
 import UnifiedAnalytics from '../views/UnifiedAnalytics.vue'
+import Contacts from '../views/Contacts.vue'
+import ContactLists from '../views/ContactLists.vue'
 
 const routes = [
   {
@@ -156,6 +158,16 @@ const routes = [
         path: 'data-import',
         name: 'DataImport',
         component: DataImport
+      },
+      {
+        path: 'contacts',
+        name: 'Contacts',
+        component: Contacts
+      },
+      {
+        path: 'lists',
+        name: 'ContactLists',
+        component: ContactLists
       },
       {
         path: 'agents',

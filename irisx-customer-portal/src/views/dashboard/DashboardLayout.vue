@@ -76,11 +76,23 @@
             <CheckBadgeIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/email-deliverability') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Deliverability
           </router-link>
+          <router-link to="/dashboard/email-template-library" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/email-template-library') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <DocumentTextIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/email-template-library') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Template Library
+          </router-link>
         </div>
 
-        <!-- Campaigns -->
+        <!-- Contacts & Campaigns -->
         <div style="padding-top: 16px;">
-          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Campaigns</h3>
+          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Contacts & Campaigns</h3>
+          <router-link to="/dashboard/contacts" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/contacts') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <UsersIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/contacts') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Contacts
+          </router-link>
+          <router-link to="/dashboard/lists" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/lists') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <ListBulletIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/lists') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Lists
+          </router-link>
           <router-link to="/dashboard/campaigns" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/campaigns') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
             <MegaphoneIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/campaigns') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Campaign Management
@@ -261,6 +273,9 @@ const pageTitle = computed(() => {
     '/dashboard/email-analytics': 'Email Analytics',
     '/dashboard/email-automation': 'Email Automation',
     '/dashboard/email-deliverability': 'Email Deliverability',
+    '/dashboard/email-template-library': 'Email Template Library',
+    '/dashboard/contacts': 'Contacts',
+    '/dashboard/lists': 'Contact Lists',
     '/dashboard/campaigns': 'Campaign Management',
     '/dashboard/agents': 'Agent Management',
     '/dashboard/agent-performance': 'Agent Performance',
