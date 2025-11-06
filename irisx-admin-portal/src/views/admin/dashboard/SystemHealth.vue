@@ -194,7 +194,7 @@ const errors = ref(null)
 const errorTimeRange = ref(24) // hours
 let refreshInterval = null
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://3.83.53.69:3000'
 
 async function fetchAllData() {
   loading.value = true
