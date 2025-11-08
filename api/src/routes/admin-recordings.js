@@ -45,7 +45,7 @@ adminRecordings.get('/stats', async (c) => {
     const admin = c.get('admin');
     const tenant_id = c.req.query('tenant_id');
 
-    let whereClause = 'deleted_at IS NULL AND recording_url IS NOT NULL';
+    let whereClause = 'recording_url IS NOT NULL';
     let queryParams = [];
 
     if (tenant_id) {
@@ -133,7 +133,7 @@ adminRecordings.get('/', async (c) => {
     const offset = (page - 1) * limit;
 
     // Build WHERE clause
-    let whereConditions = ['c.deleted_at IS NULL', 'c.recording_url IS NOT NULL'];
+    let whereConditions = ['c.recording_url IS NOT NULL'];
     let queryParams = [];
     let paramIndex = 1;
 
@@ -253,7 +253,7 @@ adminRecordings.get('/:id', async (c) => {
        FROM calls c
        JOIN tenants t ON c.tenant_id = t.id
        LEFT JOIN users u ON c.user_id = u.id
-       WHERE c.id = $1 AND c.deleted_at IS NULL AND c.recording_url IS NOT NULL`,
+       WHERE c.id = $1 AND c.recording_url IS NOT NULL`,
       [id]
     );
 
