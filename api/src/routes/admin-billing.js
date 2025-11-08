@@ -184,12 +184,14 @@ adminBilling.get('/invoices/:id', async (c) => {
         t.name as company_name,
         t.billing_email as tenant_email,
         i.invoice_number,
-        i.amount,
+        i.amount_cents,
+        i.currency,
         i.status,
         i.due_date,
         i.paid_at,
-        i.description,
-        i.items,
+        i.line_items,
+        i.period_start,
+        i.period_end,
         i.created_at,
         i.updated_at,
         i.metadata
@@ -258,10 +260,10 @@ adminBilling.post('/invoices', async (c) => {
     // Create invoice
     const result = await pool.query(
       `INSERT INTO invoices (
-        tenant_id, invoice_number, amount, description, due_date, status, items, created_by
-      ) VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7)
-      RETURNING id, invoice_number, amount, status, due_date, created_at`,
-      [tenant_id, invoiceNumber, amount, description, invoiceDueDate, items ? JSON.stringify(items) : null, admin.id]
+        tenant_id, invoice_number, amount_cents, currency, due_date, status, line_items, created_by
+      ) VALUES ($1, $2, $3, 'USD', $4, 'pending', $5, $6)
+      RETURNING id, invoice_number, amount_cents, status, due_date, created_at`,
+      [tenant_id, invoiceNumber, Math.round(amount * 100), invoiceDueDate, items ? JSON.stringify(items) : null, admin.id]
     );
 
     const invoice = result.rows[0];
@@ -487,7 +489,7 @@ adminBilling.post('/refunds', async (c) => {
 
     // Check if invoice exists
     const invoiceCheck = await pool.query(
-      'SELECT id, tenant_id, amount, status FROM invoices WHERE id = $1',
+      'SELECT id, tenant_id, amount_cents, status FROM invoices WHERE id = $1',
       [invoice_id]
     );
 
@@ -501,7 +503,10 @@ adminBilling.post('/refunds', async (c) => {
       return c.json({ error: 'Cannot refund unpaid invoice' }, 400);
     }
 
-    if (amount > invoice.amount) {
+    // Convert amount to cents for comparison
+    const amountCents = Math.round(amount * 100);
+
+    if (amountCents > invoice.amount_cents) {
       return c.json({ error: 'Refund amount exceeds invoice amount' }, 400);
     }
 
@@ -513,7 +518,7 @@ adminBilling.post('/refunds', async (c) => {
          COALESCE(metadata, '{}'::jsonb),
          '{refunds}',
          COALESCE(metadata->'refunds', '[]'::jsonb) || jsonb_build_object(
-           'amount', $1,
+           'amount_cents', $1,
            'reason', $2,
            'issued_by', $3,
            'issued_at', NOW()
@@ -521,11 +526,11 @@ adminBilling.post('/refunds', async (c) => {
        ),
        updated_at = NOW()
        WHERE id = $4`,
-      [amount, reason, admin.id, invoice_id]
+      [amountCents, reason, admin.id, invoice_id]
     );
 
     // If full refund, mark invoice as refunded
-    if (amount === invoice.amount) {
+    if (amountCents === invoice.amount_cents) {
       await pool.query(
         'UPDATE invoices SET status = $1 WHERE id = $2',
         ['refunded', invoice_id]
@@ -541,10 +546,11 @@ adminBilling.post('/refunds', async (c) => {
 
     return c.json({
       success: true,
-      message: amount === invoice.amount ? 'Full refund issued' : 'Partial refund issued',
+      message: amountCents === invoice.amount_cents ? 'Full refund issued' : 'Partial refund issued',
       refund: {
         invoice_id,
         amount,
+        amount_cents: amountCents,
         reason,
         issued_at: new Date()
       }
@@ -603,7 +609,7 @@ adminBilling.get('/revenue', async (c) => {
         COUNT(*) FILTER (WHERE status = 'pending') as pending_invoices,
         COUNT(*) FILTER (WHERE status = 'overdue') as overdue_invoices
        FROM invoices i
-       WHERE deleted_at IS NULL ${dateFilter}`
+       WHERE 1=1 ${dateFilter}`
     );
 
     // Revenue by tenant
@@ -615,7 +621,7 @@ adminBilling.get('/revenue', async (c) => {
         COUNT(DISTINCT i.id) as invoice_count,
         SUM(i.amount_cents) as total_revenue
        FROM tenants t
-       LEFT JOIN invoices i ON t.id = i.tenant_id AND i.deleted_at IS NULL AND i.status = 'paid'
+       LEFT JOIN invoices i ON t.id = i.tenant_id AND i.status = 'paid'
        WHERE t.deleted_at IS NULL AND t.status = 'active'
        GROUP BY t.id, t.name, t.plan
        ORDER BY total_revenue DESC NULLS LAST
@@ -629,7 +635,7 @@ adminBilling.get('/revenue', async (c) => {
         SUM(i.amount_cents) as total_revenue,
         COUNT(*) as invoice_count
        FROM invoices i
-       WHERE i.deleted_at IS NULL AND i.status = 'paid' ${dateFilter}
+       WHERE i.status = 'paid' ${dateFilter}
        GROUP BY DATE_TRUNC('month', i.created_at)
        ORDER BY month DESC
        LIMIT 12`
