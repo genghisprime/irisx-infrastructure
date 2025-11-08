@@ -53,7 +53,7 @@ async function logAdminAction(adminId, action, resourceType, resourceId, changes
  * GET /admin/conversations
  * Search conversations across all tenants
  */
-adminConversations.get('/conversations', async (c) => {
+adminConversations.get('/', async (c) => {
   try {
     const admin = c.get('admin');
 
@@ -132,7 +132,7 @@ adminConversations.get('/conversations', async (c) => {
         c.customer_name,
         c.status,
         c.priority,
-        c.assigned_to,
+        c.assigned_agent_id,
         u.first_name || ' ' || u.last_name as assigned_agent_name,
         c.message_count,
         c.unread_count,
@@ -145,7 +145,7 @@ adminConversations.get('/conversations', async (c) => {
         c.updated_at
        FROM conversations c
        JOIN tenants t ON c.tenant_id = t.id
-       LEFT JOIN users u ON c.assigned_to = u.id
+       LEFT JOIN users u ON c.assigned_agent_id = u.id
        WHERE ${whereClause}
        ORDER BY c.updated_at DESC
        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
@@ -174,7 +174,7 @@ adminConversations.get('/conversations', async (c) => {
  * GET /admin/conversations/:id
  * View conversation details and messages
  */
-adminConversations.get('/conversations/:id', async (c) => {
+adminConversations.get('/:id', async (c) => {
   try {
     const { id } = c.req.param();
     const admin = c.get('admin');
@@ -188,7 +188,7 @@ adminConversations.get('/conversations/:id', async (c) => {
         u.email as assigned_agent_email
        FROM conversations c
        JOIN tenants t ON c.tenant_id = t.id
-       LEFT JOIN users u ON c.assigned_to = u.id
+       LEFT JOIN users u ON c.assigned_agent_id = u.id
        WHERE c.id = $1 AND c.deleted_at IS NULL`,
       [id]
     );
@@ -203,7 +203,7 @@ adminConversations.get('/conversations/:id', async (c) => {
     const messagesResult = await pool.query(
       `SELECT
         cm.id,
-        cm.message_content,
+        cm.content,
         cm.direction,
         cm.sender_name,
         cm.is_internal_note,
@@ -233,7 +233,7 @@ adminConversations.get('/conversations/:id', async (c) => {
  * PATCH /admin/conversations/:id/assign
  * Reassign conversation to different agent
  */
-adminConversations.patch('/conversations/:id/assign', async (c) => {
+adminConversations.patch('/:id/assign', async (c) => {
   try {
     const { id } = c.req.param();
     const admin = c.get('admin');
@@ -257,7 +257,7 @@ adminConversations.patch('/conversations/:id/assign', async (c) => {
 
     // Check if conversation exists
     const convCheck = await pool.query(
-      'SELECT id, tenant_id, assigned_to FROM conversations WHERE id = $1 AND deleted_at IS NULL',
+      'SELECT id, tenant_id, assigned_agent_id FROM conversations WHERE id = $1 AND deleted_at IS NULL',
       [id]
     );
 
@@ -279,20 +279,20 @@ adminConversations.patch('/conversations/:id/assign', async (c) => {
 
     // Reassign conversation
     await pool.query(
-      'UPDATE conversations SET assigned_to = $1, updated_at = NOW() WHERE id = $2',
-      [agent_id, id]
+      'UPDATE conversations SET assigned_agent_id = $1, assigned_at = NOW(), assigned_by = $2, updated_at = NOW() WHERE id = $3',
+      [agent_id, admin.id, id]
     );
 
     // Create assignment record
     await pool.query(
       `INSERT INTO conversation_assignments (
-        conversation_id, user_id, assigned_by, assigned_at
-      ) VALUES ($1, $2, $3, NOW())`,
+        conversation_id, agent_id, assigned_by_id, assignment_method, assigned_at
+      ) VALUES ($1, $2, $3, 'manual', NOW())`,
       [id, agent_id, admin.id]
     );
 
     await logAdminAction(admin.id, 'admin.conversation.reassign', 'conversation', id, {
-      old_agent: conversation.assigned_to,
+      old_agent: conversation.assigned_agent_id,
       new_agent: agent_id
     }, c.req);
 
@@ -311,7 +311,7 @@ adminConversations.patch('/conversations/:id/assign', async (c) => {
  * POST /admin/conversations/bulk-close
  * Bulk close multiple conversations
  */
-adminConversations.post('/conversations/bulk-close', async (c) => {
+adminConversations.post('/bulk-close', async (c) => {
   try {
     const admin = c.get('admin');
     const body = await c.req.json();
@@ -335,10 +335,10 @@ adminConversations.post('/conversations/bulk-close', async (c) => {
     // Update all conversations to closed
     const result = await pool.query(
       `UPDATE conversations
-       SET status = 'closed', closed_at = NOW(), closed_by = $1, updated_at = NOW()
-       WHERE id = ANY($2) AND deleted_at IS NULL AND status != 'closed'
+       SET status = 'closed', closed_at = NOW(), updated_at = NOW()
+       WHERE id = ANY($1) AND deleted_at IS NULL AND status != 'closed'
        RETURNING id`,
-      [admin.id, conversation_ids]
+      [conversation_ids]
     );
 
     const closedCount = result.rows.length;
@@ -364,7 +364,7 @@ adminConversations.post('/conversations/bulk-close', async (c) => {
  * GET /admin/conversations/sla-breaches
  * Get SLA breach report
  */
-adminConversations.get('/conversations/sla-breaches', async (c) => {
+adminConversations.get('/sla-breaches', async (c) => {
   try {
     const admin = c.get('admin');
 
@@ -400,14 +400,14 @@ adminConversations.get('/conversations/sla-breaches', async (c) => {
         c.customer_name,
         c.status,
         c.priority,
-        c.assigned_to,
+        c.assigned_agent_id,
         u.first_name || ' ' || u.last_name as assigned_agent_name,
         c.sla_due_at,
         c.created_at,
         EXTRACT(EPOCH FROM (NOW() - c.sla_due_at)) as breach_seconds
        FROM conversations c
        JOIN tenants t ON c.tenant_id = t.id
-       LEFT JOIN users u ON c.assigned_to = u.id
+       LEFT JOIN users u ON c.assigned_agent_id = u.id
        WHERE ${whereClause}
        ORDER BY c.sla_due_at ASC
        LIMIT 100`,
@@ -443,7 +443,7 @@ adminConversations.get('/conversations/sla-breaches', async (c) => {
  * GET /admin/conversations/stats
  * Get conversation statistics
  */
-adminConversations.get('/conversations/stats', async (c) => {
+adminConversations.get('/stats', async (c) => {
   try {
     const admin = c.get('admin');
     const tenant_id = c.req.query('tenant_id');
@@ -464,7 +464,7 @@ adminConversations.get('/conversations/stats', async (c) => {
         COUNT(*) FILTER (WHERE status = 'closed') as closed_conversations,
         COUNT(*) FILTER (WHERE status = 'snoozed') as snoozed_conversations,
         COUNT(*) FILTER (WHERE sla_breached = true) as sla_breaches,
-        COUNT(*) FILTER (WHERE assigned_to IS NULL) as unassigned,
+        COUNT(*) FILTER (WHERE assigned_agent_id IS NULL) as unassigned,
         AVG(message_count) as avg_messages_per_conversation,
         AVG(EXTRACT(EPOCH FROM (first_response_at - created_at))) FILTER (WHERE first_response_at IS NOT NULL) as avg_first_response_seconds
        FROM conversations
