@@ -635,8 +635,6 @@ adminBilling.get('/revenue', async (c) => {
        LIMIT 12`
     );
 
-    await logAdminAction(admin.id, 'admin.revenue.view', null, null, { period, groupBy, startDate, endDate, reportType }, c.req);
-
     return c.json({
       summary: totalResult.rows[0],
       by_tenant: tenantResult.rows,
