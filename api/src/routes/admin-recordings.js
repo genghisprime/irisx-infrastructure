@@ -202,8 +202,8 @@ adminRecordings.get('/', async (c) => {
         c.user_id,
         u.first_name || ' ' || u.last_name as user_name,
         u.email as user_email,
-        c.start_time,
-        c.end_time,
+        c.initiated_at,
+        c.ended_at,
         c.created_at
        FROM calls c
        JOIN tenants t ON c.tenant_id = t.id
