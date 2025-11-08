@@ -171,143 +171,6 @@ adminConversations.get('/', async (c) => {
 });
 
 /**
- * GET /admin/conversations/:id
- * View conversation details and messages
- */
-adminConversations.get('/:id', async (c) => {
-  try {
-    const { id } = c.req.param();
-    const admin = c.get('admin');
-
-    // Get conversation
-    const convResult = await pool.query(
-      `SELECT
-        c.*,
-        t.name as tenant_name,
-        u.first_name || ' ' || u.last_name as assigned_agent_name,
-        u.email as assigned_agent_email
-       FROM conversations c
-       JOIN tenants t ON c.tenant_id = t.id
-       LEFT JOIN users u ON c.assigned_agent_id = u.id
-       WHERE c.id = $1 AND c.deleted_at IS NULL`,
-      [id]
-    );
-
-    if (convResult.rows.length === 0) {
-      return c.json({ error: 'Conversation not found' }, 404);
-    }
-
-    const conversation = convResult.rows[0];
-
-    // Get messages
-    const messagesResult = await pool.query(
-      `SELECT
-        cm.id,
-        cm.content,
-        cm.direction,
-        cm.sender_name,
-        cm.is_internal_note,
-        cm.attachments,
-        cm.status,
-        cm.created_at
-       FROM conversation_messages cm
-       WHERE cm.conversation_id = $1
-       ORDER BY cm.created_at ASC`,
-      [id]
-    );
-
-    await logAdminAction(admin.id, 'admin.conversation.view', 'conversation', id, null, c.req);
-
-    return c.json({
-      conversation,
-      messages: messagesResult.rows
-    });
-
-  } catch (err) {
-    console.error('Get conversation error:', err);
-    return c.json({ error: 'Failed to get conversation' }, 500);
-  }
-});
-
-/**
- * PATCH /admin/conversations/:id/assign
- * Reassign conversation to different agent
- */
-adminConversations.patch('/:id/assign', async (c) => {
-  try {
-    const { id } = c.req.param();
-    const admin = c.get('admin');
-    const body = await c.req.json();
-
-    // Only admins and superadmins can reassign
-    if (!['admin', 'superadmin'].includes(admin.role)) {
-      return c.json({ error: 'Insufficient permissions' }, 403);
-    }
-
-    // Validate request
-    const validation = assignConversationSchema.safeParse(body);
-    if (!validation.success) {
-      return c.json({
-        error: 'Validation failed',
-        details: validation.error.errors
-      }, 400);
-    }
-
-    const { agent_id } = validation.data;
-
-    // Check if conversation exists
-    const convCheck = await pool.query(
-      'SELECT id, tenant_id, assigned_agent_id FROM conversations WHERE id = $1 AND deleted_at IS NULL',
-      [id]
-    );
-
-    if (convCheck.rows.length === 0) {
-      return c.json({ error: 'Conversation not found' }, 404);
-    }
-
-    const conversation = convCheck.rows[0];
-
-    // Check if agent exists and belongs to same tenant
-    const agentCheck = await pool.query(
-      'SELECT id, first_name, last_name FROM users WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL',
-      [agent_id, conversation.tenant_id]
-    );
-
-    if (agentCheck.rows.length === 0) {
-      return c.json({ error: 'Agent not found or does not belong to this tenant' }, 404);
-    }
-
-    // Reassign conversation
-    await pool.query(
-      'UPDATE conversations SET assigned_agent_id = $1, assigned_at = NOW(), assigned_by = $2, updated_at = NOW() WHERE id = $3',
-      [agent_id, admin.id, id]
-    );
-
-    // Create assignment record
-    await pool.query(
-      `INSERT INTO conversation_assignments (
-        conversation_id, agent_id, assigned_by_id, assignment_method, assigned_at
-      ) VALUES ($1, $2, $3, 'manual', NOW())`,
-      [id, agent_id, admin.id]
-    );
-
-    await logAdminAction(admin.id, 'admin.conversation.reassign', 'conversation', id, {
-      old_agent: conversation.assigned_agent_id,
-      new_agent: agent_id
-    }, c.req);
-
-    return c.json({
-      success: true,
-      message: 'Conversation reassigned successfully'
-    });
-
-  } catch (err) {
-    console.error('Reassign conversation error:', err);
-    return c.json({ error: 'Failed to reassign conversation' }, 500);
-  }
-});
-
-/**
  * POST /admin/conversations/bulk-close
  * Bulk close multiple conversations
  */
@@ -495,6 +358,143 @@ adminConversations.get('/stats', async (c) => {
   } catch (err) {
     console.error('Get conversation stats error:', err);
     return c.json({ error: 'Failed to get conversation stats' }, 500);
+  }
+});
+
+/**
+ * GET /admin/conversations/:id
+ * View conversation details and messages
+ */
+adminConversations.get('/:id', async (c) => {
+  try {
+    const { id } = c.req.param();
+    const admin = c.get('admin');
+
+    // Get conversation
+    const convResult = await pool.query(
+      `SELECT
+        c.*,
+        t.name as tenant_name,
+        u.first_name || ' ' || u.last_name as assigned_agent_name,
+        u.email as assigned_agent_email
+       FROM conversations c
+       JOIN tenants t ON c.tenant_id = t.id
+       LEFT JOIN users u ON c.assigned_agent_id = u.id
+       WHERE c.id = $1 AND c.deleted_at IS NULL`,
+      [id]
+    );
+
+    if (convResult.rows.length === 0) {
+      return c.json({ error: 'Conversation not found' }, 404);
+    }
+
+    const conversation = convResult.rows[0];
+
+    // Get messages
+    const messagesResult = await pool.query(
+      `SELECT
+        cm.id,
+        cm.content,
+        cm.direction,
+        cm.sender_name,
+        cm.is_internal_note,
+        cm.attachments,
+        cm.status,
+        cm.created_at
+       FROM conversation_messages cm
+       WHERE cm.conversation_id = $1
+       ORDER BY cm.created_at ASC`,
+      [id]
+    );
+
+    await logAdminAction(admin.id, 'admin.conversation.view', 'conversation', id, null, c.req);
+
+    return c.json({
+      conversation,
+      messages: messagesResult.rows
+    });
+
+  } catch (err) {
+    console.error('Get conversation error:', err);
+    return c.json({ error: 'Failed to get conversation' }, 500);
+  }
+});
+
+/**
+ * PATCH /admin/conversations/:id/assign
+ * Reassign conversation to different agent
+ */
+adminConversations.patch('/:id/assign', async (c) => {
+  try {
+    const { id } = c.req.param();
+    const admin = c.get('admin');
+    const body = await c.req.json();
+
+    // Only admins and superadmins can reassign
+    if (!['admin', 'superadmin'].includes(admin.role)) {
+      return c.json({ error: 'Insufficient permissions' }, 403);
+    }
+
+    // Validate request
+    const validation = assignConversationSchema.safeParse(body);
+    if (!validation.success) {
+      return c.json({
+        error: 'Validation failed',
+        details: validation.error.errors
+      }, 400);
+    }
+
+    const { agent_id } = validation.data;
+
+    // Check if conversation exists
+    const convCheck = await pool.query(
+      'SELECT id, tenant_id, assigned_agent_id FROM conversations WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    );
+
+    if (convCheck.rows.length === 0) {
+      return c.json({ error: 'Conversation not found' }, 404);
+    }
+
+    const conversation = convCheck.rows[0];
+
+    // Check if agent exists and belongs to same tenant
+    const agentCheck = await pool.query(
+      'SELECT id, first_name, last_name FROM users WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL',
+      [agent_id, conversation.tenant_id]
+    );
+
+    if (agentCheck.rows.length === 0) {
+      return c.json({ error: 'Agent not found or does not belong to this tenant' }, 404);
+    }
+
+    // Reassign conversation
+    await pool.query(
+      'UPDATE conversations SET assigned_agent_id = $1, assigned_at = NOW(), assigned_by = $2, updated_at = NOW() WHERE id = $3',
+      [agent_id, admin.id, id]
+    );
+
+    // Create assignment record
+    await pool.query(
+      `INSERT INTO conversation_assignments (
+        conversation_id, agent_id, assigned_by_id, assignment_method, assigned_at
+      ) VALUES ($1, $2, $3, 'manual', NOW())`,
+      [id, agent_id, admin.id]
+    );
+
+    await logAdminAction(admin.id, 'admin.conversation.reassign', 'conversation', id, {
+      old_agent: conversation.assigned_agent_id,
+      new_agent: agent_id
+    }, c.req);
+
+    return c.json({
+      success: true,
+      message: 'Conversation reassigned successfully'
+    });
+
+  } catch (err) {
+    console.error('Reassign conversation error:', err);
+    return c.json({ error: 'Failed to reassign conversation' }, 500);
   }
 });
 
