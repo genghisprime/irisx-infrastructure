@@ -73,7 +73,7 @@ async function logAdminAction(adminId, action, resourceType, resourceId, changes
  * GET /admin/billing/invoices
  * List all invoices across all tenants
  */
-adminBilling.get('/billing/invoices', async (c) => {
+adminBilling.get('/invoices', async (c) => {
   try {
     const admin = c.get('admin');
 
@@ -87,7 +87,7 @@ adminBilling.get('/billing/invoices', async (c) => {
     const offset = (page - 1) * limit;
 
     // Build WHERE clause
-    let whereConditions = ['i.deleted_at IS NULL'];
+    let whereConditions = ['1=1'];  // invoices table has no deleted_at column
     let queryParams = [];
     let paramIndex = 1;
 
@@ -129,21 +129,23 @@ adminBilling.get('/billing/invoices', async (c) => {
         i.id,
         i.tenant_id,
         t.name as tenant_name,
-        t.company_name,
+        t.name as company_name,
         i.invoice_number,
-        i.amount,
+        i.amount_cents,
+        i.currency,
         i.status,
         i.due_date,
         i.paid_at,
-        i.description,
-        i.items,
+        i.line_items,
+        i.period_start,
+        i.period_end,
         i.created_at,
         i.updated_at
        FROM invoices i
        JOIN tenants t ON i.tenant_id = t.id
        WHERE ${whereClause}
        ORDER BY i.created_at DESC
-       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+       LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length}`,
       queryParams
     );
 
@@ -169,7 +171,7 @@ adminBilling.get('/billing/invoices', async (c) => {
  * GET /admin/billing/invoices/:id
  * Get invoice details
  */
-adminBilling.get('/billing/invoices/:id', async (c) => {
+adminBilling.get('/invoices/:id', async (c) => {
   try {
     const { id } = c.req.param();
     const admin = c.get('admin');
@@ -179,8 +181,8 @@ adminBilling.get('/billing/invoices/:id', async (c) => {
         i.id,
         i.tenant_id,
         t.name as tenant_name,
-        t.company_name,
-        t.email as tenant_email,
+        t.name as company_name,
+        t.billing_email as tenant_email,
         i.invoice_number,
         i.amount,
         i.status,
@@ -193,7 +195,7 @@ adminBilling.get('/billing/invoices/:id', async (c) => {
         i.metadata
        FROM invoices i
        JOIN tenants t ON i.tenant_id = t.id
-       WHERE i.id = $1 AND i.deleted_at IS NULL`,
+       WHERE i.id = $1`,
       [id]
     );
 
@@ -215,7 +217,7 @@ adminBilling.get('/billing/invoices/:id', async (c) => {
  * POST /admin/billing/invoices
  * Create a manual invoice
  */
-adminBilling.post('/billing/invoices', async (c) => {
+adminBilling.post('/invoices', async (c) => {
   try {
     const admin = c.get('admin');
     const body = await c.req.json();
@@ -462,7 +464,7 @@ adminBilling.post('/tenants/:tenantId/extend-trial', async (c) => {
  * POST /admin/billing/refunds
  * Issue a refund (superadmin only)
  */
-adminBilling.post('/billing/refunds', async (c) => {
+adminBilling.post('/refunds', async (c) => {
   try {
     const admin = c.get('admin');
     const body = await c.req.json();
@@ -485,7 +487,7 @@ adminBilling.post('/billing/refunds', async (c) => {
 
     // Check if invoice exists
     const invoiceCheck = await pool.query(
-      'SELECT id, tenant_id, amount, status FROM invoices WHERE id = $1 AND deleted_at IS NULL',
+      'SELECT id, tenant_id, amount, status FROM invoices WHERE id = $1',
       [invoice_id]
     );
 
@@ -558,7 +560,7 @@ adminBilling.post('/billing/refunds', async (c) => {
  * GET /admin/billing/revenue
  * Get revenue reports
  */
-adminBilling.get('/billing/revenue', async (c) => {
+adminBilling.get('/revenue', async (c) => {
   try {
     const admin = c.get('admin');
 
