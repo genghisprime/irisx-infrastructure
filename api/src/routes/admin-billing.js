@@ -564,32 +564,40 @@ adminBilling.get('/revenue', async (c) => {
   try {
     const admin = c.get('admin');
 
-    // Query parameters
-    const period = c.req.query('period') || '30d'; // 7d, 30d, 90d, 1y, all
-    const groupBy = c.req.query('groupBy') || 'month'; // day, week, month
+    // Query parameters - support both formats
+    const startDate = c.req.query('start_date');
+    const endDate = c.req.query('end_date');
+    const reportType = c.req.query('report_type') || 'mrr';
+    const period = c.req.query('period') || '30d';
+    const groupBy = c.req.query('groupBy') || 'month';
 
+    // Build date filter based on parameters
     let dateFilter = '';
-    switch (period) {
-      case '7d':
-        dateFilter = "AND i.created_at >= NOW() - INTERVAL '7 days'";
-        break;
-      case '30d':
-        dateFilter = "AND i.created_at >= NOW() - INTERVAL '30 days'";
-        break;
-      case '90d':
-        dateFilter = "AND i.created_at >= NOW() - INTERVAL '90 days'";
-        break;
-      case '1y':
-        dateFilter = "AND i.created_at >= NOW() - INTERVAL '1 year'";
-        break;
-      default:
-        dateFilter = '';
+    if (startDate && endDate) {
+      dateFilter = `AND i.created_at >= '${startDate}' AND i.created_at <= '${endDate}'`;
+    } else {
+      switch (period) {
+        case '7d':
+          dateFilter = "AND i.created_at >= NOW() - INTERVAL '7 days'";
+          break;
+        case '30d':
+          dateFilter = "AND i.created_at >= NOW() - INTERVAL '30 days'";
+          break;
+        case '90d':
+          dateFilter = "AND i.created_at >= NOW() - INTERVAL '90 days'";
+          break;
+        case '1y':
+          dateFilter = "AND i.created_at >= NOW() - INTERVAL '1 year'";
+          break;
+        default:
+          dateFilter = '';
+      }
     }
 
     // Total revenue
     const totalResult = await pool.query(
       `SELECT
-        SUM(amount) as total_revenue,
+        SUM(amount_cents) as total_revenue,
         COUNT(*) as total_invoices,
         COUNT(*) FILTER (WHERE status = 'paid') as paid_invoices,
         COUNT(*) FILTER (WHERE status = 'pending') as pending_invoices,
@@ -598,39 +606,41 @@ adminBilling.get('/revenue', async (c) => {
        WHERE deleted_at IS NULL ${dateFilter}`
     );
 
-    // Revenue by plan
-    const planResult = await pool.query(
+    // Revenue by tenant
+    const tenantResult = await pool.query(
       `SELECT
+        t.id,
+        t.name,
         t.plan,
-        COUNT(DISTINCT t.id) as tenant_count,
-        SUM(s.mrr) as total_mrr,
-        AVG(s.mrr) as avg_mrr
+        COUNT(DISTINCT i.id) as invoice_count,
+        SUM(i.amount_cents) as total_revenue
        FROM tenants t
-       LEFT JOIN subscriptions s ON t.id = s.tenant_id AND s.deleted_at IS NULL
+       LEFT JOIN invoices i ON t.id = i.tenant_id AND i.deleted_at IS NULL AND i.status = 'paid'
        WHERE t.deleted_at IS NULL AND t.status = 'active'
-       GROUP BY t.plan
-       ORDER BY total_mrr DESC NULLS LAST`
+       GROUP BY t.id, t.name, t.plan
+       ORDER BY total_revenue DESC NULLS LAST
+       LIMIT 10`
     );
 
-    // MRR trend (Monthly Recurring Revenue)
-    const mrrResult = await pool.query(
+    // Monthly revenue trend
+    const monthlyResult = await pool.query(
       `SELECT
-        DATE_TRUNC('month', s.created_at) as month,
-        SUM(s.mrr) as total_mrr,
-        COUNT(*) as subscription_count
-       FROM subscriptions s
-       WHERE s.deleted_at IS NULL AND s.status = 'active' ${dateFilter.replace('i.created_at', 's.created_at')}
-       GROUP BY DATE_TRUNC('month', s.created_at)
+        DATE_TRUNC('month', i.created_at) as month,
+        SUM(i.amount_cents) as total_revenue,
+        COUNT(*) as invoice_count
+       FROM invoices i
+       WHERE i.deleted_at IS NULL AND i.status = 'paid' ${dateFilter}
+       GROUP BY DATE_TRUNC('month', i.created_at)
        ORDER BY month DESC
        LIMIT 12`
     );
 
-    await logAdminAction(admin.id, 'admin.revenue.view', null, null, { period, groupBy }, c.req);
+    await logAdminAction(admin.id, 'admin.revenue.view', null, null, { period, groupBy, startDate, endDate, reportType }, c.req);
 
     return c.json({
       summary: totalResult.rows[0],
-      by_plan: planResult.rows,
-      mrr_trend: mrrResult.rows
+      by_tenant: tenantResult.rows,
+      monthly_trend: monthlyResult.rows
     });
 
   } catch (err) {
