@@ -136,6 +136,7 @@ const loading = ref(true)
 const trunks = ref([])
 const showCreateModal = ref(false)
 const editingTrunk = ref(null)
+const error = ref(null)
 
 const trunkForm = ref({
   name: '',
