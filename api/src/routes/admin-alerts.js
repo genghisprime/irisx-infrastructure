@@ -419,6 +419,41 @@ adminAlerts.post('/:id/resolve', async (c) => {
 });
 
 /**
+ * GET /admin/alerts/stats
+ * Get alert statistics (alias for /stats/summary)
+ */
+adminAlerts.get('/stats', async (c) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'active') as active_rules,
+        COUNT(*) FILTER (WHERE status = 'paused') as paused_rules,
+        COUNT(DISTINCT CASE WHEN last_triggered_at > NOW() - INTERVAL '24 hours' THEN id END) as triggered_24h,
+        COUNT(DISTINCT CASE WHEN last_triggered_at > NOW() - INTERVAL '7 days' THEN id END) as triggered_7d
+      FROM alert_rules
+      WHERE deleted_at IS NULL
+    `);
+
+    const historyResult = await pool.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE resolved_at IS NULL) as currently_active,
+        COUNT(*) FILTER (WHERE severity = 'critical' AND resolved_at IS NULL) as critical_active,
+        COUNT(*) FILTER (WHERE triggered_at > NOW() - INTERVAL '24 hours') as alerts_24h
+      FROM alert_history ah
+      JOIN alert_rules ar ON ah.alert_rule_id = ar.id
+    `);
+
+    return c.json({
+      rules: result.rows[0],
+      alerts: historyResult.rows[0]
+    });
+  } catch (err) {
+    console.error('Failed to fetch alert stats:', err);
+    return c.json({ error: 'Failed to load alert statistics' }, 500);
+  }
+});
+
+/**
  * GET /admin/alerts/stats/summary
  * Get alert statistics summary
  */
@@ -451,6 +486,16 @@ adminAlerts.get('/stats/summary', async (c) => {
     console.error('Failed to fetch alert stats:', err);
     return c.json({ error: 'Failed to load alert statistics' }, 500);
   }
+});
+
+/**
+ * GET /admin/alerts/subscriptions
+ * Get alert subscriptions (placeholder - returns empty array)
+ */
+adminAlerts.get('/subscriptions', async (c) => {
+  // Placeholder endpoint - alert subscriptions feature not yet implemented
+  // This prevents 404 errors in the frontend
+  return c.json([]);
 });
 
 export default adminAlerts;
