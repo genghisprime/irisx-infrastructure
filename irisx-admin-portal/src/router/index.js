@@ -134,6 +134,13 @@ const routes = [
         component: () => import('../views/admin/campaigns/CampaignMonitoring.vue'),
         meta: { requiresRole: 'admin' }
       },
+      // Contacts
+      {
+        path: 'contacts',
+        name: 'ContactManagement',
+        component: () => import('../views/admin/contacts/ContactManagement.vue'),
+        meta: { requiresRole: 'admin' }
+      },
       // SIP Trunks
       {
         path: 'sip-trunks',
