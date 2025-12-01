@@ -175,13 +175,18 @@ adminCache.get('/sessions', async (c) => {
         const ttl = await redis.ttl(key);
         const sessionId = key.replace('session:', '');
 
+        // Handle invalid TTL values (keys with no expiry return -1)
+        const expiresAt = ttl > 0
+          ? new Date(Date.now() + (ttl * 1000)).toISOString()
+          : null;
+
         return {
           id: sessionId,
           user_email: session.email || 'unknown',
           tenant_name: session.tenant_name || 'unknown',
           tenant_id: session.tenant_id || null,
           created_at: session.created_at || new Date().toISOString(),
-          expires_at: new Date(Date.now() + (ttl * 1000)).toISOString()
+          expires_at: expiresAt
         };
       } catch (err) {
         console.error(`Error processing session ${key}:`, err);
@@ -244,6 +249,7 @@ adminCache.post('/clear', async (c) => {
 /**
  * GET /admin/cache/eviction-stats
  * Eviction policy and statistics
+ * Note: AWS ElastiCache restricts CONFIG command, so eviction_policy is not available
  */
 adminCache.get('/eviction-stats', async (c) => {
   try {
@@ -260,16 +266,19 @@ adminCache.get('/eviction-stats', async (c) => {
       }
     });
 
-    // Get eviction policy
-    const configInfo = await redis.config('get', 'maxmemory-policy');
-    const evictionPolicy = configInfo[1] || 'noeviction';
+    // Calculate hit rate
+    const hits = parseInt(stats.keyspace_hits || 0);
+    const misses = parseInt(stats.keyspace_misses || 0);
+    const total = hits + misses;
+    const hitRate = total > 0 ? Math.round((hits / total) * 1000) / 10 : 0;
 
     return c.json({
       total_evictions: parseInt(stats.evicted_keys || 0),
-      eviction_policy: evictionPolicy,
+      eviction_policy: 'managed', // ElastiCache managed, CONFIG not available
       expired_keys: parseInt(stats.expired_keys || 0),
-      keyspace_hits: parseInt(stats.keyspace_hits || 0),
-      keyspace_misses: parseInt(stats.keyspace_misses || 0)
+      keyspace_hits: hits,
+      keyspace_misses: misses,
+      hit_rate: hitRate
     });
 
   } catch (err) {

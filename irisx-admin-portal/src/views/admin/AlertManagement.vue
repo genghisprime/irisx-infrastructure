@@ -214,7 +214,7 @@
           <button @click="removeTarget = null" class="cancel-btn">Cancel</button>
           <button @click="removeSubscription" class="danger-btn" :disabled="removing">
             <span v-if="removing">Removing...</span>
-            <span v-else">Unsubscribe</span>
+            <span v-else>Unsubscribe</span>
           </button>
         </div>
       </div>
@@ -226,7 +226,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
 const loading = ref(true)
 const sending = ref(false)
@@ -249,7 +249,11 @@ const newSubscription = ref({
 async function fetchData() {
   loading.value = true
   try {
-    const token = localStorage.getItem('adminToken')
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      console.error('Not authenticated')
+      return
+    }
     const headers = { Authorization: `Bearer ${token}` }
 
     const [subsRes, historyRes, statsRes] = await Promise.all([
@@ -273,7 +277,11 @@ async function addSubscription() {
   adding.value = true
 
   try {
-    const token = localStorage.getItem('adminToken')
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      addError.value = 'Not authenticated. Please log in.'
+      return
+    }
     const headers = { Authorization: `Bearer ${token}` }
 
     const endpoint = newSubscription.value.type === 'email'
@@ -301,7 +309,11 @@ async function addSubscription() {
 async function removeSubscription() {
   removing.value = true
   try {
-    const token = localStorage.getItem('adminToken')
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      alert('Not authenticated. Please log in.')
+      return
+    }
     const headers = { Authorization: `Bearer ${token}` }
 
     await axios.delete(
@@ -325,7 +337,11 @@ async function sendTestAlert() {
 
   sending.value = true
   try {
-    const token = localStorage.getItem('adminToken')
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      alert('Not authenticated. Please log in.')
+      return
+    }
     const headers = { Authorization: `Bearer ${token}` }
 
     const response = await axios.post(`${API_BASE_URL}/admin/alerts/test`, {}, { headers })

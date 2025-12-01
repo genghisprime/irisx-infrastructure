@@ -99,27 +99,40 @@ adminTenants.get('/', async (c) => {
     const search = c.req.query('search'); // Search by name or domain
 
     let query = `
-      SELECT * FROM admin_tenant_summary
-      WHERE 1=1
+      SELECT
+        t.id,
+        t.name,
+        t.slug,
+        t.status,
+        t.plan,
+        t.billing_email,
+        t.trial_ends_at,
+        t.mrr,
+        t.created_at,
+        t.updated_at,
+        (SELECT COUNT(*) FROM users WHERE tenant_id = t.id AND deleted_at IS NULL) as user_count,
+        (SELECT COUNT(*) FROM calls WHERE tenant_id = t.id AND initiated_at >= NOW() - INTERVAL '30 days') as calls_30d
+      FROM tenants t
+      WHERE t.deleted_at IS NULL
     `;
     const params = [];
     let paramCount = 0;
 
     if (status) {
       paramCount++;
-      query += ` AND status = $${paramCount}`;
+      query += ` AND t.status = $${paramCount}`;
       params.push(status);
     }
 
     if (plan) {
       paramCount++;
-      query += ` AND plan = $${paramCount}`;
+      query += ` AND t.plan = $${paramCount}`;
       params.push(plan);
     }
 
     if (search) {
       paramCount++;
-      query += ` AND (name ILIKE $${paramCount} OR domain ILIKE $${paramCount})`;
+      query += ` AND (t.name ILIKE $${paramCount} OR t.slug ILIKE $${paramCount} OR t.billing_email ILIKE $${paramCount})`;
       params.push(`%${search}%`);
     }
 
@@ -132,7 +145,7 @@ adminTenants.get('/', async (c) => {
 
     // Get paginated results
     paramCount++;
-    query += ` ORDER BY created_at DESC LIMIT $${paramCount}`;
+    query += ` ORDER BY t.created_at DESC LIMIT $${paramCount}`;
     params.push(limit);
 
     paramCount++;
@@ -187,10 +200,12 @@ adminTenants.get('/:id', async (c) => {
         (SELECT COUNT(*) FROM agents WHERE tenant_id = $1 AND deleted_at IS NULL) as agent_count,
         (SELECT COUNT(*) FROM calls WHERE tenant_id = $1 AND initiated_at >= NOW() - INTERVAL '30 days') as calls_30d,
         (SELECT COUNT(*) FROM sms_messages WHERE tenant_id = $1 AND created_at >= NOW() - INTERVAL '30 days') as sms_30d,
-        (SELECT COUNT(*) FROM emails WHERE tenant_id = $1 AND created_at >= NOW() - INTERVAL '30 days') as emails_30d,
-        (SELECT COUNT(*) FROM whatsapp_messages WHERE tenant_id = $1 AND created_at >= NOW() - INTERVAL '30 days') as whatsapp_30d`,
+        (SELECT COUNT(*) FROM emails WHERE tenant_id = $1 AND created_at >= NOW() - INTERVAL '30 days') as emails_30d`,
       [tenantId]
     );
+
+    // Add whatsapp count as 0 (table doesn't exist yet)
+    statsResult.rows[0].whatsapp_30d = 0;
 
     const stats = statsResult.rows[0];
 

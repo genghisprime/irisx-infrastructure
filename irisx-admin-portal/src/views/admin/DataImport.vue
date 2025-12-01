@@ -849,7 +849,7 @@ export default {
     const loadHistory = async () => {
       loading.value = true;
       try {
-        let url = `${import.meta.env.VITE_API_URL}/v1/imports?limit=50`;
+        let url = `${import.meta.env.VITE_API_BASE_URL}/admin/imports?limit=50`;
         if (historyFilter.value) {
           url += `&status=${historyFilter.value}`;
         }
@@ -873,7 +873,7 @@ export default {
 
     const loadContactLists = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/v1/contact-lists`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/imports/contact-lists`, {
           headers: {
             'Authorization': `Bearer ${authStore.token}`
           }

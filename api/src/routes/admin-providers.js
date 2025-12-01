@@ -89,7 +89,7 @@ async function logAdminAction(adminId, action, resourceType, resourceId, changes
  * GET /admin/providers
  * List all provider configurations
  */
-adminProviders.get('/providers', async (c) => {
+adminProviders.get('/', async (c) => {
   try {
     const admin = c.get('admin');
 
@@ -134,9 +134,7 @@ adminProviders.get('/providers', async (c) => {
         mp.config,
         mp.created_at,
         mp.updated_at,
-        mp.last_used_at,
-        (SELECT COUNT(*) FROM emails WHERE provider_id = mp.id) as email_count,
-        (SELECT COUNT(*) FROM sms_messages WHERE provider_id = mp.id) as sms_count
+        mp.last_used_at
        FROM messaging_providers mp
        LEFT JOIN tenants t ON mp.tenant_id = t.id
        WHERE ${whereClause}
@@ -165,7 +163,7 @@ adminProviders.get('/providers', async (c) => {
  * GET /admin/providers/:id
  * Get provider details including credentials (masked)
  */
-adminProviders.get('/providers/:id', async (c) => {
+adminProviders.get('/:id', async (c) => {
   try {
     const { id } = c.req.param();
     const admin = c.get('admin');
@@ -212,7 +210,7 @@ adminProviders.get('/providers/:id', async (c) => {
  * POST /admin/providers
  * Create a new provider configuration
  */
-adminProviders.post('/providers', async (c) => {
+adminProviders.post('/', async (c) => {
   try {
     const admin = c.get('admin');
     const body = await c.req.json();
@@ -282,7 +280,7 @@ adminProviders.post('/providers', async (c) => {
  * PATCH /admin/providers/:id
  * Update provider configuration
  */
-adminProviders.patch('/providers/:id', async (c) => {
+adminProviders.patch('/:id', async (c) => {
   try {
     const { id } = c.req.param();
     const admin = c.get('admin');
@@ -375,7 +373,7 @@ adminProviders.patch('/providers/:id', async (c) => {
  * DELETE /admin/providers/:id
  * Delete a provider configuration
  */
-adminProviders.delete('/providers/:id', async (c) => {
+adminProviders.delete('/:id', async (c) => {
   try {
     const { id } = c.req.param();
     const admin = c.get('admin');
@@ -421,7 +419,7 @@ adminProviders.delete('/providers/:id', async (c) => {
  * POST /admin/providers/:id/test
  * Test provider connection
  */
-adminProviders.post('/providers/:id/test', async (c) => {
+adminProviders.post('/:id/test', async (c) => {
   try {
     const { id } = c.req.param();
     const admin = c.get('admin');

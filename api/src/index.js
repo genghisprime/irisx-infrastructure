@@ -16,8 +16,10 @@ import FreeSWITCHService from './services/freeswitch.js';
 import { IVRService } from './services/ivr.js';
 import calls from './routes/calls.js';
 import dialplan from './routes/dialplan.js';
-import webhooks from './routes/webhooks.js';
+// TEMPORARY: Webhook service disabled due to database schema issues
+// import webhooks from './routes/webhooks.js';
 import email from './routes/email.js';
+import emails from './routes/emails.js';
 import analytics from './routes/analytics.js';
 import tts from './routes/tts.js';
 import ivr from './routes/ivr.js';
@@ -45,9 +47,10 @@ import apiKeys from './routes/api-keys.js';
 // import carriers from './routes/carriers.js';
 import auth from './routes/auth.js';
 import adminAgents from './routes/admin-agents.js';
+import adminAgentsList from './routes/admin-agents-list.js';
 import conversations from './routes/conversations.js';
 import analyticsAgents from './routes/analytics-agents.js';
-import adminAuth from './routes/admin-auth.js'; // Temporarily disabled - has parse-time errors
+import adminAuth from './routes/admin-auth.js';
 import adminTenants from './routes/admin-tenants.js';
 import adminDashboard from './routes/admin-dashboard.js';
 import adminSearch from './routes/admin-search.js';
@@ -66,7 +69,12 @@ import adminWebhooks from './routes/admin-webhooks.js';
 import adminSipTrunks from './routes/admin-sip-trunks.js';
 import adminEmailService from './routes/admin-email-service.js';
 import adminAlerts from './routes/admin-alerts.js';
-import systemStatus from './routes/system-status.js'; // Temporarily disabled - has parse-time errors
+import adminImports from './routes/admin-imports.js';
+import adminSystem from './routes/admin-system.js';
+import adminAudit from './routes/admin-audit.js';
+import adminAnalytics from './routes/admin-analytics.js';
+import adminFeatureFlags from './routes/admin-feature-flags.js';
+import adminContacts from './routes/admin-contacts.js';
 import publicSignup from './routes/public-signup.js'; // Temporarily disabled - has parse-time errors
 import imports from './routes/imports.js';
 import { initWebSocket } from './services/websocket.js';
@@ -149,7 +157,7 @@ freeswitch.on('call:created', async (data) => {
 freeswitch.on('call:answered', async (data) => {
   console.log('✅ Call answered:', data);
   await query(
-    'UPDATE calls SET status = , answered_at = NOW() WHERE uuid = ',
+    'UPDATE calls SET status = $1, answered_at = NOW() WHERE uuid = $2',
     ['in-progress', data.uuid]
   ).catch(err => console.error('DB update error:', err));
 });
@@ -162,7 +170,7 @@ freeswitch.on('call:hungup', async (data) => {
   
   // Update database
   await query(
-    'UPDATE calls SET status = , ended_at = NOW(), duration_seconds = EXTRACT(EPOCH FROM (NOW() - answered_at))::INTEGER WHERE uuid = ',
+    'UPDATE calls SET status = $1, ended_at = NOW(), duration_seconds = EXTRACT(EPOCH FROM (NOW() - answered_at))::INTEGER WHERE uuid = $2',
     ['completed', data.uuid]
   ).catch(err => console.error('DB update error:', err));
 });
@@ -348,9 +356,10 @@ app.get('/v1', (c) => {
 // Mount API routes
 app.route('/v1/calls', calls);
 app.route('/v1/dialplan', dialplan);
-app.route('/v1/webhooks', webhooks);
+// TEMPORARY: Webhook service disabled due to database schema issues
+// app.route('/v1/webhooks', webhooks);
 app.route('/v1/email', email);
-app.route('/v1/emails', email); // Alias for plural form
+app.route('/v1/emails', emails); // Email with LCR (Least-Cost Routing)
 app.route('/v1/analytics', analytics);
 app.route('/v1/tts', tts);
 app.route('/v1/ivr', ivr);
@@ -381,7 +390,7 @@ app.route('/v1/auth', auth); // Authentication API (register, login, refresh, lo
 app.route('/v1/admin', adminAgents); // Agent provisioning and management
 app.route('/v1/conversations', conversations); // Unified Inbox - Cross-channel conversations
 app.route('/v1/analytics/agents', analyticsAgents); // Agent Performance Analytics
-app.route('/admin/auth', adminAuth); // Temporarily disabled - has parse-time errors
+app.route('/admin/auth', adminAuth);
 app.route('/admin/tenants', adminTenants); // Tenant Management
 app.route('/admin/dashboard', adminDashboard); // Platform Dashboard
 app.route('/admin/search', adminSearch); // Global Search
@@ -400,7 +409,13 @@ app.route('/admin/webhooks', adminWebhooks); // Webhook Management
 app.route('/admin/sip-trunks', adminSipTrunks); // SIP Trunk Configuration
 app.route('/admin/email-service', adminEmailService); // Email Service Management
 app.route('/admin/alerts', adminAlerts); // Alert Management
-app.route('/admin/system', systemStatus); // Temporarily disabled - has parse-time errors
+app.route('/admin/imports', adminImports); // Data Import Management (Admin view)
+app.route('/admin/system', adminSystem);
+app.route('/admin/audit-log', adminAudit); // Audit Log
+app.route('/admin/analytics', adminAnalytics); // Usage Analytics
+app.route('/admin/feature-flags', adminFeatureFlags); // Feature Flags Management
+app.route('/admin/contacts', adminContacts); // Contact Management
+app.route('/admin/agents', adminAgentsList); // Agent Management (Admin view)
 app.route('/public', publicSignup); // Temporarily disabled - has parse-time errors
 app.route('/v1/imports', imports); // Data Import System (Week 28)
 app.route('/v1/exports', imports); // Data Export System (Week 28)

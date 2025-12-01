@@ -243,7 +243,7 @@ adminSettings.get('/feature-flags', async (c) => {
  * GET /admin/settings
  * View system settings
  */
-adminSettings.get('/settings', async (c) => {
+adminSettings.get('/', async (c) => {
   try {
     const admin = c.get('admin');
 

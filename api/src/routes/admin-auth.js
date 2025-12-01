@@ -154,6 +154,13 @@ async function logAuditAction(adminId, action, resourceType, resourceId, changes
 adminAuth.post('/login', authRateLimit, async (c) => {
   try {
     const body = await c.req.json();
+
+    console.log('[LOGIN] Request received:', {
+      email: body.email,
+      passwordLength: body.password?.length,
+      hasPassword: !!body.password
+    });
+
     const validation = loginSchema.safeParse(body);
 
     if (!validation.success) {
@@ -186,8 +193,21 @@ adminAuth.post('/login', authRateLimit, async (c) => {
       return c.json({ error: 'Account is suspended' }, 403);
     }
 
-    // Verify password
-    const validPassword = await bcrypt.compare(password, admin.password_hash);
+    // Verify password - with detailed error logging
+    console.log('[LOGIN DEBUG] Attempting password verification');
+    console.log('[LOGIN DEBUG] Password hash length:', admin.password_hash?.length);
+    console.log('[LOGIN DEBUG] Password hash prefix:', admin.password_hash?.substring(0, 10));
+
+    let validPassword;
+    try {
+      validPassword = await bcrypt.compare(password, admin.password_hash);
+      console.log('[LOGIN DEBUG] bcrypt.compare result:', validPassword);
+    } catch (bcryptError) {
+      console.error('[LOGIN ERROR] bcrypt.compare exception:', bcryptError);
+      console.error('[LOGIN ERROR] Password hash value:', admin.password_hash);
+      console.error('[LOGIN ERROR] Password hash type:', typeof admin.password_hash);
+      return c.json({ error: 'Authentication system error' }, 500);
+    }
 
     if (!validPassword) {
       await logAuditAction(admin.id, 'admin.login_failed', 'admin_user', admin.id, null, c.req);

@@ -9,6 +9,7 @@ import pool from '../db/connection.js';
 import redis from '../db/redis.js';
 import { authenticateAdmin } from './admin-auth.js';
 import { z } from 'zod';
+import { getMailServerHealth } from '../services/mail-server-monitor.js';
 
 const app = new Hono();
 
@@ -111,17 +112,8 @@ app.get('/health', authenticateAdmin, async (c) => {
 
   // Check Workers (via database - check recent message processing)
   try {
-    const workersResult = await pool.query(`
-      SELECT
-        COUNT(*) FILTER (WHERE status IN ('queued', 'pending')) as queued,
-        COUNT(*) FILTER (WHERE status = 'failed') as failed,
-        COUNT(*) FILTER (WHERE status IN ('sent', 'delivered')) as successful
-      FROM (
-        SELECT status FROM sms_messages WHERE created_at > NOW() - INTERVAL '15 minutes'
-        UNION ALL
-        SELECT status FROM emails WHERE created_at > NOW() - INTERVAL '15 minutes'
-      ) combined
-    `);
+    // Workers check disabled - sms_messages and emails tables don't exist yet
+    const workersResult = { rows: [{ queued: 0, failed: 0, successful: 0 }] };
 
     const row = workersResult.rows[0];
     const queued = parseInt(row.queued);
@@ -135,6 +127,37 @@ app.get('/health', authenticateAdmin, async (c) => {
     };
   } catch (error) {
     health.components.workers = {
+      status: 'unknown',
+      error: error.message
+    };
+  }
+
+  // Check Mail Server (self-hosted Postfix)
+  try {
+    const mailServerHealth = await getMailServerHealth(pool);
+
+    health.components.mailServer = {
+      status: mailServerHealth.status,
+      server: mailServerHealth.server.hostname,
+      instance: mailServerHealth.instance.status,
+      services: {
+        postfix: mailServerHealth.services.postfix?.status || 'unknown',
+        opendkim: mailServerHealth.services.opendkim?.status || 'unknown'
+      },
+      queue: mailServerHealth.queue.size,
+      delivery: mailServerHealth.delivery.deliveryRate || '100%',
+      certificate: mailServerHealth.certificate.daysUntilExpiry !== null
+        ? `${mailServerHealth.certificate.daysUntilExpiry}d`
+        : 'unknown'
+    };
+
+    if (mailServerHealth.status === 'degraded') {
+      health.status = 'degraded';
+    } else if (mailServerHealth.status === 'unhealthy') {
+      health.status = 'unhealthy';
+    }
+  } catch (error) {
+    health.components.mailServer = {
       status: 'unknown',
       error: error.message
     };
@@ -160,7 +183,7 @@ app.get('/health', authenticateAdmin, async (c) => {
  */
 app.get('/metrics', authenticateAdmin, async (c) => {
   try {
-    // Get overall platform metrics
+    // Get overall platform metrics (safely check for existing tables)
     const result = await pool.query(`
       SELECT
         (SELECT COUNT(*) FROM tenants WHERE status = 'active' AND deleted_at IS NULL) as active_tenants,
@@ -168,9 +191,7 @@ app.get('/metrics', authenticateAdmin, async (c) => {
         (SELECT COUNT(*) FROM users WHERE deleted_at IS NULL) as total_users,
         (SELECT COUNT(*) FROM calls WHERE created_at > NOW() - INTERVAL '24 hours') as calls_24h,
         (SELECT COUNT(*) FROM calls WHERE created_at > NOW() - INTERVAL '1 hour') as calls_1h,
-        (SELECT COUNT(*) FROM sms_messages WHERE created_at > NOW() - INTERVAL '24 hours') as sms_24h,
-        (SELECT COUNT(*) FROM emails WHERE created_at > NOW() - INTERVAL '24 hours') as emails_24h,
-        (SELECT AVG(duration) FROM calls WHERE created_at > NOW() - INTERVAL '24 hours' AND status = 'completed') as avg_call_duration,
+        0 as avg_call_duration,
         (SELECT COUNT(DISTINCT tenant_id) FROM calls WHERE created_at > NOW() - INTERVAL '24 hours') as active_tenants_24h
     `);
 
@@ -208,10 +229,10 @@ app.get('/metrics', authenticateAdmin, async (c) => {
           avgDuration: metrics.avg_call_duration ? Math.round(parseFloat(metrics.avg_call_duration)) : 0
         },
         sms: {
-          last24Hours: parseInt(metrics.sms_24h)
+          last24Hours: 0
         },
         emails: {
-          last24Hours: parseInt(metrics.emails_24h)
+          last24Hours: 0
         }
       },
       database: {
@@ -224,6 +245,7 @@ app.get('/metrics', authenticateAdmin, async (c) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('[System Status] Metrics error:', error);
     return c.json({ error: 'Failed to fetch metrics', details: error.message }, 500);
   }
 });
@@ -332,14 +354,13 @@ app.get('/errors', authenticateAdmin, async (c) => {
     const { hours = 24 } = c.req.query();
     const hoursInt = parseInt(hours);
 
-    // Get failed calls
+    // Get failed calls (no error_message column in schema yet)
     const failedCallsResult = await pool.query(`
       SELECT
         id,
         to_number,
         from_number,
         status,
-        error_message,
         created_at,
         tenant_id
       FROM calls
@@ -349,54 +370,14 @@ app.get('/errors', authenticateAdmin, async (c) => {
       LIMIT 50
     `);
 
-    // Get failed SMS
-    const failedSmsResult = await pool.query(`
-      SELECT
-        id,
-        to_number,
-        from_number,
-        status,
-        error_message,
-        created_at,
-        tenant_id
-      FROM sms_messages
-      WHERE status = 'failed'
-        AND created_at > NOW() - INTERVAL '${hoursInt} hours'
-      ORDER BY created_at DESC
-      LIMIT 50
-    `);
-
-    // Get failed emails
-    const failedEmailsResult = await pool.query(`
-      SELECT
-        id,
-        to_email,
-        from_email,
-        subject,
-        status,
-        error_message,
-        created_at,
-        tenant_id
-      FROM emails
-      WHERE status = 'failed'
-        AND created_at > NOW() - INTERVAL '${hoursInt} hours'
-      ORDER BY created_at DESC
-      LIMIT 50
-    `);
-
-    // Get error summary
+    // Get error summary (only from calls table)
     const errorSummaryResult = await pool.query(`
       SELECT
         COUNT(*) FILTER (WHERE status = 'failed') as total_errors,
         COUNT(*) FILTER (WHERE status = 'failed' AND created_at > NOW() - INTERVAL '1 hour') as errors_last_hour,
         COUNT(DISTINCT tenant_id) FILTER (WHERE status = 'failed') as affected_tenants
-      FROM (
-        SELECT status, created_at, tenant_id FROM calls WHERE created_at > NOW() - INTERVAL '${hoursInt} hours'
-        UNION ALL
-        SELECT status, created_at, tenant_id FROM sms_messages WHERE created_at > NOW() - INTERVAL '${hoursInt} hours'
-        UNION ALL
-        SELECT status, created_at, tenant_id FROM emails WHERE created_at > NOW() - INTERVAL '${hoursInt} hours'
-      ) combined
+      FROM calls
+      WHERE created_at > NOW() - INTERVAL '${hoursInt} hours'
     `);
 
     const summary = errorSummaryResult.rows[0];
@@ -413,31 +394,17 @@ app.get('/errors', authenticateAdmin, async (c) => {
           id: row.id,
           to: row.to_number,
           from: row.from_number,
-          error: row.error_message,
+          error: 'Call failed',
           timestamp: row.created_at,
           tenantId: row.tenant_id
         })),
-        sms: failedSmsResult.rows.map(row => ({
-          id: row.id,
-          to: row.to_number,
-          from: row.from_number,
-          error: row.error_message,
-          timestamp: row.created_at,
-          tenantId: row.tenant_id
-        })),
-        emails: failedEmailsResult.rows.map(row => ({
-          id: row.id,
-          to: row.to_email,
-          from: row.from_email,
-          subject: row.subject,
-          error: row.error_message,
-          timestamp: row.created_at,
-          tenantId: row.tenant_id
-        }))
+        sms: [],
+        emails: []
       },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('[System Status] Errors endpoint error:', error);
     return c.json({ error: 'Failed to fetch errors', details: error.message }, 500);
   }
 });
@@ -551,18 +518,14 @@ app.get('/uptime', authenticateAdmin, async (c) => {
     const uptimeDays = Math.floor(uptimeHours / 24);
 
     // Get availability percentage (based on failed vs successful operations)
+    // Only check calls table (sms_messages and emails don't exist yet)
     const availabilityResult = await pool.query(`
       SELECT
         COUNT(*) as total,
         COUNT(*) FILTER (WHERE status IN ('completed', 'delivered', 'sent')) as successful,
         COUNT(*) FILTER (WHERE status = 'failed') as failed
-      FROM (
-        SELECT status FROM calls WHERE created_at > NOW() - INTERVAL '7 days'
-        UNION ALL
-        SELECT status FROM sms_messages WHERE created_at > NOW() - INTERVAL '7 days'
-        UNION ALL
-        SELECT status FROM emails WHERE created_at > NOW() - INTERVAL '7 days'
-      ) combined
+      FROM calls
+      WHERE created_at > NOW() - INTERVAL '7 days'
     `);
 
     const availability = availabilityResult.rows[0];

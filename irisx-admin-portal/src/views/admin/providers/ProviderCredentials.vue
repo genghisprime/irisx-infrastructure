@@ -105,8 +105,8 @@
       >
         <div class="flex items-start justify-between mb-4">
           <div>
-            <h3 class="text-lg font-semibold text-gray-900">{{ cred.provider }}</h3>
-            <p class="text-sm text-gray-500">{{ cred.type }}</p>
+            <h3 class="text-lg font-semibold text-gray-900">{{ cred.provider_name }}</h3>
+            <p class="text-sm text-gray-500">{{ cred.provider_type }}</p>
           </div>
           <span
             class="px-3 py-1 text-xs font-medium rounded-full"
@@ -116,11 +116,19 @@
           </span>
         </div>
 
-        <!-- Masked Credentials -->
+        <!-- Credentials Info -->
         <div class="space-y-2 mb-4">
-          <div v-for="(value, key) in cred.masked_credentials" :key="key">
-            <p class="text-xs text-gray-500 uppercase">{{ key }}</p>
-            <p class="text-sm text-gray-900 font-mono">{{ value }}</p>
+          <div>
+            <p class="text-xs text-gray-500 uppercase">Credentials</p>
+            <p class="text-sm text-gray-900">{{ cred.credentials_preview || 'API Credentials configured' }}</p>
+          </div>
+          <div v-if="cred.tenant_name">
+            <p class="text-xs text-gray-500 uppercase">Tenant</p>
+            <p class="text-sm text-gray-900">{{ cred.tenant_name }}</p>
+          </div>
+          <div v-else>
+            <p class="text-xs text-gray-500 uppercase">Scope</p>
+            <p class="text-sm text-gray-900">Global (All Tenants)</p>
           </div>
         </div>
 
@@ -272,7 +280,7 @@
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium mb-2">Type</label>
-            <select v-model="newCredential.type" class="w-full px-3 py-2 border rounded-md">
+            <select v-model="newCredential.provider_type" class="w-full px-3 py-2 border rounded-md">
               <option value="email">Email</option>
               <option value="sms">SMS</option>
               <option value="whatsapp">WhatsApp</option>
@@ -281,7 +289,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium mb-2">Provider</label>
-            <select v-model="newCredential.provider" class="w-full px-3 py-2 border rounded-md">
+            <select v-model="newCredential.provider_name" class="w-full px-3 py-2 border rounded-md">
               <option value="sendgrid">SendGrid</option>
               <option value="mailgun">Mailgun</option>
               <option value="twilio">Twilio</option>
@@ -358,8 +366,8 @@ const filters = ref({
 })
 
 const newCredential = ref({
-  type: 'email',
-  provider: 'sendgrid',
+  provider_type: 'email',
+  provider_name: 'sendgrid',
   credentials: ''
 })
 
@@ -390,8 +398,8 @@ async function addCredential() {
   try {
     const credentialsObj = JSON.parse(newCredential.value.credentials)
     await adminAPI.providers.create({
-      type: newCredential.value.type,
-      provider: newCredential.value.provider,
+      provider_type: newCredential.value.provider_type,
+      provider_name: newCredential.value.provider_name,
       credentials: credentialsObj
     })
     showAddModal.value = false
@@ -422,7 +430,7 @@ function editCredential(cred) {
 }
 
 async function deleteCredential(cred) {
-  if (!confirm(`Delete ${cred.provider} credentials? This action cannot be undone.`)) return
+  if (!confirm(`Delete ${cred.provider_name} credentials? This action cannot be undone.`)) return
 
   try {
     await adminAPI.providers.delete(cred.id)

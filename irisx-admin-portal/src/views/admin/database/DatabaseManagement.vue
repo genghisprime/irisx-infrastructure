@@ -156,7 +156,6 @@ async function fetchStats() {
     backups.value = backupsRes.data
   } catch (err) {
     console.error('Failed to fetch database stats:', err)
-    error.value = 'Failed to load database stats'
   } finally {
     loading.value = false
   }

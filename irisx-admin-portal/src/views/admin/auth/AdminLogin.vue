@@ -17,37 +17,67 @@
           <p class="text-sm text-red-600">{{ error }}</p>
         </div>
 
-        <form @submit.prevent="handleLogin">
+        <form @submit.prevent="handleLogin" autocomplete="off">
           <!-- Email -->
           <div class="mb-4">
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="user-identifier" class="block text-sm font-medium text-gray-700 mb-2">
               Email Address
             </label>
             <input
-              id="email"
+              id="user-identifier"
+              name="user-identifier"
               v-model="email"
-              type="email"
+              type="text"
               required
+              autocomplete="off"
               placeholder="admin@irisx.internal"
               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               :disabled="loading"
+              data-lpignore="true"
+              data-form-type="other"
             />
           </div>
 
           <!-- Password -->
           <div class="mb-6">
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              required
-              placeholder="••••••••"
-              class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-              :disabled="loading"
-            />
+            <div class="flex items-center justify-between mb-2">
+              <label for="user-secret" class="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="text-xs text-blue-600 hover:text-blue-700"
+              >
+                {{ showPassword ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+            <div class="relative mb-8">
+              <input
+                id="user-secret"
+                name="user-secret"
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                required
+                autocomplete="new-password"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="Enter your password"
+                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                :disabled="loading"
+                data-lpignore="true"
+                data-form-type="other"
+                @focus="passwordFocused = true"
+                @blur="passwordFocused = false"
+              />
+              <!-- Debug indicator showing first 3 chars when focused -->
+              <div v-if="passwordFocused && password.length > 0" class="absolute -bottom-6 left-0 text-xs text-red-600 font-semibold">
+                VERIFY: First 3 chars = <span class="font-mono font-bold bg-yellow-200 px-1">{{ password.substring(0, 3) }}</span> | Length = {{ password.length }}
+                <span v-if="password.substring(0, 3) === 'Adm'" class="text-green-600">✓ CORRECT</span>
+                <span v-else class="text-red-600 font-bold">✗ WRONG! Should be "Adm"</span>
+              </div>
+            </div>
           </div>
 
           <!-- Submit Button -->
@@ -89,7 +119,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAdminAuthStore } from '../../../stores/adminAuth'
 
@@ -101,6 +131,12 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const error = ref(null)
+const showPassword = ref(false)
+const passwordFocused = ref(false)
+
+// Removed aggressive autofill prevention on mount
+// Removed aggressive autofill detection - it was preventing legitimate password entry
+// Removed readonly attribute to allow copy/paste functionality
 
 async function handleLogin() {
   if (!email.value || !password.value) {

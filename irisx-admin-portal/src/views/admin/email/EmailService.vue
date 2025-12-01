@@ -32,9 +32,14 @@
     <div class="bg-white rounded-lg shadow p-6 mb-6">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-semibold text-gray-900">Email Providers</h2>
-        <button @click="refreshProviders" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
-          Refresh
-        </button>
+        <div class="flex gap-2">
+          <button @click="openAddModal" class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700">
+            Add Provider
+          </button>
+          <button @click="refreshProviders" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div v-if="loading.providers" class="text-center py-8">
@@ -249,6 +254,38 @@
                     </div>
                   </div>
                 </div>
+
+                <div v-else-if="editModal.provider.provider_name === 'amazon-ses'">
+                  <div class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">AWS Access Key ID</label>
+                      <input v-model="editModal.credentials.access_key_id" type="password"
+                             placeholder="Enter new access key to update (leave blank to keep current)"
+                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                      <p class="mt-1 text-xs text-gray-500">Your AWS IAM user access key ID</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">AWS Secret Access Key</label>
+                      <input v-model="editModal.credentials.secret_access_key" type="password"
+                             placeholder="Enter new secret key to update (leave blank to keep current)"
+                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                      <p class="mt-1 text-xs text-gray-500">Your AWS IAM user secret access key</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">AWS Region</label>
+                      <select v-model="editModal.credentials.region"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="us-east-1">US East (N. Virginia) - us-east-1</option>
+                        <option value="us-west-2">US West (Oregon) - us-west-2</option>
+                        <option value="eu-west-1">Europe (Ireland) - eu-west-1</option>
+                        <option value="eu-central-1">Europe (Frankfurt) - eu-central-1</option>
+                        <option value="ap-southeast-1">Asia Pacific (Singapore) - ap-southeast-1</option>
+                        <option value="ap-northeast-1">Asia Pacific (Tokyo) - ap-northeast-1</option>
+                      </select>
+                      <p class="mt-1 text-xs text-gray-500">AWS region where your SES is configured</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -262,6 +299,203 @@
                       :disabled="editModal.saving"
                       class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
                 {{ editModal.saving ? 'Saving...' : 'Save Changes' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Provider Modal -->
+    <div v-if="addModal.show" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Add Email Provider</h2>
+            <button @click="closeAddModal" class="text-gray-400 hover:text-gray-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="space-y-6">
+            <!-- Provider Type Selection -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Provider Type</label>
+              <select v-model="addModal.form.provider_name" @change="onProviderTypeChange"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Select a provider type...</option>
+                <option value="elastic-email">Elastic Email</option>
+                <option value="custom-smtp">Custom SMTP (Self-Hosted Mail Server)</option>
+                <option value="amazon-ses">Amazon SES</option>
+              </select>
+            </div>
+
+            <div v-if="addModal.form.provider_name" class="space-y-6">
+              <!-- Configuration -->
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Configuration</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+                    <input v-model="addModal.form.display_name" type="text"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="e.g., Elastic Email Primary">
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <input v-model.number="addModal.form.priority" type="number" min="1"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <p class="mt-1 text-xs text-gray-500">Lower number = higher priority (1 is highest)</p>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Cost per 1000 Emails ($)</label>
+                    <input v-model.number="addModal.form.cost_per_1000" type="number" step="0.01" min="0"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Max Retry Attempts</label>
+                      <input v-model.number="addModal.form.max_retry_attempts" type="number" min="0"
+                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Retry Delay (seconds)</label>
+                      <input v-model.number="addModal.form.retry_delay_seconds" type="number" min="0"
+                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">From Email</label>
+                    <input v-model="addModal.form.from_email" type="email" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="noreply@yourdomain.com">
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">From Name</label>
+                    <input v-model="addModal.form.from_name" type="text"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="IRISX">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Credentials -->
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">API Credentials</h3>
+                <div class="space-y-4">
+                  <div v-if="addModal.form.provider_name === 'elastic-email'">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Elastic Email API Key</label>
+                    <input v-model="addModal.credentials.api_key" type="password" required
+                           placeholder="Enter your Elastic Email API key"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <p class="mt-1 text-xs text-gray-500">Get your API key from Elastic Email dashboard</p>
+                  </div>
+
+                  <div v-else-if="addModal.form.provider_name === 'sendgrid'">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">SendGrid API Key</label>
+                    <input v-model="addModal.credentials.api_key" type="password" required
+                           placeholder="Enter your SendGrid API key"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <p class="mt-1 text-xs text-gray-500">Get your API key from SendGrid settings</p>
+                  </div>
+
+                  <div v-else-if="addModal.form.provider_name === 'custom-smtp'">
+                    <div class="space-y-4">
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Host</label>
+                          <input v-model="addModal.credentials.smtp_host" type="text" required
+                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                 placeholder="smtp.example.com">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Port</label>
+                          <input v-model.number="addModal.credentials.smtp_port" type="number" required
+                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                 placeholder="587">
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Username</label>
+                        <input v-model="addModal.credentials.smtp_user" type="text" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Password</label>
+                        <input v-model="addModal.credentials.smtp_password" type="password" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                      </div>
+                      <div>
+                        <label class="flex items-center">
+                          <input v-model="addModal.credentials.smtp_secure" type="checkbox" class="mr-2">
+                          <span class="text-sm font-medium text-gray-700">Use TLS/SSL</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div v-else-if="addModal.form.provider_name === 'amazon-ses'">
+                    <div class="space-y-4">
+                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 mb-3">
+                        <p class="text-sm text-blue-800">
+                          <strong>Setup Required:</strong> Before using Amazon SES, ensure you have:
+                          <ul class="list-disc ml-5 mt-1">
+                            <li>Verified your sender email address or domain in SES</li>
+                            <li>Moved out of SES sandbox for production use</li>
+                            <li>Created IAM user with <code class="bg-blue-100 px-1 rounded">ses:SendEmail</code> permissions</li>
+                          </ul>
+                        </p>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">AWS Access Key ID</label>
+                        <input v-model="addModal.credentials.access_key_id" type="password" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="AKIAIOSFODNN7EXAMPLE">
+                        <p class="mt-1 text-xs text-gray-500">Your AWS IAM user access key ID</p>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">AWS Secret Access Key</label>
+                        <input v-model="addModal.credentials.secret_access_key" type="password" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY">
+                        <p class="mt-1 text-xs text-gray-500">Your AWS IAM user secret access key</p>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">AWS Region</label>
+                        <select v-model="addModal.credentials.region"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                          <option value="us-east-1">US East (N. Virginia) - us-east-1</option>
+                          <option value="us-west-2">US West (Oregon) - us-west-2</option>
+                          <option value="eu-west-1">Europe (Ireland) - eu-west-1</option>
+                          <option value="eu-central-1">Europe (Frankfurt) - eu-central-1</option>
+                          <option value="ap-southeast-1">Asia Pacific (Singapore) - ap-southeast-1</option>
+                          <option value="ap-northeast-1">Asia Pacific (Tokyo) - ap-northeast-1</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">AWS region where your SES is configured</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end gap-3 pt-6 border-t">
+              <button @click="closeAddModal"
+                      class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                Cancel
+              </button>
+              <button @click="createProvider"
+                      :disabled="addModal.saving || !addModal.form.provider_name"
+                      class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ addModal.saving ? 'Creating...' : 'Create Provider' }}
               </button>
             </div>
           </div>
@@ -426,7 +660,37 @@ const editModal = ref({
     smtp_port: 587,
     smtp_user: '',
     smtp_password: '',
-    smtp_secure: false
+    smtp_secure: false,
+    access_key_id: '',
+    secret_access_key: '',
+    region: 'us-east-1'
+  }
+})
+
+// Add modal state
+const addModal = ref({
+  show: false,
+  saving: false,
+  form: {
+    provider_name: '',
+    display_name: '',
+    priority: 1,
+    cost_per_1000: 0,
+    max_retry_attempts: 3,
+    retry_delay_seconds: 5,
+    from_email: '',
+    from_name: ''
+  },
+  credentials: {
+    api_key: '',
+    smtp_host: '',
+    smtp_port: 587,
+    smtp_user: '',
+    smtp_password: '',
+    smtp_secure: false,
+    access_key_id: '',
+    secret_access_key: '',
+    region: 'us-east-1'
   }
 })
 
@@ -593,6 +857,105 @@ async function saveProvider() {
     alert(err.response?.data?.error || 'Failed to update provider')
   } finally {
     editModal.value.saving = false
+  }
+}
+
+// Open add modal
+function openAddModal() {
+  // Reset form
+  addModal.value.form = {
+    provider_name: '',
+    display_name: '',
+    priority: 1,
+    cost_per_1000: 0,
+    max_retry_attempts: 3,
+    retry_delay_seconds: 5,
+    from_email: '',
+    from_name: ''
+  }
+
+  // Reset credentials
+  addModal.value.credentials = {
+    api_key: '',
+    smtp_host: '',
+    smtp_port: 587,
+    smtp_user: '',
+    smtp_password: '',
+    smtp_secure: false
+  }
+
+  addModal.value.show = true
+}
+
+// Close add modal
+function closeAddModal() {
+  addModal.value.show = false
+}
+
+// Handle provider type change
+function onProviderTypeChange() {
+  // Auto-populate display name based on provider type
+  const displayNames = {
+    'elastic-email': 'Elastic Email',
+    'sendgrid': 'SendGrid',
+    'custom-smtp': 'Custom SMTP (Mail Server)',
+    'amazon-ses': 'Amazon SES'
+  }
+
+  if (addModal.value.form.provider_name && !addModal.value.form.display_name) {
+    addModal.value.form.display_name = displayNames[addModal.value.form.provider_name] || ''
+  }
+}
+
+// Create provider
+async function createProvider() {
+  if (!addModal.value.form.provider_name) {
+    alert('Please select a provider type')
+    return
+  }
+
+  if (!addModal.value.form.from_email) {
+    alert('Please enter a from email address')
+    return
+  }
+
+  // Validate credentials based on provider type
+  if (addModal.value.form.provider_name === 'elastic-email' || addModal.value.form.provider_name === 'sendgrid') {
+    if (!addModal.value.credentials.api_key) {
+      alert('Please enter an API key')
+      return
+    }
+  } else if (addModal.value.form.provider_name === 'custom-smtp') {
+    if (!addModal.value.credentials.smtp_host || !addModal.value.credentials.smtp_user || !addModal.value.credentials.smtp_password) {
+      alert('Please fill in all SMTP credentials')
+      return
+    }
+  } else if (addModal.value.form.provider_name === 'amazon-ses') {
+    if (!addModal.value.credentials.access_key_id || !addModal.value.credentials.secret_access_key) {
+      alert('Please enter AWS access key and secret access key')
+      return
+    }
+  }
+
+  addModal.value.saving = true
+
+  try {
+    // Call backend API to create provider
+    await adminAPI.emailService.createProvider({
+      ...addModal.value.form,
+      credentials: addModal.value.credentials
+    })
+
+    alert('Provider created successfully')
+    closeAddModal()
+
+    // Refresh data
+    await Promise.all([fetchProviders(), fetchHealth()])
+  } catch (err) {
+    console.error('Failed to create provider:', err)
+    alert(err.response?.data?.error || 'Failed to create provider')
+  } finally {
+    addModal.value.saving = false
   }
 }
 

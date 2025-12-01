@@ -388,7 +388,6 @@ class WebhookService {
       const result = await query(
         `SELECT id FROM webhook_deliveries
          WHERE status IN ('pending', 'retrying')
-           AND (next_retry_at IS NULL OR next_retry_at <= NOW())
            AND attempts < max_attempts
          ORDER BY scheduled_at ASC
          LIMIT 100`

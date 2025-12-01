@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://3.83.53.69:3000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.tazzi.com'
 
 export const useAdminAuthStore = defineStore('adminAuth', () => {
   // State
@@ -26,27 +26,47 @@ export const useAdminAuthStore = defineStore('adminAuth', () => {
     error.value = null
 
     try {
+      console.log('[AdminAuth] Attempting login to:', `${API_BASE_URL}/admin/auth/login`)
+      console.log('[AdminAuth] Request payload:', {
+        email,
+        password: password.substring(0, 3) + '***',
+        emailLength: email.length,
+        passwordLength: password.length,
+        emailType: typeof email,
+        passwordType: typeof password,
+        emailTrimmed: email.trim(),
+        passwordTrimmed: password.trim()
+      })
+
       const response = await axios.post(`${API_BASE_URL}/admin/auth/login`, {
         email,
         password
       })
 
-      const { admin: adminData, token: authToken, refresh_token } = response.data
+      console.log('[AdminAuth] Login response:', response)
+      console.log('[AdminAuth] Response data:', response.data)
+      console.log('[AdminAuth] Response status:', response.status)
+
+      const { admin: adminData, token: authToken } = response.data
 
       // Store auth data
       admin.value = adminData
       token.value = authToken
-      refreshToken.value = refresh_token
+      refreshToken.value = null // No refresh token from backend
 
       // Persist to localStorage
       localStorage.setItem('admin_token', authToken)
-      localStorage.setItem('admin_refresh_token', refresh_token)
       localStorage.setItem('admin_user', JSON.stringify(adminData))
 
+      console.log('[AdminAuth] Login successful, token stored')
       return { success: true, admin: adminData }
     } catch (err) {
+      console.error('[AdminAuth] Login error:', err)
+      console.error('[AdminAuth] Error response:', err.response)
+      console.error('[AdminAuth] Error status:', err.response?.status)
+      console.error('[AdminAuth] Error data:', err.response?.data)
+
       error.value = err.response?.data?.error || 'Login failed'
-      console.error('Login error:', err)
       return { success: false, error: error.value }
     } finally {
       loading.value = false
@@ -144,12 +164,11 @@ export const useAdminAuthStore = defineStore('adminAuth', () => {
 
   function restoreFromLocalStorage() {
     const storedToken = localStorage.getItem('admin_token')
-    const storedRefreshToken = localStorage.getItem('admin_refresh_token')
     const storedUser = localStorage.getItem('admin_user')
 
-    if (storedToken && storedRefreshToken && storedUser) {
+    if (storedToken && storedUser) {
       token.value = storedToken
-      refreshToken.value = storedRefreshToken
+      refreshToken.value = null // No refresh token in backend
       try {
         admin.value = JSON.parse(storedUser)
       } catch (err) {

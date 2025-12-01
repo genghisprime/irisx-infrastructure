@@ -86,14 +86,11 @@ adminContacts.get('/', async (c) => {
       values.push(parseInt(params.list_id));
     }
 
-    // Filter by tags
+    // Filter by tags (using array column)
     if (params.tags) {
       const tagNames = params.tags.split(',').map(t => t.trim());
       paramCount++;
-      conditions.push(`EXISTS (
-        SELECT 1 FROM contact_tags ct
-        WHERE ct.contact_id = c.id AND ct.tag_name = ANY($${paramCount}::text[])
-      )`);
+      conditions.push(`c.tags && $${paramCount}::text[]`);
       values.push(tagNames);
     }
 
@@ -134,7 +131,7 @@ adminContacts.get('/', async (c) => {
 
     // Log audit
     await pool.query(`
-      INSERT INTO admin_audit_log (admin_id, action, resource_type, details)
+      INSERT INTO admin_audit_log (admin_user_id, action, resource_type, changes)
       VALUES ($1, $2, $3, $4)
     `, [
       admin.id,
@@ -159,119 +156,6 @@ adminContacts.get('/', async (c) => {
 });
 
 // =====================================================
-// GET /admin/contacts/:id
-// Get contact details with full activity timeline
-// =====================================================
-adminContacts.get('/:id', async (c) => {
-  try {
-    const admin = c.get('admin');
-    const contactId = parseInt(c.req.param('id'));
-
-    // Get contact with all details
-    const contactQuery = `
-      SELECT
-        c.*,
-        t.name as tenant_name,
-        t.name as tenant_company,
-        (
-          SELECT json_agg(ct.tag_name)
-          FROM contact_tags ct
-          WHERE ct.contact_id = c.id
-        ) as tags,
-        (
-          SELECT json_agg(json_build_object(
-            'id', cl.id,
-            'name', cl.name,
-            'added_at', clm.added_at
-          ))
-          FROM contact_list_members clm
-          JOIN contact_lists cl ON clm.list_id = cl.id
-          WHERE clm.contact_id = c.id
-        ) as lists
-      FROM contacts c
-      LEFT JOIN tenants t ON c.tenant_id = t.id
-      WHERE c.id = $1
-    `;
-    const contactResult = await pool.query(contactQuery, [contactId]);
-
-    if (contactResult.rows.length === 0) {
-      return c.json({ error: 'Contact not found' }, 404);
-    }
-
-    const contact = contactResult.rows[0];
-
-    // Get activity timeline (messages, calls, campaigns)
-    const activityQuery = `
-      SELECT * FROM (
-        -- Messages sent/received
-        SELECT
-          'message' as activity_type,
-          m.id,
-          m.direction,
-          m.channel,
-          m.status,
-          m.body as content,
-          m.created_at
-        FROM messages m
-        WHERE m.contact_id = $1
-
-        UNION ALL
-
-        -- Calls
-        SELECT
-          'call' as activity_type,
-          c.id,
-          c.direction,
-          'voice' as channel,
-          c.status,
-          c.duration::text as content,
-          c.created_at
-        FROM calls c
-        WHERE c.contact_id = $1
-
-        UNION ALL
-
-        -- Campaign interactions
-        SELECT
-          'campaign' as activity_type,
-          cc.id,
-          NULL as direction,
-          ca.channel,
-          cc.status,
-          ca.name as content,
-          cc.created_at
-        FROM campaign_contacts cc
-        JOIN campaigns ca ON cc.campaign_id = ca.id
-        WHERE cc.contact_id = $1
-      ) activities
-      ORDER BY created_at DESC
-      LIMIT 100
-    `;
-    const activityResult = await pool.query(activityQuery, [contactId]);
-
-    // Log audit
-    await pool.query(`
-      INSERT INTO admin_audit_log (admin_id, action, resource_type, resource_id, details)
-      VALUES ($1, $2, $3, $4, $5)
-    `, [
-      admin.id,
-      'admin.contact.view',
-      'contact',
-      contactId,
-      JSON.stringify({ tenant_id: contact.tenant_id })
-    ]);
-
-    return c.json({
-      contact,
-      activity: activityResult.rows
-    });
-  } catch (error) {
-    console.error('Error getting contact:', error);
-    return c.json({ error: 'Failed to get contact', message: error.message }, 500);
-  }
-});
-
-// =====================================================
 // POST /admin/contacts/bulk-action
 // Perform bulk actions on contacts
 // =====================================================
@@ -291,9 +175,11 @@ adminContacts.post('/bulk-action', async (c) => {
           return c.json({ error: 'tag_name required for add_tag action' }, 400);
         }
         query = `
-          INSERT INTO contact_tags (contact_id, tag_name, created_at)
-          SELECT unnest($1::int[]), $2, NOW()
-          ON CONFLICT (contact_id, tag_name) DO NOTHING
+          UPDATE contacts
+          SET tags = array_append(tags, $2),
+              updated_at = NOW()
+          WHERE id = ANY($1::int[])
+            AND (tags IS NULL OR NOT ($2 = ANY(tags)))
         `;
         params = [data.contact_ids, data.tag_name];
         actionDescription = `Added tag "${data.tag_name}"`;
@@ -304,8 +190,11 @@ adminContacts.post('/bulk-action', async (c) => {
           return c.json({ error: 'tag_name required for remove_tag action' }, 400);
         }
         query = `
-          DELETE FROM contact_tags
-          WHERE contact_id = ANY($1::int[]) AND tag_name = $2
+          UPDATE contacts
+          SET tags = array_remove(tags, $2),
+              updated_at = NOW()
+          WHERE id = ANY($1::int[])
+            AND $2 = ANY(tags)
         `;
         params = [data.contact_ids, data.tag_name];
         actionDescription = `Removed tag "${data.tag_name}"`;
@@ -365,7 +254,7 @@ adminContacts.post('/bulk-action', async (c) => {
 
     // Log audit
     await pool.query(`
-      INSERT INTO admin_audit_log (admin_id, action, resource_type, details)
+      INSERT INTO admin_audit_log (admin_user_id, action, resource_type, changes)
       VALUES ($1, $2, $3, $4)
     `, [
       admin.id,
@@ -452,7 +341,7 @@ adminContacts.get('/dnc', async (c) => {
 
     // Log audit
     await pool.query(`
-      INSERT INTO admin_audit_log (admin_id, action, resource_type, details)
+      INSERT INTO admin_audit_log (admin_user_id, action, resource_type, changes)
       VALUES ($1, $2, $3, $4)
     `, [
       admin.id,
@@ -517,7 +406,7 @@ adminContacts.get('/stats', async (c) => {
 
     // Log audit
     await pool.query(`
-      INSERT INTO admin_audit_log (admin_id, action, resource_type)
+      INSERT INTO admin_audit_log (admin_user_id, action, resource_type)
       VALUES ($1, $2, $3)
     `, [admin.id, 'admin.contacts.stats', 'contact']);
 
@@ -591,7 +480,7 @@ adminContacts.get('/lists', async (c) => {
 
     // Log audit
     await pool.query(`
-      INSERT INTO admin_audit_log (admin_id, action, resource_type, details)
+      INSERT INTO admin_audit_log (admin_user_id, action, resource_type, changes)
       VALUES ($1, $2, $3, $4)
     `, [
       admin.id,
@@ -690,7 +579,7 @@ adminContacts.get('/export', async (c) => {
 
     // Log audit
     await pool.query(`
-      INSERT INTO admin_audit_log (admin_id, action, resource_type, details)
+      INSERT INTO admin_audit_log (admin_user_id, action, resource_type, changes)
       VALUES ($1, $2, $3, $4)
     `, [
       admin.id,
@@ -705,6 +594,116 @@ adminContacts.get('/export', async (c) => {
   } catch (error) {
     console.error('Error exporting contacts:', error);
     return c.json({ error: 'Failed to export contacts', message: error.message }, 500);
+  }
+});
+
+// =====================================================
+// GET /admin/contacts/:id
+// Get contact details with full activity timeline
+// NOTE: This route MUST be last to avoid catching other routes like /stats, /dnc, /lists
+// =====================================================
+adminContacts.get('/:id', async (c) => {
+  try {
+    const admin = c.get('admin');
+    const contactId = parseInt(c.req.param('id'));
+
+    // Get contact with all details
+    const contactQuery = `
+      SELECT
+        c.*,
+        t.name as tenant_name,
+        t.name as tenant_company,
+        c.tags,
+        (
+          SELECT json_agg(json_build_object(
+            'id', cl.id,
+            'name', cl.name,
+            'added_at', clm.added_at
+          ))
+          FROM contact_list_members clm
+          JOIN contact_lists cl ON clm.list_id = cl.id
+          WHERE clm.contact_id = c.id
+        ) as lists
+      FROM contacts c
+      LEFT JOIN tenants t ON c.tenant_id = t.id
+      WHERE c.id = $1
+    `;
+    const contactResult = await pool.query(contactQuery, [contactId]);
+
+    if (contactResult.rows.length === 0) {
+      return c.json({ error: 'Contact not found' }, 404);
+    }
+
+    const contact = contactResult.rows[0];
+
+    // Get activity timeline (messages, calls, campaigns)
+    const activityQuery = `
+      SELECT * FROM (
+        -- Messages sent/received
+        SELECT
+          'message' as activity_type,
+          m.id,
+          m.direction,
+          m.channel,
+          m.status,
+          m.body as content,
+          m.created_at
+        FROM messages m
+        WHERE m.contact_id = $1
+
+        UNION ALL
+
+        -- Calls
+        SELECT
+          'call' as activity_type,
+          c.id,
+          c.direction,
+          'voice' as channel,
+          c.status,
+          c.duration::text as content,
+          c.created_at
+        FROM calls c
+        WHERE c.contact_id = $1
+
+        UNION ALL
+
+        -- Campaign interactions
+        SELECT
+          'campaign' as activity_type,
+          cc.id,
+          NULL as direction,
+          ca.channel,
+          cc.status,
+          ca.name as content,
+          cc.created_at
+        FROM campaign_contacts cc
+        JOIN campaigns ca ON cc.campaign_id = ca.id
+        WHERE cc.contact_id = $1
+      ) activities
+      ORDER BY created_at DESC
+      LIMIT 100
+    `;
+    const activityResult = await pool.query(activityQuery, [contactId]);
+
+    // Log audit
+    await pool.query(`
+      INSERT INTO admin_audit_log (admin_user_id, action, resource_type, resource_id, changes)
+      VALUES ($1, $2, $3, $4, $5)
+    `, [
+      admin.id,
+      'admin.contact.view',
+      'contact',
+      contactId,
+      JSON.stringify({ tenant_id: contact.tenant_id })
+    ]);
+
+    return c.json({
+      contact,
+      activity: activityResult.rows
+    });
+  } catch (error) {
+    console.error('Error getting contact:', error);
+    return c.json({ error: 'Failed to get contact', message: error.message }, 500);
   }
 });
 

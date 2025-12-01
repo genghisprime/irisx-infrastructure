@@ -133,6 +133,7 @@ import { ref, onMounted } from 'vue'
 import { adminAPI } from '../../../utils/api'
 
 const loading = ref(true)
+const error = ref(null)
 
 const stats = ref({
   memory_used: 0,
@@ -150,12 +151,16 @@ const evictionStats = ref({})
 async function fetchStats() {
   loading.value = true
   try {
-    const [statsRes, sessionsRes] = await Promise.all([
+    const [statsRes, patternsRes, sessionsRes, evictionRes] = await Promise.all([
       adminAPI.cache.getStats(),
-      adminAPI.cache.getSessions()
+      adminAPI.cache.getPatterns(),
+      adminAPI.cache.getSessions(),
+      adminAPI.cache.getEvictionStats()
     ])
     stats.value = statsRes.data
+    cachePatterns.value = patternsRes.data
     sessions.value = sessionsRes.data
+    evictionStats.value = evictionRes.data
   } catch (err) {
     console.error('Failed to fetch cache stats:', err)
     error.value = 'Failed to load cache stats'
@@ -206,11 +211,14 @@ function formatBytes(bytes) {
 }
 
 function formatNumber(num) {
+  if (num === null || num === undefined) return '0'
   return num.toLocaleString()
 }
 
 function formatTime(timestamp) {
+  if (!timestamp) return 'N/A'
   const date = new Date(timestamp)
+  if (isNaN(date.getTime())) return 'N/A'
   return date.toLocaleString()
 }
 

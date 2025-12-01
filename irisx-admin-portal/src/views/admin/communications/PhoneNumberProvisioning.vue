@@ -13,19 +13,19 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-6 text-center">
         <p class="text-sm text-gray-600 mb-2">Total Numbers</p>
         <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
       </div>
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-6 text-center">
         <p class="text-sm text-gray-600 mb-2">Active</p>
         <p class="text-2xl font-bold text-green-600">{{ stats.active }}</p>
       </div>
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-6 text-center">
         <p class="text-sm text-gray-600 mb-2">Unassigned</p>
         <p class="text-2xl font-bold text-yellow-600">{{ stats.unassigned }}</p>
       </div>
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-6 text-center">
         <p class="text-sm text-gray-600 mb-2">Monthly Cost</p>
         <p class="text-2xl font-bold text-gray-900">${{ stats.monthly_cost }}</p>
       </div>
@@ -147,35 +147,53 @@
             <td class="px-6 py-4 text-sm text-gray-900">
               ${{ number.monthly_cost || '0.00' }}
             </td>
-            <td class="px-6 py-4 text-right text-sm font-medium space-x-2">
-              <button
-                v-if="!number.tenant_id && authStore.isAdmin"
-                @click="assignNumber(number)"
-                class="text-blue-600 hover:text-blue-800"
-              >
-                Assign
-              </button>
-              <button
-                v-if="number.tenant_id && authStore.isAdmin"
-                @click="unassignNumber(number)"
-                class="text-yellow-600 hover:text-yellow-800"
-              >
-                Unassign
-              </button>
-              <button
-                v-if="authStore.isAdmin"
-                @click="testNumber(number)"
-                class="text-green-600 hover:text-green-800"
-              >
-                Test
-              </button>
-              <button
-                v-if="authStore.isSuperAdmin"
-                @click="releaseNumber(number)"
-                class="text-red-600 hover:text-red-800"
-              >
-                Release
-              </button>
+            <td class="px-6 py-4 text-right text-sm font-medium">
+              <div class="flex justify-end gap-2">
+                <button
+                  v-if="!number.tenant_id && authStore.isAdmin"
+                  @click="assignNumber(number)"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                  title="Assign to tenant"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  <span>Assign</span>
+                </button>
+                <button
+                  v-if="number.tenant_id && authStore.isAdmin"
+                  @click="showUnassignModal(number)"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded-md transition-colors"
+                  title="Unassign from tenant"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                  </svg>
+                  <span>Unassign</span>
+                </button>
+                <button
+                  v-if="authStore.isAdmin"
+                  @click="testNumber(number)"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors"
+                  title="Test number connectivity"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span>Test</span>
+                </button>
+                <button
+                  v-if="authStore.isSuperAdmin"
+                  @click="showReleaseModal(number)"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                  title="Release number from provider"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                  <span>Release</span>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -329,6 +347,123 @@
         </form>
       </div>
     </div>
+
+    <!-- Unassign Confirmation Modal -->
+    <div
+      v-if="unassigningNumber"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click="cancelUnassign"
+    >
+      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4" @click.stop>
+        <div class="flex items-start mb-4">
+          <div class="flex-shrink-0">
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div class="ml-3 flex-1">
+            <h3 class="text-lg font-semibold text-gray-900">Unassign Phone Number</h3>
+            <p class="mt-2 text-sm text-gray-600">
+              You are about to unassign <span class="font-semibold">{{ formatPhoneNumber(unassigningNumber?.phone_number) }}</span> from <span class="font-semibold">{{ unassigningNumber?.tenant_name }}</span>.
+            </p>
+            <p class="mt-2 text-sm text-gray-600">
+              To confirm, please type <span class="font-mono font-semibold bg-gray-100 px-2 py-0.5 rounded">UNASSIGN</span> below:
+            </p>
+          </div>
+        </div>
+        <form @submit.prevent="handleUnassignNumber" class="space-y-4">
+          <div>
+            <input
+              v-model="unassignConfirmText"
+              type="text"
+              required
+              placeholder="Type UNASSIGN to confirm"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+            />
+          </div>
+          <div class="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              @click="cancelUnassign"
+              class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="unassignConfirmText !== 'UNASSIGN'"
+              class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Unassign Number
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Release Confirmation Modal -->
+    <div
+      v-if="releasingNumber"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click="cancelRelease"
+    >
+      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4" @click.stop>
+        <div class="flex items-start mb-4">
+          <div class="flex-shrink-0">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div class="ml-3 flex-1">
+            <h3 class="text-lg font-semibold text-red-900">Release Phone Number</h3>
+            <p class="mt-2 text-sm text-gray-600">
+              <span class="font-semibold text-red-600">⚠️ CRITICAL ACTION:</span> You are about to permanently release <span class="font-semibold">{{ formatPhoneNumber(releasingNumber?.phone_number) }}</span> from the provider.
+            </p>
+            <p class="mt-2 text-sm text-gray-600">
+              This action will:
+            </p>
+            <ul class="mt-1 ml-4 text-sm text-gray-600 list-disc">
+              <li>Cancel the number with {{ releasingNumber?.provider }}</li>
+              <li>Stop all monthly billing for this number</li>
+              <li>Make the number unavailable for future use</li>
+            </ul>
+            <p class="mt-3 text-sm font-semibold text-red-600">
+              This action cannot be undone.
+            </p>
+            <p class="mt-3 text-sm text-gray-600">
+              To confirm, please type <span class="font-mono font-semibold bg-red-100 px-2 py-0.5 rounded">RELEASE</span> below:
+            </p>
+          </div>
+        </div>
+        <form @submit.prevent="handleReleaseNumber" class="space-y-4">
+          <div>
+            <input
+              v-model="releaseConfirmText"
+              type="text"
+              required
+              placeholder="Type RELEASE to confirm"
+              class="w-full px-3 py-2 border border-red-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            />
+          </div>
+          <div class="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              @click="cancelRelease"
+              class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="releaseConfirmText !== 'RELEASE'"
+              class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Release Number Permanently
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -362,6 +497,8 @@ const filters = ref({
 
 const showProvisionModal = ref(false)
 const assigningNumber = ref(null)
+const unassigningNumber = ref(null)
+const releasingNumber = ref(null)
 
 const provisionForm = ref({
   provider: 'twilio',
@@ -373,6 +510,9 @@ const provisionForm = ref({
 const assignForm = ref({
   tenant_id: ''
 })
+
+const unassignConfirmText = ref('')
+const releaseConfirmText = ref('')
 
 const totalPages = computed(() => Math.ceil(total.value / 20))
 
@@ -441,11 +581,23 @@ async function handleAssignNumber() {
   }
 }
 
-async function unassignNumber(number) {
-  if (!confirm(`Unassign ${formatPhoneNumber(number.phone_number)} from ${number.tenant_name}?`)) return
+function showUnassignModal(number) {
+  unassigningNumber.value = number
+  unassignConfirmText.value = ''
+}
+
+function cancelUnassign() {
+  unassigningNumber.value = null
+  unassignConfirmText.value = ''
+}
+
+async function handleUnassignNumber() {
+  if (unassignConfirmText.value !== 'UNASSIGN') return
 
   try {
-    await adminAPI.phoneNumbers.unassign(number.id)
+    await adminAPI.phoneNumbers.unassign(unassigningNumber.value.id)
+    unassigningNumber.value = null
+    unassignConfirmText.value = ''
     await fetchData()
   } catch (err) {
     console.error('Failed to unassign number:', err)
@@ -467,11 +619,23 @@ async function testNumber(number) {
   }
 }
 
-async function releaseNumber(number) {
-  if (!confirm(`RELEASE ${formatPhoneNumber(number.phone_number)}? This will cancel it with the provider.`)) return
+function showReleaseModal(number) {
+  releasingNumber.value = number
+  releaseConfirmText.value = ''
+}
+
+function cancelRelease() {
+  releasingNumber.value = null
+  releaseConfirmText.value = ''
+}
+
+async function handleReleaseNumber() {
+  if (releaseConfirmText.value !== 'RELEASE') return
 
   try {
-    await adminAPI.phoneNumbers.release(number.id)
+    await adminAPI.phoneNumbers.release(releasingNumber.value.id)
+    releasingNumber.value = null
+    releaseConfirmText.value = ''
     await fetchData()
   } catch (err) {
     console.error('Failed to release number:', err)

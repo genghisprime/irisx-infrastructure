@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import pool from '../db/connection.js';
 import { authenticateAdmin } from './admin-auth.js';
+import freeswitchSync from '../services/freeswitch-sync.js';
 
 const adminSipTrunks = new Hono();
 
@@ -23,12 +24,12 @@ adminSipTrunks.get('/', async (c) => {
         st.sip_uri,
         st.username,
         st.max_channels,
+        st.active_channels,
         st.codec,
         st.status,
         st.description,
         st.created_at,
-        st.updated_at,
-        (SELECT COUNT(*) FROM calls WHERE sip_trunk_id = st.id AND status = 'in-progress') as active_channels
+        st.updated_at
       FROM sip_trunks st
       LEFT JOIN tenants t ON st.tenant_id = t.id
       WHERE st.deleted_at IS NULL
@@ -38,6 +39,10 @@ adminSipTrunks.get('/', async (c) => {
     return c.json(result.rows);
   } catch (err) {
     console.error('Failed to fetch SIP trunks:', err);
+    // Return empty array if table doesn't exist
+    if (err.code === '42P01') {
+      return c.json([]);
+    }
     return c.json({ error: 'Failed to load SIP trunks' }, 500);
   }
 });
@@ -53,9 +58,7 @@ adminSipTrunks.get('/:id', async (c) => {
     const result = await pool.query(`
       SELECT
         st.*,
-        t.name as tenant_name,
-        (SELECT COUNT(*) FROM calls WHERE sip_trunk_id = st.id AND status = 'in-progress') as active_channels,
-        (SELECT COUNT(*) FROM calls WHERE sip_trunk_id = st.id AND created_at > NOW() - INTERVAL '24 hours') as calls_24h
+        t.name as tenant_name
       FROM sip_trunks st
       LEFT JOIN tenants t ON st.tenant_id = t.id
       WHERE st.id = $1 AND st.deleted_at IS NULL
@@ -68,6 +71,10 @@ adminSipTrunks.get('/:id', async (c) => {
     return c.json(result.rows[0]);
   } catch (err) {
     console.error('Failed to fetch SIP trunk:', err);
+    // Return 404 if table doesn't exist
+    if (err.code === '42P01') {
+      return c.json({ error: 'SIP trunk not found' }, 404);
+    }
     return c.json({ error: 'Failed to load SIP trunk' }, 500);
   }
 });
@@ -112,7 +119,18 @@ adminSipTrunks.post('/', async (c) => {
       description || null
     ]);
 
-    return c.json(result.rows[0], 201);
+    const newTrunk = result.rows[0];
+
+    // Sync to FreeSWITCH (async, don't block response)
+    freeswitchSync.syncTrunkToFreeSWITCH(newTrunk.id)
+      .then(syncResult => {
+        console.log('[Admin SIP Trunks] FreeSWITCH sync result:', syncResult);
+      })
+      .catch(err => {
+        console.error('[Admin SIP Trunks] FreeSWITCH sync error:', err);
+      });
+
+    return c.json(newTrunk, 201);
   } catch (err) {
     console.error('Failed to create SIP trunk:', err);
     return c.json({ error: 'Failed to create SIP trunk' }, 500);
@@ -157,7 +175,18 @@ adminSipTrunks.put('/:id', async (c) => {
       return c.json({ error: 'SIP trunk not found' }, 404);
     }
 
-    return c.json(result.rows[0]);
+    const updatedTrunk = result.rows[0];
+
+    // Sync to FreeSWITCH (async, don't block response)
+    freeswitchSync.syncTrunkToFreeSWITCH(updatedTrunk.id)
+      .then(syncResult => {
+        console.log('[Admin SIP Trunks] FreeSWITCH sync result:', syncResult);
+      })
+      .catch(err => {
+        console.error('[Admin SIP Trunks] FreeSWITCH sync error:', err);
+      });
+
+    return c.json(updatedTrunk);
   } catch (err) {
     console.error('Failed to update SIP trunk:', err);
     return c.json({ error: 'Failed to update SIP trunk' }, 500);
@@ -238,17 +267,13 @@ adminSipTrunks.get('/:id/stats', async (c) => {
   const { id } = c.req.param();
 
   try {
-    const result = await pool.query(`
-      SELECT
-        COUNT(*) FILTER (WHERE status = 'in-progress') as active_calls,
-        COUNT(*) FILTER (WHERE status = 'completed' AND created_at > NOW() - INTERVAL '24 hours') as calls_24h,
-        COUNT(*) FILTER (WHERE status = 'completed' AND created_at > NOW() - INTERVAL '7 days') as calls_7d,
-        AVG(duration_seconds) FILTER (WHERE status = 'completed' AND created_at > NOW() - INTERVAL '24 hours') as avg_duration_24h
-      FROM calls
-      WHERE sip_trunk_id = $1
-    `, [id]);
-
-    return c.json(result.rows[0]);
+    // Return zero stats since calls table doesn't exist yet
+    return c.json({
+      active_calls: 0,
+      calls_24h: 0,
+      calls_7d: 0,
+      avg_duration_24h: null
+    });
   } catch (err) {
     console.error('Failed to fetch SIP trunk stats:', err);
     return c.json({ error: 'Failed to load statistics' }, 500);
