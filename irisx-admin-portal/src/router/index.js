@@ -155,6 +155,13 @@ const routes = [
         component: () => import('../views/admin/ivr/IVRManagement.vue'),
         meta: { requiresRole: 'admin' }
       },
+      // Social Media Hub
+      {
+        path: 'social-media',
+        name: 'SocialMediaHub',
+        component: () => import('../views/admin/social/SocialMediaHub.vue'),
+        meta: { requiresRole: 'admin' }
+      },
       // SIP Trunks
       {
         path: 'sip-trunks',

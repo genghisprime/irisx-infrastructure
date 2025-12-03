@@ -77,6 +77,7 @@ import adminFeatureFlags from './routes/admin-feature-flags.js';
 import adminContacts from './routes/admin-contacts.js';
 import adminCDRs from './routes/admin-cdrs.js';
 import adminIVR from './routes/admin-ivr.js';
+import adminSocialMedia from './routes/admin-social-media.js';
 import publicSignup from './routes/public-signup.js'; // Temporarily disabled - has parse-time errors
 import imports from './routes/imports.js';
 import { initWebSocket } from './services/websocket.js';
@@ -419,6 +420,7 @@ app.route('/admin/feature-flags', adminFeatureFlags); // Feature Flags Managemen
 app.route('/admin/contacts', adminContacts); // Contact Management
 app.route('/admin/cdrs', adminCDRs); // CDR Viewer (Call Detail Records)
 app.route('/admin/ivr', adminIVR); // IVR Management (Menu Configuration)
+app.route('/admin/social-media', adminSocialMedia); // Social Media Hub (Discord, Slack, Teams, Telegram)
 app.route('/admin/agents', adminAgentsList); // Agent Management (Admin view)
 app.route('/public', publicSignup); // Temporarily disabled - has parse-time errors
 app.route('/v1/imports', imports); // Data Import System (Week 28)

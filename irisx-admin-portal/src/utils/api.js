@@ -235,6 +235,17 @@ export const adminAPI = {
     list: (params) => apiClient.get('/admin/audit-log', { params }),
     getStats: () => apiClient.get('/admin/audit-log/stats'),
     getAdmins: () => apiClient.get('/admin/audit-log/admins')
+  },
+  socialMedia: {
+    getStats: () => apiClient.get('/admin/social-media/stats').then(r => r.data),
+    getAccounts: (params) => apiClient.get('/admin/social-media/accounts', { params }).then(r => r.data),
+    getAccountDetails: (id) => apiClient.get(`/admin/social-media/accounts/${id}`).then(r => r.data),
+    getMessages: (params) => apiClient.get('/admin/social-media/messages', { params }).then(r => r.data),
+    getWebhooks: (params) => apiClient.get('/admin/social-media/webhooks', { params }).then(r => r.data),
+    getHealth: () => apiClient.get('/admin/social-media/health').then(r => r.data),
+    getAnalytics: (params) => apiClient.get('/admin/social-media/analytics', { params }).then(r => r.data),
+    updateAccountStatus: (id, status) => apiClient.patch(`/admin/social-media/accounts/${id}/status`, { status }).then(r => r.data),
+    testAccount: (id) => apiClient.post(`/admin/social-media/accounts/${id}/test`).then(r => r.data)
   }
 }
 
