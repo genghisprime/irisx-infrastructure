@@ -341,7 +341,7 @@ app.get('/menus/:id', async (c) => {
         c.to_number,
         c.status as call_status
       FROM ivr_sessions s
-      LEFT JOIN calls c ON s.call_uuid = c.uuid
+      LEFT JOIN calls c ON s.call_uuid = c.uuid::text
       WHERE s.current_menu_id = $1
       ORDER BY s.started_at DESC
       LIMIT 100
@@ -525,7 +525,7 @@ app.get('/sessions', async (c) => {
       FROM ivr_sessions s
       LEFT JOIN ivr_menus m ON s.current_menu_id = m.id
       LEFT JOIN tenants t ON s.tenant_id = t.id
-      LEFT JOIN calls c ON s.call_uuid = c.uuid
+      LEFT JOIN calls c ON s.call_uuid = c.uuid::text
       WHERE ${whereClause}
       ORDER BY s.started_at DESC
       LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
