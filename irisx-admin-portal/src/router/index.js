@@ -162,6 +162,13 @@ const routes = [
         component: () => import('../views/admin/social/SocialMediaHub.vue'),
         meta: { requiresRole: 'admin' }
       },
+      // Billing Rates Management
+      {
+        path: 'billing/rates',
+        name: 'BillingRates',
+        component: () => import('../views/admin/billing/RateManagement.vue'),
+        meta: { requiresRole: 'admin' }
+      },
       // SIP Trunks
       {
         path: 'sip-trunks',

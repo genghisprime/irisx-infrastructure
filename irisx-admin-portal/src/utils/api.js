@@ -246,6 +246,19 @@ export const adminAPI = {
     getAnalytics: (params) => apiClient.get('/admin/social-media/analytics', { params }).then(r => r.data),
     updateAccountStatus: (id, status) => apiClient.patch(`/admin/social-media/accounts/${id}/status`, { status }).then(r => r.data),
     testAccount: (id) => apiClient.post(`/admin/social-media/accounts/${id}/test`).then(r => r.data)
+  },
+  billingRates: {
+    getStats: () => apiClient.get('/admin/billing-rates/stats').then(r => r.data),
+    list: (params) => apiClient.get('/admin/billing-rates', { params }).then(r => r.data),
+    get: (id) => apiClient.get(`/admin/billing-rates/${id}`).then(r => r.data),
+    create: (data) => apiClient.post('/admin/billing-rates', data).then(r => r.data),
+    update: (id, data) => apiClient.patch(`/admin/billing-rates/${id}`, data).then(r => r.data),
+    delete: (id, hard = false) => apiClient.delete(`/admin/billing-rates/${id}`, { params: { hard } }).then(r => r.data),
+    bulk: (rates, mode = 'create') => apiClient.post('/admin/billing-rates/bulk', { rates, mode }).then(r => r.data),
+    import: (csv_data, has_header = true) => apiClient.post('/admin/billing-rates/import', { csv_data, has_header }).then(r => r.data),
+    export: (params) => apiClient.get('/admin/billing-rates/export', { params }).then(r => r.data),
+    lookup: (destination_number) => apiClient.post('/admin/billing-rates/lookup', { destination_number }).then(r => r.data),
+    getCarriers: () => apiClient.get('/admin/billing-rates/carriers').then(r => r.data)
   }
 }
 

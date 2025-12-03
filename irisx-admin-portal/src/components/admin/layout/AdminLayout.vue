@@ -95,6 +95,17 @@
             </svg>
             Revenue
           </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/billing/rates"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/billing/rates' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Rate Tables
+          </RouterLink>
         </div>
 
         <!-- Communications -->
@@ -394,6 +405,7 @@ const pageTitle = computed(() => {
     'CDRViewer': 'Call Detail Records',
     'IVRManagement': 'IVR Management',
     'SocialMediaHub': 'Social Media Hub',
+    'BillingRates': 'Billing Rate Tables',
     'ProviderCredentials': 'Provider Credentials',
     'FeatureFlags': 'Feature Flags',
     'SystemSettings': 'System Settings'
