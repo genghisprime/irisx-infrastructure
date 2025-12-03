@@ -1,19 +1,26 @@
-import { Hono } from 'hono';
-import pkg from 'pg';
-const { Pool } = pkg;
+/**
+ * Admin IVR (Interactive Voice Response) Management Routes
+ *
+ * Provides comprehensive IVR menu management, session monitoring,
+ * and analytics for superadmins to manage tenant IVR configurations.
+ *
+ * Endpoints:
+ * - GET /admin/ivr/stats - Overall IVR statistics
+ * - GET /admin/ivr/menus - List all IVR menus (cross-tenant)
+ * - GET /admin/ivr/menus/:id - Get menu details with options
+ * - GET /admin/ivr/menus/:id/flow - Get menu flow visualization data
+ * - GET /admin/ivr/sessions - List active/recent sessions
+ * - GET /admin/ivr/analytics - Cross-tenant IVR analytics
+ */
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'irisx',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+import { Hono } from 'hono';
+import pool from '../db/connection.js';
+import { authenticateAdmin } from './admin-auth.js';
 
 const app = new Hono();
+
+// All routes require admin authentication
+app.use('*', authenticateAdmin);
 
 // ============================================================================
 // GET /admin/ivr/stats - Overall IVR statistics
@@ -30,7 +37,7 @@ app.get('/stats', async (c) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
 
-    // Query stats
+    // Query stats - adapted to actual schema
     const statsQuery = `
       SELECT
         COUNT(DISTINCT m.id) as total_menus,
@@ -53,7 +60,6 @@ app.get('/stats', async (c) => {
         FROM ivr_menu_options
         GROUP BY menu_id
       ) option_counts ON m.id = option_counts.menu_id
-      WHERE m.deleted_at IS NULL
     `;
 
     const statsResult = await pool.query(statsQuery, [startDate, endDate]);
@@ -65,7 +71,6 @@ app.get('/stats', async (c) => {
         action_type,
         COUNT(*) as count
       FROM ivr_menu_options
-      WHERE deleted_at IS NULL
       GROUP BY action_type
       ORDER BY count DESC
     `;
@@ -86,7 +91,6 @@ app.get('/stats', async (c) => {
       LEFT JOIN ivr_sessions s ON m.id = s.current_menu_id
         AND s.started_at >= $1
         AND s.started_at <= $2
-      WHERE m.deleted_at IS NULL
       GROUP BY m.id, m.name, m.tenant_id, t.name
       ORDER BY session_count DESC
       LIMIT 10
@@ -165,7 +169,7 @@ app.get('/menus', async (c) => {
     const sortOrder = c.req.query('sort_order') || 'desc';
 
     // Build query
-    let whereConditions = ['m.deleted_at IS NULL'];
+    let whereConditions = ['1=1'];
     const params = [];
     let paramCount = 0;
 
@@ -210,13 +214,8 @@ app.get('/menus', async (c) => {
         t.name as tenant_name,
         m.name,
         m.description,
-        m.greeting_text,
         m.greeting_audio,
-        m.greeting_voice,
-        m.greeting_provider,
-        m.invalid_text,
         m.invalid_audio,
-        m.max_attempts_text,
         m.max_attempts_audio,
         m.max_digits,
         m.digit_timeout_ms,
@@ -228,7 +227,7 @@ app.get('/menus', async (c) => {
         COUNT(DISTINCT CASE WHEN s.ended_at IS NULL THEN s.id END) as active_session_count
       FROM ivr_menus m
       LEFT JOIN tenants t ON m.tenant_id = t.id
-      LEFT JOIN ivr_menu_options o ON m.id = o.menu_id AND o.deleted_at IS NULL
+      LEFT JOIN ivr_menu_options o ON m.id = o.menu_id
       LEFT JOIN ivr_sessions s ON m.id = s.current_menu_id
         AND s.started_at >= NOW() - INTERVAL '7 days'
       WHERE ${whereClause}
@@ -257,20 +256,9 @@ app.get('/menus', async (c) => {
         tenant_name: row.tenant_name,
         name: row.name,
         description: row.description,
-        greeting: {
-          text: row.greeting_text,
-          audio: row.greeting_audio,
-          voice: row.greeting_voice,
-          provider: row.greeting_provider
-        },
-        invalid_input: {
-          text: row.invalid_text,
-          audio: row.invalid_audio
-        },
-        max_attempts: {
-          text: row.max_attempts_text,
-          audio: row.max_attempts_audio
-        },
+        greeting_audio: row.greeting_audio,
+        invalid_audio: row.invalid_audio,
+        max_attempts_audio: row.max_attempts_audio,
         settings: {
           max_digits: row.max_digits,
           digit_timeout_ms: row.digit_timeout_ms
@@ -310,11 +298,10 @@ app.get('/menus/:id', async (c) => {
     const menuQuery = `
       SELECT
         m.*,
-        t.name as tenant_name,
-        t.id as tenant_id
+        t.name as tenant_name
       FROM ivr_menus m
       LEFT JOIN tenants t ON m.tenant_id = t.id
-      WHERE m.id = $1 AND m.deleted_at IS NULL
+      WHERE m.id = $1
     `;
     const menuResult = await pool.query(menuQuery, [menuId]);
 
@@ -335,8 +322,7 @@ app.get('/menus/:id', async (c) => {
       FROM ivr_menu_options o
       LEFT JOIN ivr_menus sm ON o.action_type = 'submenu'
         AND o.action_value = sm.id::text
-        AND sm.deleted_at IS NULL
-      WHERE o.menu_id = $1 AND o.deleted_at IS NULL
+      WHERE o.menu_id = $1
       ORDER BY o.digit_pattern
     `;
     const optionsResult = await pool.query(optionsQuery, [menuId]);
@@ -396,36 +382,31 @@ app.get('/menus/:id', async (c) => {
         tenant_name: menu.tenant_name,
         name: menu.name,
         description: menu.description,
-        greeting: {
-          text: menu.greeting_text,
-          audio: menu.greeting_audio,
-          voice: menu.greeting_voice,
-          provider: menu.greeting_provider
-        },
-        invalid_input: {
-          text: menu.invalid_text,
-          audio: menu.invalid_audio,
-          voice: menu.invalid_voice
-        },
-        max_attempts: {
-          text: menu.max_attempts_text,
-          audio: menu.max_attempts_audio
-        },
+        greeting_audio: menu.greeting_audio,
+        invalid_audio: menu.invalid_audio,
+        max_attempts_audio: menu.max_attempts_audio,
         settings: {
           max_digits: menu.max_digits,
-          digit_timeout_ms: menu.digit_timeout_ms
+          digit_timeout_ms: menu.digit_timeout_ms,
+          inter_digit_timeout_ms: menu.inter_digit_timeout_ms,
+          max_invalid_attempts: menu.max_invalid_attempts,
+          timeout_action: menu.timeout_action,
+          timeout_value: menu.timeout_value
         },
         status: menu.status,
+        metadata: menu.metadata,
         created_at: menu.created_at,
         updated_at: menu.updated_at
       },
       options: optionsResult.rows.map(row => ({
         id: parseInt(row.id),
         digit_pattern: row.digit_pattern,
-        description: row.description,
+        option_label: row.option_label,
         action_type: row.action_type,
         action_value: row.action_value,
         submenu_name: row.submenu_name,
+        confirmation_audio: row.confirmation_audio,
+        display_order: row.display_order,
         created_at: row.created_at
       })),
       recent_sessions: sessionsResult.rows.map(row => ({
@@ -481,7 +462,7 @@ app.get('/sessions', async (c) => {
     const endDate = c.req.query('end_date') || '';
 
     // Build query
-    let whereConditions = [];
+    let whereConditions = ['1=1'];
     const params = [];
     let paramCount = 0;
 
@@ -497,7 +478,7 @@ app.get('/sessions', async (c) => {
 
     if (tenantId) {
       paramCount++;
-      whereConditions.push(`m.tenant_id = $${paramCount}`);
+      whereConditions.push(`s.tenant_id = $${paramCount}`);
       params.push(tenantId);
     }
 
@@ -513,16 +494,13 @@ app.get('/sessions', async (c) => {
       params.push(endDate);
     }
 
-    const whereClause = whereConditions.length > 0
-      ? 'WHERE ' + whereConditions.join(' AND ')
-      : '';
+    const whereClause = whereConditions.join(' AND ');
 
     // Count total
     const countQuery = `
       SELECT COUNT(*)
       FROM ivr_sessions s
-      LEFT JOIN ivr_menus m ON s.current_menu_id = m.id
-      ${whereClause}
+      WHERE ${whereClause}
     `;
     const countResult = await pool.query(countQuery, params);
     const total = parseInt(countResult.rows[0].count);
@@ -537,8 +515,8 @@ app.get('/sessions', async (c) => {
         s.invalid_input_count,
         s.started_at,
         s.ended_at,
+        s.tenant_id,
         m.name as menu_name,
-        m.tenant_id,
         t.name as tenant_name,
         c.from_number,
         c.to_number,
@@ -546,9 +524,9 @@ app.get('/sessions', async (c) => {
         c.direction
       FROM ivr_sessions s
       LEFT JOIN ivr_menus m ON s.current_menu_id = m.id
-      LEFT JOIN tenants t ON m.tenant_id = t.id
+      LEFT JOIN tenants t ON s.tenant_id = t.id
       LEFT JOIN calls c ON s.call_uuid = c.uuid
-      ${whereClause}
+      WHERE ${whereClause}
       ORDER BY s.started_at DESC
       LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
     `;
@@ -570,7 +548,7 @@ app.get('/sessions', async (c) => {
       sessions: sessionsResult.rows.map(row => ({
         id: parseInt(row.id),
         call_uuid: row.call_uuid,
-        menu_id: parseInt(row.current_menu_id),
+        menu_id: row.current_menu_id ? parseInt(row.current_menu_id) : null,
         menu_name: row.menu_name,
         tenant_id: parseInt(row.tenant_id),
         tenant_name: row.tenant_name,
@@ -620,7 +598,7 @@ app.get('/analytics', async (c) => {
     let tenantFilter = '';
     const params = [startDate, endDate];
     if (tenantId) {
-      tenantFilter = 'AND m.tenant_id = $3';
+      tenantFilter = 'AND s.tenant_id = $3';
       params.push(tenantId);
     }
 
@@ -636,7 +614,6 @@ app.get('/analytics', async (c) => {
         AVG(s.invalid_input_count) as avg_invalid_inputs,
         SUM(s.invalid_input_count) as total_invalid_inputs
       FROM ivr_sessions s
-      LEFT JOIN ivr_menus m ON s.current_menu_id = m.id
       WHERE s.started_at >= $1 AND s.started_at <= $2
       ${tenantFilter}
     `;
@@ -647,7 +624,7 @@ app.get('/analytics', async (c) => {
       SELECT
         m.id as menu_id,
         m.name as menu_name,
-        m.tenant_id,
+        s.tenant_id,
         t.name as tenant_name,
         COUNT(*) as total_sessions,
         COUNT(CASE WHEN s.ended_at IS NULL THEN 1 END) as abandoned_count,
@@ -658,43 +635,15 @@ app.get('/analytics', async (c) => {
         ) as abandonment_rate
       FROM ivr_sessions s
       LEFT JOIN ivr_menus m ON s.current_menu_id = m.id
-      LEFT JOIN tenants t ON m.tenant_id = t.id
+      LEFT JOIN tenants t ON s.tenant_id = t.id
       WHERE s.started_at >= $1 AND s.started_at <= $2
       ${tenantFilter}
-      GROUP BY m.id, m.name, m.tenant_id, t.name
+      GROUP BY m.id, m.name, s.tenant_id, t.name
       HAVING COUNT(*) >= 5
       ORDER BY abandonment_rate DESC
       LIMIT 10
     `;
     const dropoffResult = await pool.query(dropoffQuery, params);
-
-    // Most used options
-    const optionsQuery = `
-      SELECT
-        o.id,
-        o.digit_pattern,
-        o.description,
-        o.action_type,
-        m.name as menu_name,
-        m.tenant_id,
-        t.name as tenant_name,
-        COUNT(CASE
-          WHEN s.menu_history::text LIKE '%' || o.digit_pattern || '%'
-          THEN 1
-        END) as usage_count
-      FROM ivr_menu_options o
-      LEFT JOIN ivr_menus m ON o.menu_id = m.id
-      LEFT JOIN tenants t ON m.tenant_id = t.id
-      LEFT JOIN ivr_sessions s ON m.id = s.current_menu_id
-        AND s.started_at >= $1
-        AND s.started_at <= $2
-      WHERE o.deleted_at IS NULL
-      ${tenantFilter}
-      GROUP BY o.id, o.digit_pattern, o.description, o.action_type, m.name, m.tenant_id, t.name
-      ORDER BY usage_count DESC
-      LIMIT 20
-    `;
-    const optionsResult = await pool.query(optionsQuery, params);
 
     // Daily session trends
     const trendsQuery = `
@@ -705,7 +654,6 @@ app.get('/analytics', async (c) => {
         COUNT(CASE WHEN s.ended_at IS NULL THEN 1 END) as abandoned_count,
         AVG(s.invalid_input_count) as avg_invalid_inputs
       FROM ivr_sessions s
-      LEFT JOIN ivr_menus m ON s.current_menu_id = m.id
       WHERE s.started_at >= $1 AND s.started_at <= $2
       ${tenantFilter}
       GROUP BY DATE(s.started_at)
@@ -737,23 +685,13 @@ app.get('/analytics', async (c) => {
         total_invalid_inputs: parseInt(completionResult.rows[0].total_invalid_inputs) || 0
       },
       dropoff_points: dropoffResult.rows.map(row => ({
-        menu_id: parseInt(row.menu_id),
+        menu_id: row.menu_id ? parseInt(row.menu_id) : null,
         menu_name: row.menu_name,
         tenant_id: parseInt(row.tenant_id),
         tenant_name: row.tenant_name,
         total_sessions: parseInt(row.total_sessions),
         abandoned_count: parseInt(row.abandoned_count),
         abandonment_rate: parseFloat(row.abandonment_rate)
-      })),
-      popular_options: optionsResult.rows.map(row => ({
-        option_id: parseInt(row.id),
-        digit_pattern: row.digit_pattern,
-        description: row.description,
-        action_type: row.action_type,
-        menu_name: row.menu_name,
-        tenant_id: parseInt(row.tenant_id),
-        tenant_name: row.tenant_name,
-        usage_count: parseInt(row.usage_count) || 0
       })),
       daily_trends: trendsResult.rows.map(row => ({
         date: row.date,
@@ -798,7 +736,7 @@ app.get('/menus/:id/flow', async (c) => {
           0 as depth,
           ARRAY[m.id] as path
         FROM ivr_menus m
-        WHERE m.id = $1 AND m.deleted_at IS NULL
+        WHERE m.id = $1
 
         UNION ALL
 
@@ -813,9 +751,7 @@ app.get('/menus/:id/flow', async (c) => {
         FROM menu_tree mt
         JOIN ivr_menu_options o ON mt.id = o.menu_id
           AND o.action_type = 'submenu'
-          AND o.deleted_at IS NULL
         JOIN ivr_menus sm ON o.action_value = sm.id::text
-          AND sm.deleted_at IS NULL
           AND NOT sm.id = ANY(mt.path) -- Prevent circular references
         WHERE mt.depth < 10 -- Limit recursion depth
       )
@@ -841,9 +777,7 @@ app.get('/menus/:id/flow', async (c) => {
       FROM ivr_menu_options o
       LEFT JOIN ivr_menus sm ON o.action_type = 'submenu'
         AND o.action_value = sm.id::text
-        AND sm.deleted_at IS NULL
       WHERE o.menu_id = ANY($1)
-        AND o.deleted_at IS NULL
       ORDER BY o.menu_id, o.digit_pattern
     `;
     const optionsResult = await pool.query(optionsQuery, [menuIds]);
@@ -858,7 +792,7 @@ app.get('/menus/:id/flow', async (c) => {
         .filter(o => parseInt(o.menu_id) === parseInt(row.id))
         .map(o => ({
           digit_pattern: o.digit_pattern,
-          description: o.description,
+          option_label: o.option_label,
           action_type: o.action_type,
           action_value: o.action_value,
           submenu_name: o.submenu_name,
