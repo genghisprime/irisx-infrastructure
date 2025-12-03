@@ -712,7 +712,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import { adminAPI } from '@/utils/api';
+import { adminAPI } from '../../../utils/api';
 
 // State
 const loading = ref(false);
