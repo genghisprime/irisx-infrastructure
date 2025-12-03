@@ -35,7 +35,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600">Total Contacts</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.total.toLocaleString() }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">{{ parseInt(stats.total_contacts || 0).toLocaleString() }}</p>
           </div>
           <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +49,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600">Active</p>
-            <p class="text-3xl font-bold text-green-600 mt-2">{{ stats.by_status.active.toLocaleString() }}</p>
+            <p class="text-3xl font-bold text-green-600 mt-2">{{ parseInt(stats.active_contacts || 0).toLocaleString() }}</p>
           </div>
           <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,7 +63,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600">DNC</p>
-            <p class="text-3xl font-bold text-red-600 mt-2">{{ stats.by_status.dnc.toLocaleString() }}</p>
+            <p class="text-3xl font-bold text-red-600 mt-2">{{ parseInt(stats.dnc_contacts || 0).toLocaleString() }}</p>
           </div>
           <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +77,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600">New This Month</p>
-            <p class="text-3xl font-bold text-purple-600 mt-2">{{ stats.new_this_month.toLocaleString() }}</p>
+            <p class="text-3xl font-bold text-purple-600 mt-2">{{ parseInt(stats.new_this_month || 0).toLocaleString() }}</p>
           </div>
           <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -437,7 +437,15 @@ import { adminAPI } from '../../../utils/api'
 const loading = ref(false)
 const processing = ref(false)
 const contacts = ref([])
-const stats = ref(null)
+const stats = ref({
+  total_contacts: 0,
+  total_tenants: 0,
+  active_contacts: 0,
+  inactive_contacts: 0,
+  dnc_contacts: 0,
+  new_this_month: 0,
+  active_this_week: 0
+})
 const selectedContacts = ref([])
 const selectedContact = ref(null)
 const showBulkModal = ref(false)
@@ -494,7 +502,8 @@ async function fetchContacts() {
 async function fetchStats() {
   try {
     const response = await adminAPI.contacts.getStats()
-    stats.value = response.data
+    // API returns {stats: {...}, top_tenants: [...]}
+    stats.value = response.data.stats || stats.value
   } catch (error) {
     console.error('Failed to fetch stats:', error)
   }

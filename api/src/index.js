@@ -75,6 +75,8 @@ import adminAudit from './routes/admin-audit.js';
 import adminAnalytics from './routes/admin-analytics.js';
 import adminFeatureFlags from './routes/admin-feature-flags.js';
 import adminContacts from './routes/admin-contacts.js';
+import adminCDRs from './routes/admin-cdrs.js';
+import adminIVR from './routes/admin-ivr.js';
 import publicSignup from './routes/public-signup.js'; // Temporarily disabled - has parse-time errors
 import imports from './routes/imports.js';
 import { initWebSocket } from './services/websocket.js';
@@ -415,6 +417,8 @@ app.route('/admin/audit-log', adminAudit); // Audit Log
 app.route('/admin/analytics', adminAnalytics); // Usage Analytics
 app.route('/admin/feature-flags', adminFeatureFlags); // Feature Flags Management
 app.route('/admin/contacts', adminContacts); // Contact Management
+app.route('/admin/cdrs', adminCDRs); // CDR Viewer (Call Detail Records)
+app.route('/admin/ivr', adminIVR); // IVR Management (Menu Configuration)
 app.route('/admin/agents', adminAgentsList); // Agent Management (Admin view)
 app.route('/public', publicSignup); // Temporarily disabled - has parse-time errors
 app.route('/v1/imports', imports); // Data Import System (Week 28)

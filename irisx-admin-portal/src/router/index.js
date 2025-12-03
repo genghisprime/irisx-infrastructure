@@ -141,6 +141,20 @@ const routes = [
         component: () => import('../views/admin/contacts/ContactManagement.vue'),
         meta: { requiresRole: 'admin' }
       },
+      // CDR Viewer
+      {
+        path: 'cdrs',
+        name: 'CDRViewer',
+        component: () => import('../views/admin/cdrs/CDRViewer.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // IVR Management
+      {
+        path: 'ivr',
+        name: 'IVRManagement',
+        component: () => import('../views/admin/ivr/IVRManagement.vue'),
+        meta: { requiresRole: 'admin' }
+      },
       // SIP Trunks
       {
         path: 'sip-trunks',

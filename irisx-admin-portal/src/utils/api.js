@@ -145,6 +145,22 @@ export const adminAPI = {
     getLists: (params) => apiClient.get('/admin/contacts/lists', { params }),
     export: (params) => apiClient.get('/admin/contacts/export', { params, responseType: 'blob' })
   },
+  cdrs: {
+    list: (params) => apiClient.get('/admin/cdrs', { params }),
+    get: (id) => apiClient.get(`/admin/cdrs/${id}`),
+    getStats: (params) => apiClient.get('/admin/cdrs/stats', { params }),
+    getTimeline: (id) => apiClient.get(`/admin/cdrs/timeline/${id}`),
+    getQualityAlerts: (params) => apiClient.get('/admin/cdrs/quality-alerts', { params }),
+    export: (params) => apiClient.get('/admin/cdrs/export', { params, responseType: 'blob' })
+  },
+  ivr: {
+    getStats: () => apiClient.get('/admin/ivr/stats'),
+    listMenus: (params) => apiClient.get('/admin/ivr/menus', { params }),
+    getMenuDetails: (id) => apiClient.get(`/admin/ivr/menus/${id}`),
+    getMenuFlow: (id) => apiClient.get(`/admin/ivr/menus/${id}/flow`),
+    listSessions: (params) => apiClient.get('/admin/ivr/sessions', { params }),
+    getAnalytics: (params) => apiClient.get('/admin/ivr/analytics', { params })
+  },
   search: {
     tenants: (params) => apiClient.get('/admin/search/tenants', { params }),
     users: (params) => apiClient.get('/admin/search/users', { params }),
