@@ -259,6 +259,48 @@ export const adminAPI = {
     export: (params) => apiClient.get('/admin/billing-rates/export', { params }).then(r => r.data),
     lookup: (destination_number) => apiClient.post('/admin/billing-rates/lookup', { destination_number }).then(r => r.data),
     getCarriers: () => apiClient.get('/admin/billing-rates/carriers').then(r => r.data)
+  },
+  analyticsDashboard: {
+    getOverview: (params) => apiClient.get('/admin/analytics-dashboard/overview', { params }).then(r => r.data),
+    getChannelComparison: (params) => apiClient.get('/admin/analytics-dashboard/channel-comparison', { params }).then(r => r.data),
+    getUsageTrends: (params) => apiClient.get('/admin/analytics-dashboard/usage-trends', { params }).then(r => r.data),
+    getTopTenants: (params) => apiClient.get('/admin/analytics-dashboard/top-tenants', { params }).then(r => r.data),
+    getCostBreakdown: (params) => apiClient.get('/admin/analytics-dashboard/cost-breakdown', { params }).then(r => r.data),
+    getRevenueTrends: (params) => apiClient.get('/admin/analytics-dashboard/revenue-trends', { params }).then(r => r.data),
+    getRealTime: () => apiClient.get('/admin/analytics-dashboard/real-time').then(r => r.data),
+    getTenantAnalytics: (id, params) => apiClient.get(`/admin/analytics-dashboard/tenant/${id}`, { params }).then(r => r.data)
+  },
+  whatsapp: {
+    getStats: () => apiClient.get('/admin/whatsapp/stats').then(r => r.data),
+    getAccounts: (params) => apiClient.get('/admin/whatsapp/accounts', { params }).then(r => r.data),
+    getAccountDetails: (id) => apiClient.get(`/admin/whatsapp/accounts/${id}`).then(r => r.data),
+    updateAccountStatus: (id, status) => apiClient.patch(`/admin/whatsapp/accounts/${id}/status`, { status }).then(r => r.data),
+    getTemplates: (params) => apiClient.get('/admin/whatsapp/templates', { params }).then(r => r.data),
+    getMessages: (params) => apiClient.get('/admin/whatsapp/messages', { params }).then(r => r.data),
+    getWebhooks: (params) => apiClient.get('/admin/whatsapp/webhooks', { params }).then(r => r.data),
+    getAnalytics: (params) => apiClient.get('/admin/whatsapp/analytics', { params }).then(r => r.data),
+    getContacts: (params) => apiClient.get('/admin/whatsapp/contacts', { params }).then(r => r.data)
+  },
+  smsTemplates: {
+    getStats: () => apiClient.get('/admin/sms-templates/stats').then(r => r.data),
+    list: (params) => apiClient.get('/admin/sms-templates', { params }).then(r => r.data),
+    get: (id) => apiClient.get(`/admin/sms-templates/${id}`).then(r => r.data),
+    getOptOuts: (params) => apiClient.get('/admin/sms-templates/opt-outs/list', { params }).then(r => r.data),
+    getScheduled: (params) => apiClient.get('/admin/sms-templates/scheduled/list', { params }).then(r => r.data),
+    getMessages: (params) => apiClient.get('/admin/sms-templates/messages/list', { params }).then(r => r.data),
+    getAnalytics: (params) => apiClient.get('/admin/sms-templates/analytics/data', { params }).then(r => r.data),
+    getCostByTenant: (params) => apiClient.get('/admin/sms-templates/cost-by-tenant', { params }).then(r => r.data)
+  },
+  emailTemplates: {
+    getStats: () => apiClient.get('/admin/email-templates/stats').then(r => r.data),
+    list: (params) => apiClient.get('/admin/email-templates', { params }).then(r => r.data),
+    get: (id) => apiClient.get(`/admin/email-templates/${id}`).then(r => r.data),
+    getUnsubscribes: (params) => apiClient.get('/admin/email-templates/unsubscribes/list', { params }).then(r => r.data),
+    getBounces: (params) => apiClient.get('/admin/email-templates/bounces/list', { params }).then(r => r.data),
+    getEmails: (params) => apiClient.get('/admin/email-templates/emails/list', { params }).then(r => r.data),
+    getAnalytics: (params) => apiClient.get('/admin/email-templates/analytics/data', { params }).then(r => r.data),
+    getCostByTenant: (params) => apiClient.get('/admin/email-templates/cost-by-tenant', { params }).then(r => r.data),
+    getEvents: (params) => apiClient.get('/admin/email-templates/events/list', { params }).then(r => r.data)
   }
 }
 

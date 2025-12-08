@@ -169,6 +169,34 @@ const routes = [
         component: () => import('../views/admin/billing/RateManagement.vue'),
         meta: { requiresRole: 'admin' }
       },
+      // Analytics Dashboard (Cross-Tenant)
+      {
+        path: 'analytics/overview',
+        name: 'AnalyticsOverview',
+        component: () => import('../views/admin/analytics/AnalyticsOverview.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // WhatsApp Business Management
+      {
+        path: 'whatsapp',
+        name: 'WhatsAppManagement',
+        component: () => import('../views/admin/whatsapp/WhatsAppManagement.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // SMS Template Management
+      {
+        path: 'sms-templates',
+        name: 'SMSTemplates',
+        component: () => import('../views/admin/sms/SMSTemplates.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // Email Template Management
+      {
+        path: 'email-templates',
+        name: 'EmailTemplates',
+        component: () => import('../views/admin/email/EmailTemplates.vue'),
+        meta: { requiresRole: 'admin' }
+      },
       // SIP Trunks
       {
         path: 'sip-trunks',

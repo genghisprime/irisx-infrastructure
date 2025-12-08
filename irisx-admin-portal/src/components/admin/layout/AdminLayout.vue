@@ -52,6 +52,18 @@
             </svg>
             Usage & Analytics
           </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/analytics/overview"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/analytics/overview' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+            </svg>
+            Analytics Dashboard
+          </RouterLink>
         </div>
 
         <!-- Tenants -->
@@ -223,6 +235,39 @@
           </RouterLink>
           <RouterLink
             v-if="authStore.isAdmin"
+            to="/dashboard/whatsapp"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/whatsapp' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            WhatsApp
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/sms-templates"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/sms-templates' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+            SMS Templates
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/email-templates"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/email-templates' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Email Templates
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
             to="/dashboard/providers"
             class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
           >
@@ -391,6 +436,8 @@ const pageTitle = computed(() => {
     'Dashboard': 'Dashboard Overview',
     'SystemHealth': 'System Health',
     'AuditLog': 'Audit Log',
+    'UsageAnalytics': 'Usage & Analytics',
+    'AnalyticsOverview': 'Analytics Dashboard',
     'TenantList': 'All Tenants',
     'TenantDetails': 'Tenant Details',
     'TenantCreate': 'Create Tenant',
@@ -405,6 +452,9 @@ const pageTitle = computed(() => {
     'CDRViewer': 'Call Detail Records',
     'IVRManagement': 'IVR Management',
     'SocialMediaHub': 'Social Media Hub',
+    'WhatsAppManagement': 'WhatsApp Business',
+    'SMSTemplates': 'SMS Template Management',
+    'EmailTemplates': 'Email Template Management',
     'BillingRates': 'Billing Rate Tables',
     'ProviderCredentials': 'Provider Credentials',
     'FeatureFlags': 'Feature Flags',

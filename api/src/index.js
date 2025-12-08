@@ -79,6 +79,10 @@ import adminCDRs from './routes/admin-cdrs.js';
 import adminIVR from './routes/admin-ivr.js';
 import adminSocialMedia from './routes/admin-social-media.js';
 import adminBillingRates from './routes/admin-billing-rates.js';
+import adminAnalyticsDashboard from './routes/admin-analytics-dashboard.js';
+import adminWhatsApp from './routes/admin-whatsapp.js';
+import adminSMSTemplates from './routes/admin-sms-templates.js';
+import adminEmailTemplates from './routes/admin-email-templates.js';
 import publicSignup from './routes/public-signup.js'; // Temporarily disabled - has parse-time errors
 import imports from './routes/imports.js';
 import { initWebSocket } from './services/websocket.js';
@@ -423,6 +427,10 @@ app.route('/admin/cdrs', adminCDRs); // CDR Viewer (Call Detail Records)
 app.route('/admin/ivr', adminIVR); // IVR Management (Menu Configuration)
 app.route('/admin/social-media', adminSocialMedia); // Social Media Hub (Discord, Slack, Teams, Telegram)
 app.route('/admin/billing-rates', adminBillingRates); // Billing Rates Management (LCR)
+app.route('/admin/analytics-dashboard', adminAnalyticsDashboard); // Cross-Tenant Analytics Dashboard
+app.route('/admin/whatsapp', adminWhatsApp); // WhatsApp Business Management
+app.route('/admin/sms-templates', adminSMSTemplates); // SMS Template Management
+app.route('/admin/email-templates', adminEmailTemplates); // Email Template Management
 app.route('/admin/agents', adminAgentsList); // Agent Management (Admin view)
 app.route('/public', publicSignup); // Temporarily disabled - has parse-time errors
 app.route('/v1/imports', imports); // Data Import System (Week 28)
