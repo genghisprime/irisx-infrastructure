@@ -465,7 +465,7 @@
                     {{ item.bounced || 0 }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ${{ (item.total_cost || 0).toFixed(2) }}
+                    ${{ parseFloat(item.total_cost || 0).toFixed(2) }}
                   </td>
                 </tr>
                 <tr v-if="costByTenant.length === 0 && !loading">
@@ -495,7 +495,7 @@
             </div>
             <div class="bg-gray-50 rounded-lg p-4">
               <p class="text-sm font-medium text-gray-500">Total Cost</p>
-              <p class="text-2xl font-semibold text-gray-900">${{ (analytics.overall?.total_cost || 0).toFixed(2) }}</p>
+              <p class="text-2xl font-semibold text-gray-900">${{ parseFloat(analytics.overall?.total_cost || 0).toFixed(2) }}</p>
             </div>
           </div>
         </div>
