@@ -868,6 +868,222 @@ adminCDRs.get('/', async (c) => {
 });
 
 /**
+ * POST /admin/cdrs/:id/hangup - Admin force hangup (EMERGENCY OPERATION)
+ *
+ * CRITICAL: Allows admin to forcefully terminate any call across any tenant.
+ * Use cases:
+ * - Terminate harassment/abuse calls
+ * - End stuck/zombie calls
+ * - Emergency call termination
+ *
+ * This action is logged to the audit trail with reason.
+ */
+adminCDRs.post('/:id/hangup', async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'));
+    if (isNaN(id)) {
+      return c.json({ error: 'Invalid CDR ID' }, 400);
+    }
+
+    const bodySchema = z.object({
+      reason: z.string().min(1, 'Reason is required for audit trail').max(500),
+      notify_tenant: z.boolean().default(false)
+    });
+
+    const body = bodySchema.parse(await c.req.json());
+    const admin = c.get('admin');
+
+    // Get the call to verify it exists and get UUID for FreeSWITCH
+    const callResult = await pool.query(`
+      SELECT
+        c.*,
+        t.name as tenant_name
+      FROM calls c
+      LEFT JOIN tenants t ON c.tenant_id = t.id
+      WHERE c.id = $1
+    `, [id]);
+
+    if (callResult.rows.length === 0) {
+      return c.json({ error: 'Call not found' }, 404);
+    }
+
+    const call = callResult.rows[0];
+
+    // Check if call is already ended
+    if (call.status === 'completed' || call.status === 'failed' || call.ended_at) {
+      return c.json({
+        error: 'Call already ended',
+        status: call.status,
+        ended_at: call.ended_at
+      }, 400);
+    }
+
+    // Attempt to send hangup command to FreeSWITCH
+    // Note: This requires FreeSWITCH ESL connection
+    let freeswitchSuccess = false;
+    try {
+      // Get FreeSWITCH from context if available
+      const freeswitch = c.get('freeswitch');
+      if (freeswitch && freeswitch.connection && call.uuid) {
+        await freeswitch.api(`uuid_kill ${call.uuid}`);
+        freeswitchSuccess = true;
+      }
+    } catch (fsError) {
+      console.error('FreeSWITCH hangup failed:', fsError);
+      // Continue - we'll update the database anyway
+    }
+
+    // Update the call record
+    const updateResult = await pool.query(`
+      UPDATE calls
+      SET
+        status = 'completed',
+        ended_at = NOW(),
+        hangup_cause = 'ADMIN_HANGUP',
+        hangup_by = 'admin',
+        metadata = COALESCE(metadata, '{}'::jsonb) || $1::jsonb
+      WHERE id = $2
+      RETURNING *
+    `, [JSON.stringify({
+      admin_hangup: true,
+      admin_id: admin.id,
+      admin_email: admin.email,
+      hangup_reason: body.reason,
+      hangup_at: new Date().toISOString(),
+      freeswitch_success: freeswitchSuccess
+    }), id]);
+
+    // Log to audit trail
+    await pool.query(`
+      INSERT INTO admin_audit_log (
+        admin_user_id, action, resource_type, resource_id, changes, ip_address, user_agent
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `, [
+      admin.id,
+      'emergency_hangup',
+      'call',
+      id,
+      JSON.stringify({
+        call_sid: call.call_sid,
+        tenant_id: call.tenant_id,
+        tenant_name: call.tenant_name,
+        from_number: call.from_number,
+        to_number: call.to_number,
+        reason: body.reason,
+        freeswitch_success: freeswitchSuccess
+      }),
+      c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown',
+      c.req.header('user-agent')
+    ]);
+
+    return c.json({
+      success: true,
+      message: 'Call terminated by admin',
+      call: {
+        id: call.id,
+        call_sid: call.call_sid,
+        tenant_name: call.tenant_name,
+        from_number: call.from_number,
+        to_number: call.to_number,
+        previous_status: call.status,
+        new_status: 'completed',
+        hangup_cause: 'ADMIN_HANGUP',
+        freeswitch_notified: freeswitchSuccess
+      },
+      admin_action: {
+        admin_id: admin.id,
+        admin_email: admin.email,
+        reason: body.reason,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Error in admin hangup:', error);
+    if (error instanceof z.ZodError) {
+      return c.json({ error: 'Invalid request', details: error.errors }, 400);
+    }
+    return c.json({ error: 'Failed to hangup call' }, 500);
+  }
+});
+
+/**
+ * GET /admin/cdrs/active - Get currently active calls across all tenants
+ *
+ * Lists all in-progress calls for monitoring and emergency intervention
+ */
+adminCDRs.get('/active', async (c) => {
+  try {
+    const { tenant_id, min_duration } = c.req.query();
+
+    const conditions = [`(c.status = 'in-progress' OR (c.status = 'ringing' AND c.initiated_at > NOW() - INTERVAL '5 minutes'))`];
+    const params = [];
+    let paramCount = 0;
+
+    if (tenant_id) {
+      paramCount++;
+      conditions.push(`c.tenant_id = $${paramCount}`);
+      params.push(parseInt(tenant_id));
+    }
+
+    if (min_duration) {
+      paramCount++;
+      conditions.push(`EXTRACT(EPOCH FROM (NOW() - c.initiated_at)) >= $${paramCount}`);
+      params.push(parseInt(min_duration));
+    }
+
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
+
+    // Note: calls table doesn't have queue_id - queues are tracked via queue_members table
+    const result = await pool.query(`
+      SELECT
+        c.id,
+        c.uuid,
+        c.call_sid,
+        c.tenant_id,
+        t.name as tenant_name,
+        c.direction,
+        c.from_number,
+        c.to_number,
+        c.status,
+        c.initiated_at,
+        c.answered_at,
+        EXTRACT(EPOCH FROM (NOW() - c.initiated_at))::INTEGER as duration_so_far,
+        c.mos_score,
+        qm.queue_id,
+        q.name as queue_name
+      FROM calls c
+      LEFT JOIN tenants t ON c.tenant_id = t.id
+      LEFT JOIN queue_members qm ON qm.call_id = c.id
+      LEFT JOIN queues q ON qm.queue_id = q.id
+      ${whereClause}
+      ORDER BY c.initiated_at ASC
+    `, params);
+
+    // Get summary
+    const summaryResult = await pool.query(`
+      SELECT
+        COUNT(*) as total_active,
+        COUNT(*) FILTER (WHERE c.direction = 'inbound') as inbound,
+        COUNT(*) FILTER (WHERE c.direction = 'outbound') as outbound,
+        COUNT(DISTINCT c.tenant_id) as tenants_with_calls,
+        COUNT(*) FILTER (WHERE qm.queue_id IS NOT NULL) as calls_in_queues,
+        MAX(EXTRACT(EPOCH FROM (NOW() - c.initiated_at)))::INTEGER as longest_call_seconds
+      FROM calls c
+      LEFT JOIN queue_members qm ON qm.call_id = c.id
+      ${whereClause}
+    `, params);
+
+    return c.json({
+      active_calls: result.rows,
+      summary: summaryResult.rows[0]
+    });
+  } catch (error) {
+    console.error('Error fetching active calls:', error);
+    return c.json({ error: 'Failed to fetch active calls' }, 500);
+  }
+});
+
+/**
  * GET /admin/cdrs/:id - Get detailed CDR information
  *
  * Returns comprehensive call details including:

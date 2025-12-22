@@ -22,6 +22,7 @@ import email from './routes/email.js';
 import emails from './routes/emails.js';
 import analytics from './routes/analytics.js';
 import tts from './routes/tts.js';
+import stt from './routes/stt.js'; // Speech-to-Text API
 import ivr from './routes/ivr.js';
 import sms from './routes/sms.js';
 import messages from './routes/messages.js';
@@ -32,6 +33,7 @@ import queues from './routes/queues.js';
 import agents from './routes/agents.js';
 import campaigns from './routes/campaigns.js';
 import billing from './routes/billing.js';
+import stripe from './routes/stripe.js'; // Stripe payment integration
 import chat from './routes/chat.js';
 import usage from './routes/usage.js';
 import apiKeys from './routes/api-keys.js';
@@ -83,9 +85,45 @@ import adminAnalyticsDashboard from './routes/admin-analytics-dashboard.js';
 import adminWhatsApp from './routes/admin-whatsapp.js';
 import adminSMSTemplates from './routes/admin-sms-templates.js';
 import adminEmailTemplates from './routes/admin-email-templates.js';
+import adminApiKeys from './routes/admin-api-keys.js';
+import adminDunning from './routes/admin-dunning.js';
 import publicSignup from './routes/public-signup.js'; // Temporarily disabled - has parse-time errors
 import imports from './routes/imports.js';
+import supervisor from './routes/supervisor.js'; // Supervisor Whisper/Barge
+import wrapUp from './routes/wrap-up.js'; // Agent Wrap-up State (ACW)
+import webrtc from './routes/webrtc.js'; // WebRTC Token API (SIP credentials for Agent Desktop)
+import callIntelligence from './routes/call-intelligence.js'; // AI Transcription & Call Analysis
+import wallboard from './routes/wallboard.js'; // Real-time Wallboard API
+import dripCampaigns from './routes/drip-campaigns.js'; // Drip Campaign Automation
+import customReports from './routes/reports.js'; // Custom Reports with Exports
+import wfm from './routes/wfm.js'; // Workforce Management (Scheduling, Adherence, Forecasting)
+import callQuality from './routes/call-quality.js'; // Call Quality Monitoring (MOS, RTCP, Carrier Scoring)
+import campaignEnhancements from './routes/campaign-enhancements.js'; // Campaign Enhancements (Recurring, Triggers, A/B, Preview, Approvals)
+import billingAnalytics from './routes/billing-analytics.js'; // Billing Analytics (MRR, Churn, LTV, Usage Dashboard)
+import security from './routes/security.js'; // Security (IP Whitelisting, Email Verification, Sessions, Audit)
+import semanticSearch from './routes/semantic-search.js'; // Semantic Search (pgvector, AI embeddings)
+import anomalyDetection from './routes/anomaly-detection.js'; // Anomaly Detection (statistical, auto-remediation)
+import realtimeStreaming from './routes/realtime-streaming.js'; // Real-time Streaming (WebSocket, transcripts, events)
+import providerHealth from './routes/provider-health.js'; // Provider Health Scoring (metrics, alerts, incidents, failover)
+import audioConversion from './routes/audio-conversion.js'; // Audio Format Conversion (FFmpeg-based processing)
+import tenantIsolation from './routes/tenant-isolation.js'; // Tenant Isolation Monitoring (security, policies, audit)
+import emailTracking from './routes/email-tracking.js'; // Email Tracking (pixels, link clicks, engagement analytics)
+import campaignTemplates from './routes/campaign-templates.js'; // Campaign Templates CRUD
+import unsubscribe from './routes/unsubscribe.js'; // Unsubscribe System (RFC 8058, preference center, suppression)
+import cdn from './routes/cdn.js'; // CDN/CloudFront Integration (signed URLs, cache invalidation)
+import adminIncidents from './routes/admin-incidents.js'; // Incident Response Automation
+import capacityPlanning from './routes/capacity-planning.js'; // Capacity Planning & Forecasting
+import saml from './routes/saml.js'; // SAML 2.0 SSO
+import adminResellers from './routes/admin-resellers.js'; // Reseller/White-Label Billing
+import nats from './routes/nats.js'; // NATS Messaging Integration
+import adminClickhouse from './routes/admin-clickhouse.js'; // ClickHouse Data Warehouse
+import voiceCloning from './routes/voice-cloning.js'; // Voice Cloning (custom TTS voices)
+import webrtcStreaming from './routes/webrtc-streaming.js'; // WebRTC Audio Streaming
 import { initWebSocket } from './services/websocket.js';
+import { initWallboardWebSocket } from './services/wallboard-websocket.js';
+import { initStreamingWebSocket } from './services/streaming-websocket.js';
+import { initDashboardWebSocket } from './services/dashboard-websocket.js';
+import { initQualityWebSocket } from './services/quality-websocket.js';
 
 dotenv.config();
 
@@ -370,6 +408,7 @@ app.route('/v1/email', email);
 app.route('/v1/emails', emails); // Email with LCR (Least-Cost Routing)
 app.route('/v1/analytics', analytics);
 app.route('/v1/tts', tts);
+app.route('/v1/stt', stt); // Speech-to-Text API (multi-provider transcription)
 app.route('/v1/ivr', ivr);
 app.route('/v1/sms', sms);
 app.route('/v1/messages', messages);
@@ -381,6 +420,7 @@ app.route('/v1/queues', queues);
 app.route('/v1/agents', agents);
 app.route('/v1/campaigns', campaigns);
 app.route('/v1/billing', billing);
+app.route('/v1/stripe', stripe); // Stripe payment integration (subscriptions, payment methods, webhooks)
 app.route('/v1/chat', chat); // Live Chat (Week 24-25)
 app.route('/v1/usage', usage); // Usage & Billing Dashboard (Week 24-25)
 app.route('/v1/api-keys', apiKeys); // API Key Management
@@ -431,10 +471,44 @@ app.route('/admin/analytics-dashboard', adminAnalyticsDashboard); // Cross-Tenan
 app.route('/admin/whatsapp', adminWhatsApp); // WhatsApp Business Management
 app.route('/admin/sms-templates', adminSMSTemplates); // SMS Template Management
 app.route('/admin/email-templates', adminEmailTemplates); // Email Template Management
+app.route('/admin/api-keys', adminApiKeys); // API Keys Management (Cross-Tenant Security)
+app.route('/admin/dunning', adminDunning); // Dunning & Failed Payment Recovery
 app.route('/admin/agents', adminAgentsList); // Agent Management (Admin view)
 app.route('/public', publicSignup); // Temporarily disabled - has parse-time errors
 app.route('/v1/imports', imports); // Data Import System (Week 28)
 app.route('/v1/exports', imports); // Data Export System (Week 28)
+app.route('/v1/supervisor', supervisor); // Supervisor Whisper/Barge (Monitor, Whisper, Barge calls)
+app.route('/v1/wrap-up', wrapUp); // Agent Wrap-up State (After Call Work / ACW)
+app.route('/v1/webrtc', webrtc); // WebRTC Token API (SIP credentials for Agent Desktop)
+app.route('/v1', callIntelligence); // AI Transcription & Call Analysis (transcripts, analysis, compliance)
+app.route('/v1/wallboard', wallboard); // Real-time Wallboard API (queue metrics, agent status, SLA)
+app.route('/v1/drip-campaigns', dripCampaigns); // Drip Campaign Automation (multi-step sequences)
+app.route('/v1/reports', customReports); // Custom Reports with CSV/Excel/PDF Export
+app.route('/v1/wfm', wfm); // Workforce Management (shifts, time-off, adherence, forecasting)
+app.route('/v1/call-quality', callQuality); // Call Quality Monitoring (MOS, RTCP, carrier quality, alerts)
+app.route('/v1/campaign-enhancements', campaignEnhancements); // Campaign Enhancements (recurring, triggers, A/B, preview, approvals)
+app.route('/v1/billing-analytics', billingAnalytics); // Billing Analytics (MRR, Churn, LTV, Customer Usage Dashboard)
+app.route('/v1/security', security); // Security (IP Whitelisting, Email Verification, Sessions, Audit Log)
+app.route('/v1/search', semanticSearch); // Semantic Search (pgvector embeddings, call/knowledge/contact search)
+app.route('/v1/anomalies', anomalyDetection); // Anomaly Detection (z-score, IQR, auto-remediation)
+app.route('/v1/streaming', realtimeStreaming); // Real-time Streaming (WebSocket, transcripts, events, quality metrics)
+app.route('/v1/provider-health', providerHealth); // Provider Health Scoring (metrics, alerts, incidents, route rankings, failover)
+app.route('/v1/audio', audioConversion); // Audio Format Conversion (FFmpeg conversion, normalization, trimming, mixing)
+app.route('/v1/tenant-isolation', tenantIsolation); // Tenant Isolation Monitoring (security policies, access audit, risk scoring)
+app.route('/track', emailTracking); // Email Tracking Pixels and Links (public endpoints)
+app.route('/v1/email-tracking', emailTracking); // Email Tracking Analytics (authenticated)
+app.route('/v1/templates', campaignTemplates); // Campaign Templates CRUD (SMS, Email, Voice)
+app.route('/unsubscribe', unsubscribe); // Unsubscribe System (public unsubscribe pages)
+app.route('/v1/unsubscribe', unsubscribe); // Unsubscribe API (authenticated endpoints)
+app.route('/v1/cdn', cdn); // CDN/CloudFront (signed URLs, cache invalidation, media delivery)
+app.route('/admin/incidents', adminIncidents); // Incident Response Automation (escalation, runbooks, postmortems)
+app.route('/admin/capacity', capacityPlanning); // Capacity Planning & Forecasting (trends, recommendations, scaling)
+app.route('/auth/saml', saml); // SAML 2.0 SSO (SP metadata, login, callback, logout, config)
+app.route('/admin/resellers', adminResellers); // Reseller/White-Label Billing (commissions, invoices, payouts)
+app.route('/v1/nats', nats); // NATS Messaging (campaign queues, call events, analytics)
+app.route('/admin/clickhouse', adminClickhouse); // ClickHouse Data Warehouse (analytics, ingestion, sync)
+app.route('/v1/voices', voiceCloning); // Voice Cloning (create, manage, generate with cloned voices)
+app.route('/v1/webrtc', webrtcStreaming); // WebRTC Audio Streaming (streams, sessions, rooms, recording)
 
 // 404 handler
 app.notFound((c) => {
@@ -494,4 +568,20 @@ const server = serve({
   // Initialize WebSocket server for real-time import progress
   initWebSocket(server);
   console.log('✓ WebSocket server initialized on /ws/imports');
+
+  // Initialize Wallboard WebSocket server for real-time queue metrics
+  initWallboardWebSocket(server);
+  console.log('✓ Wallboard WebSocket server initialized on /ws/wallboard');
+
+  // Initialize Streaming WebSocket server for real-time transcripts and events
+  initStreamingWebSocket(server);
+  console.log('✓ Streaming WebSocket server initialized on /ws/streaming');
+
+  // Initialize Dashboard WebSocket server for real-time admin analytics
+  initDashboardWebSocket(server);
+  console.log('✓ Dashboard WebSocket server initialized on /ws/dashboard');
+
+  // Initialize Quality WebSocket server for real-time call quality graphs
+  initQualityWebSocket(server);
+  console.log('✓ Quality WebSocket server initialized on /ws/quality');
 });

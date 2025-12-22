@@ -5,7 +5,7 @@ description: 'Purchase and manage phone numbers for voice and SMS'
 
 ## Overview
 
-IRISX allows you to purchase local, toll-free, and mobile phone numbers in 60+ countries for voice calls and SMS messaging.
+Tazzi allows you to purchase local, toll-free, and mobile phone numbers in 60+ countries for voice calls and SMS messaging.
 
 ## Number Types
 
@@ -33,7 +33,7 @@ IRISX allows you to purchase local, toll-free, and mobile phone numbers in 60+ c
 ## Searching Numbers
 
 ```javascript
-const available = await irisx.phoneNumbers.search({
+const available = await tazzi.phoneNumbers.search({
   country: 'US',
   area_code: '415',
   type: 'local',
@@ -49,25 +49,25 @@ available.forEach(number => {
 
 ```javascript
 // Search by area code
-await irisx.phoneNumbers.search({
+await tazzi.phoneNumbers.search({
   country: 'US',
   area_code: '212'  // New York
 });
 
 // Search by pattern
-await irisx.phoneNumbers.search({
+await tazzi.phoneNumbers.search({
   country: 'US',
   contains: '1234'  // Numbers containing "1234"
 });
 
 // Toll-free only
-await irisx.phoneNumbers.search({
+await tazzi.phoneNumbers.search({
   country: 'US',
   type: 'toll-free'
 });
 
 // SMS-enabled only
-await irisx.phoneNumbers.search({
+await tazzi.phoneNumbers.search({
   country: 'US',
   sms_enabled: true
 });
@@ -76,7 +76,7 @@ await irisx.phoneNumbers.search({
 ## Purchasing Numbers
 
 ```javascript
-const number = await irisx.phoneNumbers.purchase({
+const number = await tazzi.phoneNumbers.purchase({
   phone_number: '+14155551234',
   friendly_name: 'Support Line'
 });
@@ -90,7 +90,7 @@ console.log(`Cost: $${number.monthly_cost}/month`);
 ### Set Webhook URLs
 
 ```javascript
-await irisx.phoneNumbers.update(numberI, {
+await tazzi.phoneNumbers.update(numberI, {
   // Voice webhooks
   voice_webhook_url: 'https://yourapp.com/webhooks/voice',
 
@@ -110,7 +110,7 @@ await irisx.phoneNumbers.update(numberI, {
   "event": "call.initiated",
   "data": {
     "direction": "inbound",
-    "to": "+14155551234",      // Your IRISX number
+    "to": "+14155551234",      // Your Tazzi number
     "from": "+15551234567",    // Caller
     "caller_name": "John Doe"
   }
@@ -138,7 +138,7 @@ await irisx.phoneNumbers.update(numberI, {
 }
 
 // Auto-reply
-await irisx.sms.send({
+await tazzi.sms.send({
   to: inboundSMS.from,
   from: inboundSMS.to,
   body: 'Our hours are 9am-5pm Monday-Friday.'
@@ -163,7 +163,7 @@ Check what each number supports:
 
 ## Number Porting
 
-Port existing numbers to IRISX:
+Port existing numbers to Tazzi:
 
 1. **Submit LOA** (Letter of Authorization)
 2. **Verify ownership** (recent bill)
@@ -171,7 +171,7 @@ Port existing numbers to IRISX:
 4. **Cost:** $10 one-time fee
 
 ```javascript
-const portRequest = await irisx.phoneNumbers.requestPort({
+const portRequest = await tazzi.phoneNumbers.requestPort({
   phone_number: '+14155551234',
   current_carrier: 'Verizon',
   account_number: '1234567890',
@@ -179,14 +179,14 @@ const portRequest = await irisx.phoneNumbers.requestPort({
 });
 
 // Check status
-const status = await irisx.phoneNumbers.getPortStatus(portRequest.id);
+const status = await tazzi.phoneNumbers.getPortStatus(portRequest.id);
 ```
 
 ## Releasing Numbers
 
 ```javascript
 // Release number (cancel)
-await irisx.phoneNumbers.release(numberId);
+await tazzi.phoneNumbers.release(numberId);
 
 // Number is released at end of billing cycle
 // No prorated refunds
@@ -202,14 +202,14 @@ For high-volume SMS, use number pools:
 
 ```javascript
 // Create pool
-const pool = await irisx.phoneNumbers.createPool({
+const pool = await tazzi.phoneNumbers.createPool({
   name: 'Marketing Campaign',
   size: 10,  // 10 numbers
   area_code: '415'
 });
 
 // Send SMS from pool (rotates automatically)
-await irisx.sms.sendFromPool({
+await tazzi.sms.sendFromPool({
   pool_id: pool.id,
   to: '+15551234567',
   body: 'Hello from our campaign!'

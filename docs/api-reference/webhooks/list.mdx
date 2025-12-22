@@ -27,7 +27,7 @@ Retrieve a list of all webhook endpoints configured for your account.
 <RequestExample>
 
 ```bash cURL
-curl https://api.useiris.com/v1/webhooks/endpoints \
+curl https://api.tazzi.com/v1/webhooks/endpoints \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
@@ -36,7 +36,7 @@ const axios = require('axios');
 
 async function listWebhooks() {
   const response = await axios.get(
-    'https://api.useiris.com/v1/webhooks/endpoints',
+    'https://api.tazzi.com/v1/webhooks/endpoints',
     {
       headers: { 'X-API-Key': 'YOUR_API_KEY' }
     }
@@ -52,7 +52,7 @@ import requests
 
 def list_webhooks():
     response = requests.get(
-        'https://api.useiris.com/v1/webhooks/endpoints',
+        'https://api.tazzi.com/v1/webhooks/endpoints',
         headers={'X-API-Key': 'YOUR_API_KEY'}
     )
 

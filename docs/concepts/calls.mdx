@@ -1,15 +1,15 @@
 ---
 title: 'Voice Calls'
-description: 'Understanding voice calls in IRISX'
+description: 'Understanding voice calls in Tazzi'
 ---
 
 ## Overview
 
-IRISX provides enterprise-grade voice calling capabilities powered by FreeSWITCH with intelligent carrier routing, IVR menus, call recording, and real-time analytics.
+Tazzi provides enterprise-grade voice calling capabilities powered by FreeSWITCH with intelligent carrier routing, IVR menus, call recording, and real-time analytics.
 
 ## Call Lifecycle
 
-Every call in IRISX goes through several states:
+Every call in Tazzi goes through several states:
 
 ```mermaid
 graph LR
@@ -55,7 +55,7 @@ graph LR
 ### Basic Outbound Call
 
 ```javascript
-const call = await irisx.calls.create({
+const call = await tazzi.calls.create({
   to: '+15551234567',
   from: '+15559876543',
   webhook_url: 'https://yourapp.com/webhooks/calls'
@@ -67,7 +67,7 @@ console.log(`Call UUID: ${call.uuid}`);
 ### With Recording
 
 ```javascript
-const call = await irisx.calls.create({
+const call = await tazzi.calls.create({
   to: '+15551234567',
   from: '+15559876543',
   record: true,  // Enable call recording
@@ -78,7 +78,7 @@ const call = await irisx.calls.create({
 ### With Timeout
 
 ```javascript
-const call = await irisx.calls.create({
+const call = await tazzi.calls.create({
   to: '+15551234567',
   from: '+15559876543',
   timeout: 30,  // Ring for 30 seconds
@@ -89,7 +89,7 @@ const call = await irisx.calls.create({
 ### With Metadata
 
 ```javascript
-const call = await irisx.calls.create({
+const call = await tazzi.calls.create({
   to: '+15551234567',
   from: '+15559876543',
   metadata: {
@@ -103,7 +103,7 @@ const call = await irisx.calls.create({
 
 ## Intelligent Routing
 
-IRISX automatically selects the best carrier for each call using **LCR (Least Cost Routing)**.
+Tazzi automatically selects the best carrier for each call using **LCR (Least Cost Routing)**.
 
 ### How LCR Works
 
@@ -116,7 +116,7 @@ IRISX automatically selects the best carrier for each call using **LCR (Least Co
 
 ### Carrier Failover
 
-If a call fails with the primary carrier, IRISX automatically retries with the next-best carrier:
+If a call fails with the primary carrier, Tazzi automatically retries with the next-best carrier:
 
 ```
 Attempt 1: Carrier A (lowest cost) → Failed
@@ -130,7 +130,7 @@ Attempt 3: Carrier C (third lowest) → Success
 
 ## Call Direction
 
-IRISX supports both inbound and outbound calls:
+Tazzi supports both inbound and outbound calls:
 
 ### Outbound Calls
 
@@ -138,7 +138,7 @@ Initiated by your application via API:
 
 ```javascript
 // You control: to, from, routing
-const call = await irisx.calls.create({
+const call = await tazzi.calls.create({
   to: '+15551234567',
   from: '+15559876543'
 });
@@ -146,11 +146,11 @@ const call = await irisx.calls.create({
 
 ### Inbound Calls
 
-Received on your IRISX phone numbers:
+Received on your Tazzi phone numbers:
 
 ```javascript
 // Configure webhook on phone number
-await irisx.phoneNumbers.update(phoneNumberId, {
+await tazzi.phoneNumbers.update(phoneNumberId, {
   webhook_url: 'https://yourapp.com/webhooks/inbound'
 });
 ```
@@ -174,7 +174,7 @@ Your webhook receives:
 Enable recording for compliance, quality assurance, or training:
 
 ```javascript
-const call = await irisx.calls.create({
+const call = await tazzi.calls.create({
   to: '+15551234567',
   from: '+15559876543',
   record: true
@@ -187,7 +187,7 @@ After call completes, `recording_url` is available:
 
 ```javascript
 // Get call details
-const call = await irisx.calls.get(callUuid);
+const call = await tazzi.calls.get(callUuid);
 
 if (call.recording_url) {
   console.log('Recording:', call.recording_url);
@@ -253,7 +253,7 @@ Some destinations may be restricted:
 
 ## Call Quality
 
-IRISX monitors call quality metrics:
+Tazzi monitors call quality metrics:
 
 - **ASR (Answer Seizure Ratio):** % of calls answered
 - **ACD (Average Call Duration):** Mean call length

@@ -391,26 +391,191 @@
             </div>
           </div>
 
-          <!-- Quality Metrics -->
+          <!-- Enhanced Quality Metrics -->
           <div v-if="selectedCDR.mos_score || selectedCDR.jitter_ms || selectedCDR.packet_loss_percent">
-            <h3 class="font-semibold text-gray-900 mb-3">Quality Metrics</h3>
-            <div class="grid grid-cols-3 gap-4">
-              <div v-if="selectedCDR.mos_score" class="bg-gray-50 rounded-lg p-4">
-                <p class="text-sm text-gray-600">MOS Score</p>
-                <p :class="getMOSColor(selectedCDR.mos_score)" class="text-2xl font-bold mt-1">
-                  {{ parseFloat(selectedCDR.mos_score).toFixed(2) }}
+            <h3 class="font-semibold text-gray-900 mb-3">Call Quality Analysis</h3>
+
+            <!-- MOS Score Gauge -->
+            <div class="bg-gradient-to-r from-gray-50 to-white rounded-xl p-6 mb-4 border border-gray-100">
+              <div class="flex items-center justify-between">
+                <!-- MOS Gauge -->
+                <div class="flex items-center gap-6">
+                  <div class="relative w-32 h-32">
+                    <!-- Background circle -->
+                    <svg class="w-32 h-32 transform -rotate-90">
+                      <circle cx="64" cy="64" r="56" fill="none" stroke="#e5e7eb" stroke-width="12" />
+                      <!-- Progress circle -->
+                      <circle
+                        cx="64" cy="64" r="56"
+                        fill="none"
+                        :stroke="getMOSGaugeColor(selectedCDR.mos_score)"
+                        stroke-width="12"
+                        stroke-linecap="round"
+                        :stroke-dasharray="`${(selectedCDR.mos_score / 5) * 352} 352`"
+                      />
+                    </svg>
+                    <!-- Center text -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                      <span :class="getMOSColor(selectedCDR.mos_score)" class="text-3xl font-bold">
+                        {{ parseFloat(selectedCDR.mos_score).toFixed(1) }}
+                      </span>
+                      <span class="text-xs text-gray-500">MOS</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p class="text-lg font-semibold" :class="getMOSColor(selectedCDR.mos_score)">
+                      {{ getMOSLabel(selectedCDR.mos_score) }} Quality
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1">
+                      R-Factor: {{ calculateRFactor(selectedCDR.mos_score).toFixed(0) }}
+                    </p>
+                    <p class="text-xs text-gray-400 mt-1">
+                      ITU-T G.107 E-Model
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Quality Thresholds Legend -->
+                <div class="text-xs space-y-1">
+                  <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span class="text-gray-600">4.0-5.0 Excellent</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <span class="text-gray-600">3.5-4.0 Good</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-orange-500"></div>
+                    <span class="text-gray-600">3.0-3.5 Fair</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <span class="text-gray-600">&lt;3.0 Poor</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quality Metrics Grid -->
+            <div class="grid grid-cols-4 gap-4 mb-4">
+              <div class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-sm text-gray-600">MOS Score</p>
+                  <span :class="getMetricStatusClass(selectedCDR.mos_score, 'mos')" class="text-xs px-2 py-0.5 rounded-full">
+                    {{ getMetricStatus(selectedCDR.mos_score, 'mos') }}
+                  </span>
+                </div>
+                <p :class="getMOSColor(selectedCDR.mos_score)" class="text-2xl font-bold">
+                  {{ parseFloat(selectedCDR.mos_score || 0).toFixed(2) }}
                 </p>
-                <p class="text-xs text-gray-500 mt-1">{{ getMOSLabel(selectedCDR.mos_score) }}</p>
+                <div class="mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all"
+                    :class="getMOSBarColor(selectedCDR.mos_score)"
+                    :style="{ width: `${(selectedCDR.mos_score / 5) * 100}%` }"
+                  ></div>
+                </div>
               </div>
-              <div v-if="selectedCDR.jitter_ms" class="bg-gray-50 rounded-lg p-4">
-                <p class="text-sm text-gray-600">Jitter</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">{{ selectedCDR.jitter_ms }}ms</p>
-                <p class="text-xs text-gray-500 mt-1">{{ getJitterLabel(selectedCDR.jitter_ms) }}</p>
+
+              <div class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-sm text-gray-600">Jitter</p>
+                  <span :class="getMetricStatusClass(selectedCDR.jitter_ms, 'jitter')" class="text-xs px-2 py-0.5 rounded-full">
+                    {{ getMetricStatus(selectedCDR.jitter_ms, 'jitter') }}
+                  </span>
+                </div>
+                <p class="text-2xl font-bold text-gray-900">{{ selectedCDR.jitter_ms || 0 }}<span class="text-sm font-normal text-gray-500">ms</span></p>
+                <p class="text-xs text-gray-500 mt-1">Target: &lt;30ms</p>
               </div>
-              <div v-if="selectedCDR.packet_loss_percent" class="bg-gray-50 rounded-lg p-4">
-                <p class="text-sm text-gray-600">Packet Loss</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">{{ parseFloat(selectedCDR.packet_loss_percent).toFixed(2) }}%</p>
-                <p class="text-xs text-gray-500 mt-1">{{ getPacketLossLabel(selectedCDR.packet_loss_percent) }}</p>
+
+              <div class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-sm text-gray-600">Packet Loss</p>
+                  <span :class="getMetricStatusClass(selectedCDR.packet_loss_percent, 'packetLoss')" class="text-xs px-2 py-0.5 rounded-full">
+                    {{ getMetricStatus(selectedCDR.packet_loss_percent, 'packetLoss') }}
+                  </span>
+                </div>
+                <p class="text-2xl font-bold text-gray-900">{{ parseFloat(selectedCDR.packet_loss_percent || 0).toFixed(2) }}<span class="text-sm font-normal text-gray-500">%</span></p>
+                <p class="text-xs text-gray-500 mt-1">Target: &lt;1%</p>
+              </div>
+
+              <div class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-sm text-gray-600">Latency</p>
+                  <span :class="getMetricStatusClass(selectedCDR.latency_ms, 'latency')" class="text-xs px-2 py-0.5 rounded-full">
+                    {{ getMetricStatus(selectedCDR.latency_ms, 'latency') }}
+                  </span>
+                </div>
+                <p class="text-2xl font-bold text-gray-900">{{ selectedCDR.latency_ms || 'N/A' }}<span v-if="selectedCDR.latency_ms" class="text-sm font-normal text-gray-500">ms</span></p>
+                <p class="text-xs text-gray-500 mt-1">Target: &lt;150ms</p>
+              </div>
+            </div>
+
+            <!-- Quality Recommendations -->
+            <div v-if="getQualityRecommendations(selectedCDR).length > 0" class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <h4 class="font-medium text-amber-800 mb-2 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Quality Recommendations
+              </h4>
+              <ul class="space-y-1 text-sm text-amber-700">
+                <li v-for="(rec, idx) in getQualityRecommendations(selectedCDR)" :key="idx" class="flex items-start gap-2">
+                  <span class="text-amber-500 mt-0.5">•</span>
+                  {{ rec }}
+                </li>
+              </ul>
+            </div>
+
+            <!-- Network Path (if available) -->
+            <div v-if="selectedCDR.carrier_name || selectedCDR.sip_trunk_name" class="mt-4 bg-gray-50 rounded-lg p-4">
+              <h4 class="font-medium text-gray-700 mb-3">Network Path</h4>
+              <div class="flex items-center gap-4 text-sm">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="font-medium text-gray-900">{{ selectedCDR.from_number }}</p>
+                    <p class="text-xs text-gray-500">Caller</p>
+                  </div>
+                </div>
+
+                <div class="flex-1 border-t-2 border-dashed border-gray-300 relative">
+                  <div v-if="selectedCDR.carrier_name" class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-white px-2 text-xs text-gray-500">
+                    {{ selectedCDR.carrier_name }}
+                  </div>
+                </div>
+
+                <div v-if="selectedCDR.sip_trunk_name" class="flex items-center gap-2">
+                  <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="font-medium text-gray-900">{{ selectedCDR.sip_trunk_name }}</p>
+                    <p class="text-xs text-gray-500">SIP Trunk</p>
+                  </div>
+                </div>
+
+                <div class="flex-1 border-t-2 border-dashed border-gray-300"></div>
+
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="font-medium text-gray-900">{{ selectedCDR.to_number }}</p>
+                    <p class="text-xs text-gray-500">Callee</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -844,5 +1009,105 @@ function getPacketLossLabel(loss) {
   if (loss < 2) return 'Good'
   if (loss < 5) return 'Fair'
   return 'Poor'
+}
+
+// Enhanced MOS display functions
+function getMOSGaugeColor(mos) {
+  if (!mos) return '#9ca3af'
+  if (mos >= 4.0) return '#22c55e'
+  if (mos >= 3.5) return '#eab308'
+  if (mos >= 3.0) return '#f97316'
+  return '#ef4444'
+}
+
+function getMOSBarColor(mos) {
+  if (!mos) return 'bg-gray-400'
+  if (mos >= 4.0) return 'bg-green-500'
+  if (mos >= 3.5) return 'bg-yellow-500'
+  if (mos >= 3.0) return 'bg-orange-500'
+  return 'bg-red-500'
+}
+
+function calculateRFactor(mos) {
+  // Convert MOS to R-Factor using ITU-T G.107 E-Model approximation
+  // R = 20 * (8 - sqrt(226 - 100 * MOS)) for MOS >= 0
+  if (!mos) return 0
+  const mosVal = parseFloat(mos)
+  if (mosVal <= 0) return 0
+  if (mosVal >= 4.5) return 100
+
+  // Inverse of: MOS = 1 + 0.035*R + 7*10^-6 * R * (R-60) * (100-R)
+  // Simplified approximation
+  const r = 20 * mosVal + 10
+  return Math.min(100, Math.max(0, r))
+}
+
+function getMetricStatus(value, type) {
+  if (value === null || value === undefined) return 'N/A'
+
+  const thresholds = {
+    mos: { excellent: 4.0, good: 3.5, fair: 3.0 },
+    jitter: { excellent: 20, good: 50, fair: 100 },
+    packetLoss: { excellent: 1, good: 2, fair: 5 },
+    latency: { excellent: 100, good: 150, fair: 300 }
+  }
+
+  const t = thresholds[type]
+  if (!t) return 'N/A'
+
+  if (type === 'mos') {
+    if (value >= t.excellent) return 'Excellent'
+    if (value >= t.good) return 'Good'
+    if (value >= t.fair) return 'Fair'
+    return 'Poor'
+  } else {
+    // For metrics where lower is better
+    if (value <= t.excellent) return 'Excellent'
+    if (value <= t.good) return 'Good'
+    if (value <= t.fair) return 'Fair'
+    return 'Poor'
+  }
+}
+
+function getMetricStatusClass(value, type) {
+  const status = getMetricStatus(value, type)
+  const classes = {
+    'Excellent': 'bg-green-100 text-green-800',
+    'Good': 'bg-yellow-100 text-yellow-800',
+    'Fair': 'bg-orange-100 text-orange-800',
+    'Poor': 'bg-red-100 text-red-800',
+    'N/A': 'bg-gray-100 text-gray-600'
+  }
+  return classes[status] || classes['N/A']
+}
+
+function getQualityRecommendations(cdr) {
+  const recommendations = []
+
+  if (cdr.mos_score && cdr.mos_score < 3.5) {
+    recommendations.push('Call quality below acceptable threshold. Review network conditions.')
+  }
+
+  if (cdr.jitter_ms && cdr.jitter_ms > 30) {
+    recommendations.push(`High jitter detected (${cdr.jitter_ms}ms). Consider implementing jitter buffer or checking network congestion.`)
+  }
+
+  if (cdr.packet_loss_percent && cdr.packet_loss_percent > 1) {
+    recommendations.push(`Packet loss at ${parseFloat(cdr.packet_loss_percent).toFixed(2)}%. Check network stability and carrier quality.`)
+  }
+
+  if (cdr.latency_ms && cdr.latency_ms > 150) {
+    recommendations.push(`High latency (${cdr.latency_ms}ms) may cause conversation delays. Consider routing optimization.`)
+  }
+
+  if (cdr.mos_score && cdr.mos_score < 3.0) {
+    recommendations.push('Critically poor quality. Investigate carrier issues, network path, or codec configuration.')
+  }
+
+  if (cdr.packet_loss_percent > 3 && cdr.jitter_ms > 50) {
+    recommendations.push('Combined high packet loss and jitter suggests severe network degradation. Escalate to network operations.')
+  }
+
+  return recommendations
 }
 </script>

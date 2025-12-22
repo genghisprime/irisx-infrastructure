@@ -1,32 +1,32 @@
 ---
 title: 'Ruby SDK'
-description: 'Official IRISX Ruby SDK for seamless integration'
+description: 'Official Tazzi Ruby SDK for seamless integration'
 ---
 
 ## Installation
 
-Install the IRISX SDK via Gemfile:
+Install the Tazzi SDK via Gemfile:
 
 ```ruby
-gem 'irisx-sdk'
+gem 'tazzi'
 ```
 
 Or install directly:
 
 ```bash
-gem install irisx-sdk
+gem install tazzi
 ```
 
 ## Quick Start
 
 ```ruby
-require 'irisx'
+require 'tazzi'
 
 # Initialize with API key
-irisx = Irisx::Client.new(api_key: 'your_api_key_here')
+tazzi = Tazzi::Client.new(api_key: 'your_api_key_here')
 
 # Make your first call
-call = irisx.calls.create(
+call = tazzi.calls.create(
   to: '+15551234567',
   from: '+15559876543',
   record: true
@@ -40,20 +40,20 @@ puts "Call initiated: #{call.uuid}"
 ### API Key (Recommended)
 
 ```ruby
-require 'irisx'
+require 'tazzi'
 
-irisx = Irisx::Client.new(api_key: 'your_api_key_here')
+irisx = Tazzi::Client.new(api_key: 'your_api_key_here')
 ```
 
 ### JWT Token (For User Auth)
 
 ```ruby
-require 'irisx'
+require 'tazzi'
 
-irisx = Irisx::Client.new(token: 'your_jwt_token_here')
+irisx = Tazzi::Client.new(token: 'your_jwt_token_here')
 
 # Handle token refresh
-irisx.on_token_refresh do |new_token|
+tazzi.on_token_refresh do |new_token|
   puts "Token refreshed: #{new_token}"
   # Save new token to secure storage
 end
@@ -64,7 +64,7 @@ end
 ### Create Outbound Call
 
 ```ruby
-call = irisx.calls.create(
+call = tazzi.calls.create(
   to: '+15551234567',
   from: '+15559876543',
   webhook_url: 'https://yourapp.com/webhooks',
@@ -82,7 +82,7 @@ puts "Call UUID: #{call.uuid}"
 ### Get Call Details
 
 ```ruby
-call = irisx.calls.get('123e4567-e89b-12d3-a456-426614174000')
+call = tazzi.calls.get('123e4567-e89b-12d3-a456-426614174000')
 
 puts "Status: #{call.status}"
 puts "Duration: #{call.duration}s"
@@ -92,7 +92,7 @@ puts "Cost: $#{call.cost}"
 ### List Calls
 
 ```ruby
-calls = irisx.calls.list(
+calls = tazzi.calls.list(
   status: 'completed',
   direction: 'outbound',
   start_date: '2025-10-01',
@@ -113,7 +113,7 @@ end
 ### Send Single Message
 
 ```ruby
-message = irisx.sms.send(
+message = tazzi.sms.send(
   to: '+15551234567',
   from: '+15559876543',
   body: 'Hello! This is a test message.',
@@ -126,7 +126,7 @@ puts "Message ID: #{message.id}"
 ### Send MMS with Media
 
 ```ruby
-message = irisx.sms.send(
+message = tazzi.sms.send(
   to: '+15551234567',
   from: '+15559876543',
   body: 'Check out this image!',
@@ -139,7 +139,7 @@ message = irisx.sms.send(
 ### Bulk SMS
 
 ```ruby
-result = irisx.sms.send_bulk(
+result = tazzi.sms.send_bulk(
   from: '+15559876543',
   recipients: [
     { to: '+15551111111', body: 'Message 1' },
@@ -155,13 +155,13 @@ puts "Sent: #{result.successful}, Failed: #{result.failed}"
 
 ```ruby
 # Create template
-template = irisx.sms.create_template(
+template = tazzi.sms.create_template(
   name: 'welcome',
   body: 'Hi {{name}}, welcome to {{company}}!'
 )
 
 # Send with template
-message = irisx.sms.send_template(
+message = tazzi.sms.send_template(
   to: '+15551234567',
   from: '+15559876543',
   template_id: template.id,
@@ -175,7 +175,7 @@ message = irisx.sms.send_template(
 ## Sending Email
 
 ```ruby
-email = irisx.email.send(
+email = tazzi.email.send(
   to: 'customer@example.com',
   from: 'noreply@yourcompany.com',
   subject: 'Welcome to Our Service',
@@ -193,8 +193,8 @@ puts "Email sent: #{email.id}"
 ### Create Webhook
 
 ```ruby
-webhook = irisx.webhooks.create(
-  url: 'https://yourapp.com/webhooks/irisx',
+webhook = tazzi.webhooks.create(
+  url: 'https://yourapp.com/webhooks/tazzi',
   events: [
     'call.completed',
     'call.failed',
@@ -211,7 +211,7 @@ puts "Secret: #{webhook.secret}"  # Save this!
 ### List Webhooks
 
 ```ruby
-webhooks = irisx.webhooks.list
+webhooks = tazzi.webhooks.list
 
 webhooks.each do |webhook|
   puts "#{webhook.id}: #{webhook.url}"
@@ -238,10 +238,10 @@ class WebhooksController < ApplicationController
   skip_verification_before_action :verify_authenticity_token, only: :irisx
 
   def irisx
-    signature = request.headers['X-IRISX-Signature']
+    signature = request.headers['X-Tazzi-Signature']
     payload = request.body.read
 
-    unless verify_webhook_signature(JSON.parse(payload), signature, ENV['IRISX_WEBHOOK_SECRET'])
+    unless verify_webhook_signature(JSON.parse(payload), signature, ENV['TAZZI_WEBHOOK_SECRET'])
       head :unauthorized
       return
     end
@@ -273,7 +273,7 @@ end
 ### Search Available Numbers
 
 ```ruby
-numbers = irisx.phone_numbers.search(
+numbers = tazzi.phone_numbers.search(
   country: 'US',
   area_code: '415',
   type: 'local',
@@ -288,7 +288,7 @@ end
 ### Purchase Number
 
 ```ruby
-number = irisx.phone_numbers.purchase(
+number = tazzi.phone_numbers.purchase(
   phone_number: '+14155551234',
   friendly_name: 'Support Line'
 )
@@ -299,7 +299,7 @@ puts "Purchased: #{number.number}"
 ### Configure Number
 
 ```ruby
-irisx.phone_numbers.update(
+tazzi.phone_numbers.update(
   number_id,
   voice_webhook_url: 'https://yourapp.com/webhooks/voice',
   sms_webhook_url: 'https://yourapp.com/webhooks/sms',
@@ -312,7 +312,7 @@ irisx.phone_numbers.update(
 ### Get Dashboard Stats
 
 ```ruby
-stats = irisx.analytics.dashboard(
+stats = tazzi.analytics.dashboard(
   start_date: '2025-10-01',
   end_date: '2025-10-31'
 )
@@ -325,7 +325,7 @@ puts "Total Cost: $#{stats.calls.total_cost + stats.sms.total_cost}"
 ### Call Analytics
 
 ```ruby
-analytics = irisx.analytics.calls(
+analytics = tazzi.analytics.calls(
   start_date: '2025-10-01',
   end_date: '2025-10-31',
   group_by: 'day'
@@ -339,22 +339,22 @@ end
 ## Error Handling
 
 ```ruby
-require 'irisx'
-require 'irisx/errors'
+require 'tazzi'
+require 'tazzi/errors'
 
 begin
-  call = irisx.calls.create(
+  call = tazzi.calls.create(
     to: '+15551234567',
     from: '+15559876543'
   )
-rescue Irisx::RateLimitError => e
+rescue Tazzi::RateLimitError => e
   puts "Rate limited - retry after: #{e.retry_after}s"
   # Wait and retry
   sleep(e.retry_after)
-rescue Irisx::ValidationError => e
+rescue Tazzi::ValidationError => e
   puts "Validation error: #{e.message}"
   puts "Details: #{e.details.inspect}"
-rescue Irisx::Error => e
+rescue Tazzi::Error => e
   puts "API Error: #{e.message}"
   puts "Code: #{e.code}"
 
@@ -371,15 +371,15 @@ end
 Ruby SDK includes specific exception classes:
 
 ```ruby
-require 'irisx/errors'
+require 'tazzi/errors'
 
 begin
-  number = irisx.phone_numbers.get('invalid_id')
-rescue Irisx::NotFoundError
+  number = tazzi.phone_numbers.get('invalid_id')
+rescue Tazzi::NotFoundError
   puts "Phone number not found"
-rescue Irisx::AuthenticationError
+rescue Tazzi::AuthenticationError
   puts "Authentication failed - check your API key"
-rescue Irisx::Error => e
+rescue Tazzi::Error => e
   puts "Error: #{e.message}"
 end
 ```
@@ -389,7 +389,7 @@ end
 ### Automatic Retry with Exponential Backoff
 
 ```ruby
-irisx = Irisx::Client.new(
+irisx = Tazzi::Client.new(
   api_key: 'your_api_key_here',
   retry: {
     enabled: true,
@@ -403,7 +403,7 @@ irisx = Irisx::Client.new(
 ### Custom Timeout
 
 ```ruby
-irisx = Irisx::Client.new(
+irisx = Tazzi::Client.new(
   api_key: 'your_api_key_here',
   timeout: 60  # 60 seconds
 )
@@ -417,7 +417,7 @@ require 'logger'
 logger = Logger.new(STDOUT)
 logger.level = Logger::DEBUG
 
-irisx = Irisx::Client.new(
+irisx = Tazzi::Client.new(
   api_key: 'your_api_key_here',
   logger: logger
 )
@@ -427,18 +427,18 @@ irisx = Irisx::Client.new(
 
 ```bash
 # .env file
-IRISX_API_KEY=your_api_key_here
-IRISX_API_URL=https://api.useiris.com
-IRISX_WEBHOOK_SECRET=your_webhook_secret
+TAZZI_API_KEY=your_api_key_here
+TAZZI_API_URL=https://api.tazzi.com
+TAZZI_WEBHOOK_SECRET=your_webhook_secret
 ```
 
 ```ruby
 require 'dotenv/load'
-require 'irisx'
+require 'tazzi'
 
-irisx = Irisx::Client.new(
-  api_key: ENV['IRISX_API_KEY'],
-  base_url: ENV['IRISX_API_URL']
+irisx = Tazzi::Client.new(
+  api_key: ENV['TAZZI_API_KEY'],
+  base_url: ENV['TAZZI_API_URL']
 )
 ```
 
@@ -467,7 +467,7 @@ irisx = Irisx::Client.new(
 
 ## Examples
 
-Full working examples available at [github.com/irisx/examples](https://github.com/irisx/examples):
+Full working examples available at [github.com/tazzi/examples](https://github.com/tazzi/examples):
 
 - Simple outbound call
 - IVR menu with DTMF handling
@@ -479,9 +479,9 @@ Full working examples available at [github.com/irisx/examples](https://github.co
 ## Support
 
 - 📚 [Full API Reference](/api-reference)
-- 💬 [Discord Community](https://discord.gg/irisx)
-- 🐛 [GitHub Issues](https://github.com/irisx/sdk-ruby/issues)
-- 📧 Email: support@useiris.com
+- 💬 [Discord Community](https://discord.gg/tazzi)
+- 🐛 [GitHub Issues](https://github.com/tazzi/sdk-ruby/issues)
+- 📧 Email: support@tazzi.com
 
 ## Next Steps
 
@@ -489,7 +489,7 @@ Full working examples available at [github.com/irisx/examples](https://github.co
   <Card title="API Reference" icon="book" href="/api-reference">
     Explore all endpoints
   </Card>
-  <Card title="Code Examples" icon="code" href="https://github.com/irisx/examples">
+  <Card title="Code Examples" icon="code" href="https://github.com/tazzi/examples">
     See working examples
   </Card>
 </CardGroup>

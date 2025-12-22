@@ -1,11 +1,11 @@
 ---
 title: 'Authentication'
-description: 'Learn how to authenticate with the IRISX API'
+description: 'Learn how to authenticate with the Tazzi API'
 ---
 
 ## Overview
 
-IRISX supports two authentication methods:
+Tazzi supports two authentication methods:
 
 1. **API Keys** - For server-to-server communication (recommended)
 2. **JWT Tokens** - For user-based authentication (customer portal, agent desktop)
@@ -18,7 +18,7 @@ API keys are the recommended way to authenticate server-to-server API requests.
 
 <Steps>
   <Step title="Login to Portal">
-    Visit [portal.useiris.com](https://portal.useiris.com)
+    Visit [admin.tazzi.com](https://admin.tazzi.com)
   </Step>
   <Step title="Navigate to API Keys">
     Go to **Settings → API Keys**
@@ -37,7 +37,7 @@ API keys are the recommended way to authenticate server-to-server API requests.
 Include your API key in the `X-API-Key` header:
 
 ```bash cURL
-curl https://api.useiris.com/v1/calls \
+curl https://api.tazzi.com/v1/calls \
   -H "X-API-Key: your_api_key_here" \
   -H "Content-Type: application/json"
 ```
@@ -48,9 +48,9 @@ curl https://api.useiris.com/v1/calls \
 const axios = require('axios');
 
 const client = axios.create({
-  baseURL: 'https://api.useiris.com',
+  baseURL: 'https://api.tazzi.com',
   headers: {
-    'X-API-Key': process.env.IRISX_API_KEY,
+    'X-API-Key': process.env.TAZZI_API_KEY,
     'Content-Type': 'application/json'
   }
 });
@@ -63,10 +63,10 @@ const response = await client.post('/v1/calls', { /* ... */ });
 import os
 import requests
 
-class IRISXClient:
+class TazziClient:
     def __init__(self, api_key=None):
-        self.api_key = api_key or os.getenv('IRISX_API_KEY')
-        self.base_url = 'https://api.useiris.com'
+        self.api_key = api_key or os.getenv('TAZZI_API_KEY')
+        self.base_url = 'https://api.tazzi.com'
         self.headers = {
             'X-API-Key': self.api_key,
             'Content-Type': 'application/json'
@@ -77,19 +77,19 @@ class IRISXClient:
         return requests.post(url, json=data, headers=self.headers)
 
 # Usage
-client = IRISXClient()
+client = TazziClient()
 response = client.post('/v1/calls', { /* ... */ })
 ```
 
 ```php PHP
 <?php
 
-class IRISXClient {
+class TazziClient {
     private $apiKey;
-    private $baseUrl = 'https://api.useiris.com';
+    private $baseUrl = 'https://api.tazzi.com';
 
     public function __construct($apiKey = null) {
-        $this->apiKey = $apiKey ?: getenv('IRISX_API_KEY');
+        $this->apiKey = $apiKey ?: getenv('TAZZI_API_KEY');
     }
 
     public function post($endpoint, $data) {
@@ -110,7 +110,7 @@ class IRISXClient {
 }
 
 // Usage
-$client = new IRISXClient();
+$client = new TazziClient();
 $response = $client->post('/v1/calls', [/* ... */]);
 ?>
 ```
@@ -125,13 +125,13 @@ $response = $client->post('/v1/calls', [/* ... */]);
 
     ```bash
     # .env file
-    IRISX_API_KEY=your_api_key_here
+    TAZZI_API_KEY=your_api_key_here
     ```
 
     Load them in your application:
     ```javascript
     require('dotenv').config();
-    const apiKey = process.env.IRISX_API_KEY;
+    const apiKey = process.env.TAZZI_API_KEY;
     ```
   </Accordion>
 
@@ -144,9 +144,9 @@ $response = $client->post('/v1/calls', [/* ... */]);
 
   <Accordion title="Use Different Keys Per Environment">
     Create separate keys for each environment:
-    - `IRISX_API_KEY_PRODUCTION`
-    - `IRISX_API_KEY_STAGING`
-    - `IRISX_API_KEY_DEVELOPMENT`
+    - `TAZZI_API_KEY_PRODUCTION`
+    - `TAZZI_API_KEY_STAGING`
+    - `TAZZI_API_KEY_DEVELOPMENT`
   </Accordion>
 
   <Accordion title="Restrict Key Permissions">
@@ -183,7 +183,7 @@ JWT (JSON Web Token) authentication is used for user-based access in customer po
 Create a new tenant account:
 
 ```javascript
-const response = await axios.post('https://api.useiris.com/v1/auth/register', {
+const response = await axios.post('https://api.tazzi.com/v1/auth/register', {
   company_name: 'Acme Corp',
   email: 'admin@acme.com',
   password: 'SecurePassword123!',
@@ -203,7 +203,7 @@ localStorage.setItem('refresh_token', refresh_token);
 Authenticate existing user:
 
 ```javascript
-const response = await axios.post('https://api.useiris.com/v1/auth/login', {
+const response = await axios.post('https://api.tazzi.com/v1/auth/login', {
   email: 'admin@acme.com',
   password: 'SecurePassword123!'
 });
@@ -222,7 +222,7 @@ Include JWT token in Authorization header:
 ```javascript
 const token = localStorage.getItem('access_token');
 
-const response = await axios.get('https://api.useiris.com/v1/auth/me', {
+const response = await axios.get('https://api.tazzi.com/v1/auth/me', {
   headers: {
     'Authorization': `Bearer ${token}`
   }
@@ -241,7 +241,7 @@ async function refreshAccessToken() {
 
   try {
     const response = await axios.post(
-      'https://api.useiris.com/v1/auth/refresh',
+      'https://api.tazzi.com/v1/auth/refresh',
       { refresh_token: refreshToken }
     );
 
@@ -267,7 +267,7 @@ import axios from 'axios';
 
 // Create Axios instance
 const apiClient = axios.create({
-  baseURL: 'https://api.useiris.com'
+  baseURL: 'https://api.tazzi.com'
 });
 
 // Add token to requests
@@ -318,7 +318,7 @@ Revoke refresh token when logging out:
 async function logout() {
   const refreshToken = localStorage.getItem('refresh_token');
 
-  await axios.post('https://api.useiris.com/v1/auth/logout', {
+  await axios.post('https://api.tazzi.com/v1/auth/logout', {
     refresh_token: refreshToken
   });
 
@@ -395,11 +395,11 @@ Test your authentication setup:
 
 ```bash
 # Test API Key
-curl https://api.useiris.com/v1/auth/health \
+curl https://api.tazzi.com/v1/auth/health \
   -H "X-API-Key: your_api_key_here"
 
 # Test JWT Token
-curl https://api.useiris.com/v1/auth/me \
+curl https://api.tazzi.com/v1/auth/me \
   -H "Authorization: Bearer your_jwt_token_here"
 ```
 

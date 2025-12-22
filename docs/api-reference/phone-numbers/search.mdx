@@ -67,7 +67,7 @@ Search for available phone numbers by country, area code, or specific digits. Fi
 <RequestExample>
 
 ```bash cURL
-curl "https://api.useiris.com/v1/phone-numbers/search?country=US&area_code=415&limit=10" \
+curl "https://api.tazzi.com/v1/phone-numbers/search?country=US&area_code=415&limit=10" \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
@@ -83,7 +83,7 @@ async function searchPhoneNumbers(country, areaCode, options = {}) {
   });
 
   const response = await axios.get(
-    `https://api.useiris.com/v1/phone-numbers/search?${params}`,
+    `https://api.tazzi.com/v1/phone-numbers/search?${params}`,
     {
       headers: { 'X-API-Key': 'YOUR_API_KEY' }
     }
@@ -118,7 +118,7 @@ def search_phone_numbers(country, area_code=None, **options):
         params['type'] = options['type']
 
     response = requests.get(
-        'https://api.useiris.com/v1/phone-numbers/search',
+        'https://api.tazzi.com/v1/phone-numbers/search',
         params=params,
         headers={'X-API-Key': 'YOUR_API_KEY'}
     )

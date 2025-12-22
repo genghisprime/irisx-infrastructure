@@ -1,18 +1,18 @@
 ---
 title: 'Email'
-description: 'Send transactional and marketing emails with IRISX'
+description: 'Send transactional and marketing emails with Tazzi'
 ---
 
 ## Overview
 
-IRISX provides reliable email delivery via SendGrid and AWS SES with tracking, templates, and bounce handling.
+Tazzi provides reliable email delivery via SendGrid and AWS SES with tracking, templates, and bounce handling.
 
 ## Sending Email
 
 ### Basic Email
 
 ```javascript
-const email = await irisx.email.send({
+const email = await tazzi.email.send({
   to: 'customer@example.com',
   from: 'noreply@yourcompany.com',
   subject: 'Welcome to Our Service',
@@ -24,7 +24,7 @@ const email = await irisx.email.send({
 ### With Attachments
 
 ```javascript
-const email = await irisx.email.send({
+const email = await tazzi.email.send({
   to: 'customer@example.com',
   from: 'noreply@yourcompany.com',
   subject: 'Your Invoice',
@@ -43,14 +43,14 @@ const email = await irisx.email.send({
 
 ```javascript
 // Create template
-const template = await irisx.email.createTemplate({
+const template = await tazzi.email.createTemplate({
   name: 'password_reset',
   subject: 'Reset Your Password',
   body_html: '<p>Hi {{name}}, click here to reset: {{reset_link}}</p>'
 });
 
 // Send with template
-const email = await irisx.email.sendTemplate({
+const email = await tazzi.email.sendTemplate({
   to: 'user@example.com',
   template_slug: 'password_reset',
   variables: {
@@ -65,7 +65,7 @@ const email = await irisx.email.sendTemplate({
 Track opens and clicks:
 
 ```javascript
-const email = await irisx.email.send({
+const email = await tazzi.email.send({
   to: 'customer@example.com',
   from: 'noreply@yourcompany.com',
   subject: 'Check out our new features',
@@ -75,7 +75,7 @@ const email = await irisx.email.send({
 });
 
 // Get stats later
-const stats = await irisx.email.getStats(email.id);
+const stats = await tazzi.email.getStats(email.id);
 console.log(`Opened: ${stats.opened}`);
 console.log(`Clicked: ${stats.clicked}`);
 ```

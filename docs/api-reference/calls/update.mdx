@@ -43,7 +43,7 @@ Update the metadata of an existing call. This endpoint allows you to add or modi
 <RequestExample>
 
 ```bash cURL
-curl -X PATCH https://api.useiris.com/v1/calls/123e4567-e89b-12d3-a456-426614174000 \
+curl -X PATCH https://api.tazzi.com/v1/calls/123e4567-e89b-12d3-a456-426614174000 \
   -H "X-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -62,7 +62,7 @@ const axios = require('axios');
 async function updateCallMetadata(uuid, metadata) {
   try {
     const response = await axios.patch(
-      `https://api.useiris.com/v1/calls/${uuid}`,
+      `https://api.tazzi.com/v1/calls/${uuid}`,
       {
         metadata
       },
@@ -97,7 +97,7 @@ import requests
 
 def update_call_metadata(uuid, metadata):
     response = requests.patch(
-        f'https://api.useiris.com/v1/calls/{uuid}',
+        f'https://api.tazzi.com/v1/calls/{uuid}',
         json={
             'metadata': metadata
         },
@@ -126,7 +126,7 @@ update_call_metadata('123e4567-e89b-12d3-a456-426614174000', {
 ```php PHP
 <?php
 function updateCallMetadata($uuid, $metadata) {
-    $ch = curl_init("https://api.useiris.com/v1/calls/$uuid");
+    $ch = curl_init("https://api.tazzi.com/v1/calls/$uuid");
 
     curl_setopt_array($ch, [
         CURLOPT_CUSTOMREQUEST => 'PATCH',
@@ -179,7 +179,7 @@ updateCallMetadata('123e4567-e89b-12d3-a456-426614174000', [
     "direction": "outbound",
     "duration": 125,
     "cost": 0.015,
-    "recording_url": "https://recordings.useiris.com/abc123.mp3",
+    "recording_url": "https://recordings.tazzi.com/abc123.mp3",
     "metadata": {
       "customer_id": "12345",
       "order_id": "ORD-789",

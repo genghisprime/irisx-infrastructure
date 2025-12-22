@@ -1,35 +1,35 @@
 ---
 title: 'Node.js SDK'
-description: 'Official IRISX Node.js SDK for seamless integration'
+description: 'Official Tazzi Node.js SDK for seamless integration'
 ---
 
 ## Installation
 
-Install the IRISX SDK via npm:
+Install the Tazzi SDK via npm:
 
 ```bash
-npm install @irisx/sdk
+npm install @tazzi/sdk
 ```
 
 Or with yarn:
 
 ```bash
-yarn add @irisx/sdk
+yarn add @tazzi/sdk
 ```
 
 ## Quick Start
 
 ```javascript
-const IRISX = require('@irisx/sdk');
+const Tazzi = require('@tazzi/sdk');
 
 // Initialize with API key
-const irisx = new IRISX({
-  apiKey: process.env.IRISX_API_KEY
+const tazzi = new Tazzi({
+  apiKey: process.env.TAZZI_API_KEY
 });
 
 // Make your first call
 async function makeCall() {
-  const call = await irisx.calls.create({
+  const call = await tazzi.calls.create({
     to: '+15551234567',
     from: '+15559876543',
     record: true
@@ -46,7 +46,7 @@ makeCall();
 ### API Key (Recommended)
 
 ```javascript
-const irisx = new IRISX({
+const tazzi = new Tazzi({
   apiKey: 'your_api_key_here'
 });
 ```
@@ -54,12 +54,12 @@ const irisx = new IRISX({
 ### JWT Token (For User Auth)
 
 ```javascript
-const irisx = new IRISX({
+const tazzi = new Tazzi({
   token: 'your_jwt_token_here'
 });
 
 // Auto-refresh token
-irisx.onTokenRefresh((newToken) => {
+tazzi.onTokenRefresh((newToken) => {
   console.log('Token refreshed:', newToken);
   // Save new token
 });
@@ -70,7 +70,7 @@ irisx.onTokenRefresh((newToken) => {
 ### Create Outbound Call
 
 ```javascript
-const call = await irisx.calls.create({
+const call = await tazzi.calls.create({
   to: '+15551234567',
   from: '+15559876543',
   webhook_url: 'https://yourapp.com/webhooks',
@@ -86,7 +86,7 @@ const call = await irisx.calls.create({
 ### Get Call Details
 
 ```javascript
-const call = await irisx.calls.get('123e4567-e89b-12d3-a456-426614174000');
+const call = await tazzi.calls.get('123e4567-e89b-12d3-a456-426614174000');
 
 console.log(`Status: ${call.status}`);
 console.log(`Duration: ${call.duration}s`);
@@ -96,7 +96,7 @@ console.log(`Cost: $${call.cost}`);
 ### List Calls
 
 ```javascript
-const calls = await irisx.calls.list({
+const calls = await tazzi.calls.list({
   status: 'completed',
   direction: 'outbound',
   start_date: '2025-10-01',
@@ -117,7 +117,7 @@ calls.data.forEach(call => {
 ### Send Single Message
 
 ```javascript
-const message = await irisx.sms.send({
+const message = await tazzi.sms.send({
   to: '+15551234567',
   from: '+15559876543',
   body: 'Hello! This is a test message.',
@@ -128,7 +128,7 @@ const message = await irisx.sms.send({
 ### Send MMS with Media
 
 ```javascript
-const message = await irisx.sms.send({
+const message = await tazzi.sms.send({
   to: '+15551234567',
   from: '+15559876543',
   body: 'Check out this image!',
@@ -141,7 +141,7 @@ const message = await irisx.sms.send({
 ### Bulk SMS
 
 ```javascript
-const result = await irisx.sms.sendBulk({
+const result = await tazzi.sms.sendBulk({
   from: '+15559876543',
   recipients: [
     { to: '+15551111111', body: 'Message 1' },
@@ -157,13 +157,13 @@ console.log(`Sent: ${result.successful}, Failed: ${result.failed}`);
 
 ```javascript
 // Create template
-const template = await irisx.sms.createTemplate({
+const template = await tazzi.sms.createTemplate({
   name: 'welcome',
   body: 'Hi {{name}}, welcome to {{company}}!'
 });
 
 // Send with template
-const message = await irisx.sms.sendTemplate({
+const message = await tazzi.sms.sendTemplate({
   to: '+15551234567',
   from: '+15559876543',
   template_id: template.id,
@@ -177,7 +177,7 @@ const message = await irisx.sms.sendTemplate({
 ## Sending Email
 
 ```javascript
-const email = await irisx.email.send({
+const email = await tazzi.email.send({
   to: 'customer@example.com',
   from: 'noreply@yourcompany.com',
   subject: 'Welcome to Our Service',
@@ -193,8 +193,8 @@ const email = await irisx.email.send({
 ### Create Webhook
 
 ```javascript
-const webhook = await irisx.webhooks.create({
-  url: 'https://yourapp.com/webhooks/irisx',
+const webhook = await tazzi.webhooks.create({
+  url: 'https://yourapp.com/webhooks/tazzi',
   events: [
     'call.completed',
     'call.failed',
@@ -211,7 +211,7 @@ console.log(`Secret: ${webhook.secret}`); // Save this!
 ### List Webhooks
 
 ```javascript
-const webhooks = await irisx.webhooks.list();
+const webhooks = await tazzi.webhooks.list();
 
 webhooks.forEach(webhook => {
   console.log(`${webhook.id}: ${webhook.url}`);
@@ -233,8 +233,8 @@ function verifyWebhook(payload, signature, secret) {
 }
 
 // In Express.js
-app.post('/webhooks/irisx', (req, res) => {
-  const signature = req.headers['x-irisx-signature'];
+app.post('/webhooks/tazzi', (req, res) => {
+  const signature = req.headers['x-tazzi-signature'];
   const isValid = verifyWebhook(req.body, signature, webhookSecret);
 
   if (!isValid) {
@@ -254,7 +254,7 @@ app.post('/webhooks/irisx', (req, res) => {
 ### Search Available Numbers
 
 ```javascript
-const numbers = await irisx.phoneNumbers.search({
+const numbers = await tazzi.phoneNumbers.search({
   country: 'US',
   area_code: '415',
   type: 'local',
@@ -269,7 +269,7 @@ numbers.forEach(number => {
 ### Purchase Number
 
 ```javascript
-const number = await irisx.phoneNumbers.purchase({
+const number = await tazzi.phoneNumbers.purchase({
   phone_number: '+14155551234',
   friendly_name: 'Support Line'
 });
@@ -280,7 +280,7 @@ console.log(`Purchased: ${number.number}`);
 ### Configure Number
 
 ```javascript
-await irisx.phoneNumbers.update(numberId, {
+await tazzi.phoneNumbers.update(numberId, {
   voice_webhook_url: 'https://yourapp.com/webhooks/voice',
   sms_webhook_url: 'https://yourapp.com/webhooks/sms',
   friendly_name: 'Main Support Line'
@@ -292,7 +292,7 @@ await irisx.phoneNumbers.update(numberId, {
 ### Get Dashboard Stats
 
 ```javascript
-const stats = await irisx.analytics.dashboard({
+const stats = await tazzi.analytics.dashboard({
   start_date: '2025-10-01',
   end_date: '2025-10-31'
 });
@@ -305,7 +305,7 @@ console.log(`Total Cost: $${stats.calls.total_cost + stats.sms.total_cost}`);
 ### Call Analytics
 
 ```javascript
-const analytics = await irisx.analytics.calls({
+const analytics = await tazzi.analytics.calls({
   start_date: '2025-10-01',
   end_date: '2025-10-31',
   group_by: 'day'
@@ -320,7 +320,7 @@ analytics.data.forEach(day => {
 
 ```javascript
 try {
-  const call = await irisx.calls.create({ /* ... */ });
+  const call = await tazzi.calls.create({ /* ... */ });
 } catch (error) {
   if (error.code === 'RATE_LIMITED') {
     console.log('Rate limited - retry after:', error.retry_after);
@@ -336,10 +336,10 @@ try {
 
 ### Error Types
 
-All SDK errors extend `IRISXError`:
+All SDK errors extend `TazziError`:
 
 ```javascript
-const { IRISXError, RateLimitError, ValidationError } = require('@irisx/sdk');
+const { TazziError, RateLimitError, ValidationError } = require('@tazzi/sdk');
 
 try {
   // ...
@@ -350,7 +350,7 @@ try {
   } else if (error instanceof ValidationError) {
     // Fix request parameters
     console.log('Validation errors:', error.details);
-  } else if (error instanceof IRISXError) {
+  } else if (error instanceof TazziError) {
     // Other API error
     console.log('API Error:', error.message);
   } else {
@@ -365,8 +365,8 @@ try {
 ### Automatic Retry with Exponential Backoff
 
 ```javascript
-const irisx = new IRISX({
-  apiKey: process.env.IRISX_API_KEY,
+const tazzi = new Tazzi({
+  apiKey: process.env.TAZZI_API_KEY,
   retry: {
     enabled: true,
     max_retries: 3,
@@ -379,8 +379,8 @@ const irisx = new IRISX({
 ### Custom Timeout
 
 ```javascript
-const irisx = new IRISX({
-  apiKey: process.env.IRISX_API_KEY,
+const tazzi = new Tazzi({
+  apiKey: process.env.TAZZI_API_KEY,
   timeout: 60000 // 60 seconds
 });
 ```
@@ -388,8 +388,8 @@ const irisx = new IRISX({
 ### Logging
 
 ```javascript
-const irisx = new IRISX({
-  apiKey: process.env.IRISX_API_KEY,
+const tazzi = new Tazzi({
+  apiKey: process.env.TAZZI_API_KEY,
   logger: console, // or custom logger
   logLevel: 'debug' // 'error', 'warn', 'info', 'debug'
 });
@@ -400,13 +400,13 @@ const irisx = new IRISX({
 The SDK is written in TypeScript with full type definitions:
 
 ```typescript
-import IRISX, { Call, SMS, Email } from '@irisx/sdk';
+import Tazzi, { Call, SMS, Email } from '@tazzi/sdk';
 
-const irisx = new IRISX({
-  apiKey: process.env.IRISX_API_KEY!
+const tazzi = new Tazzi({
+  apiKey: process.env.TAZZI_API_KEY!
 });
 
-const call: Call = await irisx.calls.create({
+const call: Call = await tazzi.calls.create({
   to: '+15551234567',
   from: '+15559876543',
   record: true
@@ -421,17 +421,17 @@ console.log(call.invalid); // ✗ TypeScript error
 
 ```bash
 # .env file
-IRISX_API_KEY=your_api_key_here
-IRISX_API_URL=https://api.useiris.com
-IRISX_WEBHOOK_SECRET=your_webhook_secret
+TAZZI_API_KEY=your_api_key_here
+TAZZI_API_URL=https://api.tazzi.com
+TAZZI_WEBHOOK_SECRET=your_webhook_secret
 ```
 
 ```javascript
 require('dotenv').config();
 
-const irisx = new IRISX({
-  apiKey: process.env.IRISX_API_KEY,
-  baseURL: process.env.IRISX_API_URL
+const tazzi = new Tazzi({
+  apiKey: process.env.TAZZI_API_KEY,
+  baseURL: process.env.TAZZI_API_URL
 });
 ```
 
@@ -454,7 +454,7 @@ const irisx = new IRISX({
 
 ## Examples
 
-Full working examples available at [github.com/irisx/examples](https://github.com/irisx/examples):
+Full working examples available at [github.com/tazzi/examples](https://github.com/tazzi/examples):
 
 - Simple outbound call
 - IVR menu system
@@ -465,9 +465,9 @@ Full working examples available at [github.com/irisx/examples](https://github.co
 ## Support
 
 - 📚 [Full API Reference](/api-reference)
-- 💬 [Discord Community](https://discord.gg/irisx)
-- 🐛 [GitHub Issues](https://github.com/irisx/sdk-nodejs/issues)
-- 📧 Email: support@useiris.com
+- 💬 [Discord Community](https://discord.gg/tazzi)
+- 🐛 [GitHub Issues](https://github.com/tazzi/sdk-nodejs/issues)
+- 📧 Email: support@tazzi.com
 
 ## Next Steps
 
@@ -475,7 +475,7 @@ Full working examples available at [github.com/irisx/examples](https://github.co
   <Card title="API Reference" icon="book" href="/api-reference">
     Explore all endpoints
   </Card>
-  <Card title="Code Examples" icon="code" href="https://github.com/irisx/examples">
+  <Card title="Code Examples" icon="code" href="https://github.com/tazzi/examples">
     See working examples
   </Card>
 </CardGroup>

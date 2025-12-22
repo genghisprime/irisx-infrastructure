@@ -93,7 +93,7 @@ Retrieve aggregated statistics across all communication channels for a given dat
 <RequestExample>
 
 ```bash cURL
-curl "https://api.useiris.com/v1/analytics/dashboard?start_date=2025-10-01T00:00:00Z&end_date=2025-10-31T23:59:59Z" \
+curl "https://api.tazzi.com/v1/analytics/dashboard?start_date=2025-10-01T00:00:00Z&end_date=2025-10-31T23:59:59Z" \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
@@ -107,7 +107,7 @@ async function getDashboardAnalytics(startDate, endDate) {
   if (endDate) params.append('end_date', endDate);
 
   const response = await axios.get(
-    `https://api.useiris.com/v1/analytics/dashboard?${params}`,
+    `https://api.tazzi.com/v1/analytics/dashboard?${params}`,
     {
       headers: { 'X-API-Key': 'YOUR_API_KEY' }
     }
@@ -144,7 +144,7 @@ def get_dashboard_analytics(start_date=None, end_date=None):
         params['end_date'] = end_date
 
     response = requests.get(
-        'https://api.useiris.com/v1/analytics/dashboard',
+        'https://api.tazzi.com/v1/analytics/dashboard',
         params=params,
         headers={'X-API-Key': 'YOUR_API_KEY'}
     )

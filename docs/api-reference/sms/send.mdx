@@ -6,7 +6,7 @@ description: 'Send a single SMS message'
 
 ## Overview
 
-Send an SMS or MMS message with automatic delivery tracking. IRISX supports long messages (up to 1600 characters) with automatic segmentation and MMS for media attachments.
+Send an SMS or MMS message with automatic delivery tracking. Tazzi supports long messages (up to 1600 characters) with automatic segmentation and MMS for media attachments.
 
 ## Authentication
 
@@ -76,13 +76,13 @@ Send an SMS or MMS message with automatic delivery tracking. IRISX supports long
 <RequestExample>
 
 ```bash cURL
-curl -X POST https://api.useiris.com/v1/sms/send \
+curl -X POST https://api.tazzi.com/v1/sms/send \
   -H "X-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "to": "+15551234567",
     "from": "+15559876543",
-    "body": "Hello! This is a test message from IRISX."
+    "body": "Hello! This is a test message from Tazzi."
   }'
 ```
 
@@ -91,7 +91,7 @@ const axios = require('axios');
 
 async function sendSMS(to, from, body) {
   const response = await axios.post(
-    'https://api.useiris.com/v1/sms/send',
+    'https://api.tazzi.com/v1/sms/send',
     { to, from, body },
     {
       headers: {
@@ -109,7 +109,7 @@ async function sendSMS(to, from, body) {
   return message;
 }
 
-sendSMS('+15551234567', '+15559876543', 'Hello from IRISX!');
+sendSMS('+15551234567', '+15559876543', 'Hello from Tazzi!');
 ```
 
 ```python Python
@@ -117,7 +117,7 @@ import requests
 
 def send_sms(to, from_number, body):
     response = requests.post(
-        'https://api.useiris.com/v1/sms/send',
+        'https://api.tazzi.com/v1/sms/send',
         json={
             'to': to,
             'from': from_number,
@@ -135,7 +135,7 @@ def send_sms(to, from_number, body):
         print(f"Segments: {message['segments']}")
         return message
 
-send_sms('+15551234567', '+15559876543', 'Hello from IRISX!')
+send_sms('+15551234567', '+15559876543', 'Hello from Tazzi!')
 ```
 
 </RequestExample>
@@ -149,7 +149,7 @@ send_sms('+15551234567', '+15559876543', 'Hello from IRISX!')
     "tenant_id": 1,
     "to": "+15551234567",
     "from": "+15559876543",
-    "body": "Hello! This is a test message from IRISX.",
+    "body": "Hello! This is a test message from Tazzi.",
     "status": "queued",
     "direction": "outbound",
     "cost": 0.0075,

@@ -60,7 +60,7 @@ Authenticate an existing user and receive JWT tokens for API access. Use this en
 <RequestExample>
 
 ```bash cURL
-curl -X POST https://api.useiris.com/v1/auth/login \
+curl -X POST https://api.tazzi.com/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "admin@acme.com",
@@ -74,7 +74,7 @@ const axios = require('axios');
 async function login(email, password) {
   try {
     const response = await axios.post(
-      'https://api.useiris.com/v1/auth/login',
+      'https://api.tazzi.com/v1/auth/login',
       {
         email,
         password
@@ -110,7 +110,7 @@ import requests
 
 def login(email, password):
     response = requests.post(
-        'https://api.useiris.com/v1/auth/login',
+        'https://api.tazzi.com/v1/auth/login',
         json={
             'email': email,
             'password': password
@@ -137,7 +137,7 @@ login('admin@acme.com', 'securepassword123')
 ```php PHP
 <?php
 function login($email, $password) {
-    $ch = curl_init('https://api.useiris.com/v1/auth/login');
+    $ch = curl_init('https://api.tazzi.com/v1/auth/login');
 
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
@@ -209,7 +209,7 @@ login('admin@acme.com', 'securepassword123');
 Include the JWT token in subsequent API requests:
 
 ```bash
-curl https://api.useiris.com/v1/calls \
+curl https://api.tazzi.com/v1/calls \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -241,7 +241,7 @@ curl https://api.useiris.com/v1/calls \
 </Warning>
 
 <Tip>
-  Implement rate limiting on your login endpoint to prevent brute force attacks. IRISX enforces 5 login attempts per minute per IP address.
+  Implement rate limiting on your login endpoint to prevent brute force attacks. Tazzi enforces 5 login attempts per minute per IP address.
 </Tip>
 
 ## Token Storage

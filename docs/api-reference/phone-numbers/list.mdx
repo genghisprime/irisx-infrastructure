@@ -41,7 +41,7 @@ Retrieve a list of all phone numbers purchased for your account.
 <RequestExample>
 
 ```bash cURL
-curl https://api.useiris.com/v1/phone-numbers \
+curl https://api.tazzi.com/v1/phone-numbers \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
@@ -52,7 +52,7 @@ async function listPhoneNumbers(filters = {}) {
   const params = new URLSearchParams(filters);
 
   const response = await axios.get(
-    `https://api.useiris.com/v1/phone-numbers?${params}`,
+    `https://api.tazzi.com/v1/phone-numbers?${params}`,
     {
       headers: { 'X-API-Key': 'YOUR_API_KEY' }
     }
@@ -76,7 +76,7 @@ def list_phone_numbers(filters=None):
         filters = {}
 
     response = requests.get(
-        'https://api.useiris.com/v1/phone-numbers',
+        'https://api.tazzi.com/v1/phone-numbers',
         params=filters,
         headers={'X-API-Key': 'YOUR_API_KEY'}
     )

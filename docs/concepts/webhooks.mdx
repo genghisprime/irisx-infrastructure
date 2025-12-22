@@ -1,32 +1,32 @@
 ---
 title: 'Webhooks'
-description: 'Receive real-time event notifications from IRISX'
+description: 'Receive real-time event notifications from Tazzi'
 ---
 
 ## Overview
 
-Webhooks allow your application to receive real-time notifications when events occur in IRISX (calls completed, messages delivered, etc.).
+Webhooks allow your application to receive real-time notifications when events occur in Tazzi (calls completed, messages delivered, etc.).
 
 ## How Webhooks Work
 
 ```mermaid
 sequenceDiagram
     participant App as Your App
-    participant IRISX as IRISX API
+    participant Tazzi as Tazzi API
     participant Webhook as Your Webhook
 
-    App->>IRISX: Create call
-    IRISX->>App: 201 Created
-    IRISX->>Webhook: call.ringing
-    IRISX->>Webhook: call.answered
-    IRISX->>Webhook: call.completed
+    App->>Tazzi: Create call
+    Tazzi->>App: 201 Created
+    Tazzi->>Webhook: call.ringing
+    Tazzi->>Webhook: call.answered
+    Tazzi->>Webhook: call.completed
 ```
 
 ## Creating Webhooks
 
 ```javascript
-const webhook = await irisx.webhooks.create({
-  url: 'https://yourapp.com/webhooks/irisx',
+const webhook = await tazzi.webhooks.create({
+  url: 'https://yourapp.com/webhooks/tazzi',
   events: [
     'call.completed',
     'call.failed',
@@ -96,7 +96,7 @@ const crypto = require('crypto');
 const app = express();
 app.use(express.json());
 
-app.post('/webhooks/irisx', (req, res) => {
+app.post('/webhooks/tazzi', (req, res) => {
   // 1. Verify signature
   if (!verifySignature(req)) {
     return res.status(401).send('Invalid signature');
@@ -125,8 +125,8 @@ app.post('/webhooks/irisx', (req, res) => {
 });
 
 function verifySignature(req) {
-  const signature = req.headers['x-irisx-signature'];
-  const webhookSecret = process.env.IRISX_WEBHOOK_SECRET;
+  const signature = req.headers['x-tazzi-signature'];
+  const webhookSecret = process.env.TAZZI_WEBHOOK_SECRET;
 
   const hmac = crypto
     .createHmac('sha256', webhookSecret)
@@ -141,7 +141,7 @@ app.listen(3000);
 
 ## Signature Verification
 
-IRISX signs every webhook with HMAC-SHA256:
+Tazzi signs every webhook with HMAC-SHA256:
 
 ```javascript
 const crypto = require('crypto');
@@ -161,7 +161,7 @@ function verifyWebhook(payload, signature, secret) {
 // Usage
 const isValid = verifyWebhook(
   req.body,
-  req.headers['x-irisx-signature'],
+  req.headers['x-tazzi-signature'],
   webhookSecret
 );
 ```
@@ -215,7 +215,7 @@ function handleWebhook(event) {
 
 ### 3. Implement Retry Logic
 
-If your endpoint is down, IRISX retries:
+If your endpoint is down, Tazzi retries:
 - Retry 1: After 1 minute
 - Retry 2: After 5 minutes
 - Retry 3: After 15 minutes
@@ -271,7 +271,7 @@ npm install -g ngrok
 ngrok http 3000
 
 # Use ngrok URL as webhook
-https://abc123.ngrok.io/webhooks/irisx
+https://abc123.ngrok.io/webhooks/tazzi
 ```
 
 ### Test Webhook
@@ -279,7 +279,7 @@ https://abc123.ngrok.io/webhooks/irisx
 Test your webhook manually:
 
 ```javascript
-const testWebhook = await irisx.webhooks.test(webhookId);
+const testWebhook = await tazzi.webhooks.test(webhookId);
 
 if (testWebhook.success) {
   console.log('Webhook working!');
@@ -307,7 +307,7 @@ View webhook delivery logs in dashboard:
 
   <Accordion title="401/403 errors">
     - Ensure endpoint doesn't require authentication
-    - Or whitelist IRISX IP ranges
+    - Or whitelist Tazzi IP ranges
     - Check for CORS issues
   </Accordion>
 

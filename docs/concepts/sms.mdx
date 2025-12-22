@@ -1,11 +1,11 @@
 ---
 title: 'SMS Messaging'
-description: 'Send and receive SMS/MMS messages with IRISX'
+description: 'Send and receive SMS/MMS messages with Tazzi'
 ---
 
 ## Overview
 
-IRISX provides reliable SMS and MMS messaging with delivery tracking, templates, scheduling, and opt-out management powered by Twilio and Telnyx.
+Tazzi provides reliable SMS and MMS messaging with delivery tracking, templates, scheduling, and opt-out management powered by Twilio and Telnyx.
 
 ## Message Lifecycle
 
@@ -32,7 +32,7 @@ graph LR
 ### Basic Message
 
 ```javascript
-const message = await irisx.sms.send({
+const message = await tazzi.sms.send({
   to: '+15551234567',
   from: '+15559876543',
   body: 'Hello! This is your verification code: 123456'
@@ -45,7 +45,7 @@ console.log(`Status: ${message.status}`);
 ### With Webhook
 
 ```javascript
-const message = await irisx.sms.send({
+const message = await tazzi.sms.send({
   to: '+15551234567',
   from: '+15559876543',
   body: 'Your order #12345 has shipped!',
@@ -56,7 +56,7 @@ const message = await irisx.sms.send({
 ### MMS with Media
 
 ```javascript
-const message = await irisx.sms.send({
+const message = await tazzi.sms.send({
   to: '+15551234567',
   from: '+15559876543',
   body: 'Check out this image!',
@@ -100,7 +100,7 @@ SMS messages are divided into segments based on length:
 Send to multiple recipients:
 
 ```javascript
-const result = await irisx.sms.sendBulk({
+const result = await tazzi.sms.sendBulk({
   from: '+15559876543',
   recipients: [
     { to: '+15551111111', body: 'Hello Alice!' },
@@ -119,13 +119,13 @@ Create reusable templates:
 
 ```javascript
 // Create template
-const template = await irisx.sms.createTemplate({
+const template = await tazzi.sms.createTemplate({
   name: 'order_confirmation',
   body: 'Hi {{name}}, your order #{{order_id}} is confirmed!'
 });
 
 // Send using template
-const message = await irisx.sms.sendTemplate({
+const message = await tazzi.sms.sendTemplate({
   to: '+15551234567',
   from: '+15559876543',
   template_id: template.id,
@@ -141,7 +141,7 @@ const message = await irisx.sms.sendTemplate({
 Schedule messages for future delivery:
 
 ```javascript
-const scheduled = await irisx.sms.schedule({
+const scheduled = await tazzi.sms.schedule({
   to: '+15551234567',
   from: '+15559876543',
   body: 'Reminder: Your appointment is tomorrow at 2pm',
@@ -149,12 +149,12 @@ const scheduled = await irisx.sms.schedule({
 });
 
 // Cancel if needed
-await irisx.sms.cancelScheduled(scheduled.id);
+await tazzi.sms.cancelScheduled(scheduled.id);
 ```
 
 ## Opt-Out Management
 
-IRISX automatically handles STOP/START keywords:
+Tazzi automatically handles STOP/START keywords:
 
 ### Automatic Handling
 
@@ -172,11 +172,11 @@ User sends: "START"
 
 ```javascript
 // Check before sending
-const optOuts = await irisx.sms.getOptOuts();
+const optOuts = await tazzi.sms.getOptOuts();
 const isOptedOut = optOuts.some(num => num === '+15551234567');
 
 if (!isOptedOut) {
-  await irisx.sms.send({ /* ... */ });
+  await tazzi.sms.send({ /* ... */ });
 }
 ```
 
@@ -184,7 +184,7 @@ if (!isOptedOut) {
 
 ```javascript
 // Add to opt-out list
-await irisx.sms.optOut({
+await tazzi.sms.optOut({
   phone_number: '+15551234567',
   reason: 'customer_request'
 });
@@ -225,7 +225,7 @@ Receive messages on your numbers:
 
 ```javascript
 // Configure webhook on phone number
-await irisx.phoneNumbers.update(phoneNumberId, {
+await tazzi.phoneNumbers.update(phoneNumberId, {
   sms_webhook_url: 'https://yourapp.com/webhooks/inbound-sms'
 });
 
@@ -244,7 +244,7 @@ await irisx.phoneNumbers.update(phoneNumberId, {
 }
 
 // Auto-reply
-await irisx.sms.send({
+await tazzi.sms.send({
   to: inboundMessage.from,
   from: inboundMessage.to,
   body: 'Thanks for contacting us! A representative will respond shortly.'

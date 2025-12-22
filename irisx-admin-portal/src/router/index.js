@@ -113,6 +113,13 @@ const routes = [
         name: 'AgentList',
         component: () => import('../views/admin/agents/AgentList.vue')
       },
+      // Supervisor Dashboard
+      {
+        path: 'supervisor',
+        name: 'SupervisorDashboard',
+        component: () => import('../views/admin/supervisor/SupervisorDashboard.vue'),
+        meta: { requiresRole: 'admin' }
+      },
       // Providers
       {
         path: 'providers',
@@ -257,6 +264,13 @@ const routes = [
         path: 'data-import',
         name: 'DataImport',
         component: () => import('../views/admin/DataImport.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // API Keys Management (Cross-Tenant Security)
+      {
+        path: 'api-keys',
+        name: 'ApiKeyManagement',
+        component: () => import('../views/admin/api-keys/ApiKeyManagement.vue'),
         meta: { requiresRole: 'admin' }
       }
     ]

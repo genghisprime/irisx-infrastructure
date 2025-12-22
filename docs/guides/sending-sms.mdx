@@ -5,7 +5,7 @@ description: 'Complete guide to SMS messaging with bulk sending, scheduling, del
 
 ## Overview
 
-IRISX provides a robust SMS platform for sending transactional messages, marketing campaigns, and customer communications. This guide covers everything from basic messaging to advanced bulk operations.
+Tazzi provides a robust SMS platform for sending transactional messages, marketing campaigns, and customer communications. This guide covers everything from basic messaging to advanced bulk operations.
 
 <CardGroup cols={2}>
   <Card title="Basic Messaging" icon="message" href="#sending-messages">
@@ -32,14 +32,14 @@ Send a simple text message:
 const axios = require('axios');
 
 const apiKey = 'your_api_key_here';
-const apiUrl = 'https://api.useiris.com';
+const apiUrl = 'https://api.tazzi.com';
 
 async function sendSMS(to, message) {
   const response = await axios.post(
     `${apiUrl}/v1/sms/send`,
     {
       to: to,
-      from: '+15559876543', // Your IRISX number
+      from: '+15559876543', // Your Tazzi number
       body: message
     },
     {
@@ -788,4 +788,4 @@ Continue building your messaging solution:
 - [Set up IVR menus](/guides/ivr-menus) for two-way communication
 - [Learn error handling](/guides/error-handling) for robust messaging
 
-Questions? Join our [Discord community](https://discord.gg/irisx) or email support@useiris.com.
+Questions? Join our [Discord community](https://discord.gg/tazzi) or email support@tazzi.com.

@@ -171,6 +171,18 @@
           </RouterLink>
           <RouterLink
             v-if="authStore.isAdmin"
+            to="/dashboard/supervisor"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/supervisor' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            Supervisor
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
             to="/dashboard/queues"
             class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
           >
@@ -364,6 +376,17 @@
           </RouterLink>
           <RouterLink
             v-if="authStore.isAdmin"
+            to="/dashboard/api-keys"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/api-keys' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+            API Keys
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
             to="/dashboard/settings/features"
             class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
           >
@@ -448,6 +471,7 @@ const pageTitle = computed(() => {
     'RecordingManagement': 'Call Recordings',
     'PhoneNumberProvisioning': 'Phone Numbers',
     'AgentList': 'Agents',
+    'SupervisorDashboard': 'Supervisor Dashboard',
     'ContactManagement': 'Contacts',
     'CDRViewer': 'Call Detail Records',
     'IVRManagement': 'IVR Management',
@@ -458,7 +482,8 @@ const pageTitle = computed(() => {
     'BillingRates': 'Billing Rate Tables',
     'ProviderCredentials': 'Provider Credentials',
     'FeatureFlags': 'Feature Flags',
-    'SystemSettings': 'System Settings'
+    'SystemSettings': 'System Settings',
+    'ApiKeyManagement': 'API Keys Management'
   }
   return titles[route.name] || 'Tazzi Admin Portal'
 })

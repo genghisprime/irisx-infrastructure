@@ -37,7 +37,7 @@ Purchase a phone number from the available inventory. The number will be immedia
 <RequestExample>
 
 ```bash cURL
-curl -X POST https://api.useiris.com/v1/phone-numbers/purchase \
+curl -X POST https://api.tazzi.com/v1/phone-numbers/purchase \
   -H "X-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -51,7 +51,7 @@ const axios = require('axios');
 
 async function purchasePhoneNumber(number, friendlyName) {
   const response = await axios.post(
-    'https://api.useiris.com/v1/phone-numbers/purchase',
+    'https://api.tazzi.com/v1/phone-numbers/purchase',
     {
       number,
       friendly_name: friendlyName
@@ -79,7 +79,7 @@ import requests
 
 def purchase_phone_number(number, friendly_name=None):
     response = requests.post(
-        'https://api.useiris.com/v1/phone-numbers/purchase',
+        'https://api.tazzi.com/v1/phone-numbers/purchase',
         json={
             'number': number,
             'friendly_name': friendly_name

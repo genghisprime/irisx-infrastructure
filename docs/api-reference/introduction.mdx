@@ -1,29 +1,29 @@
 ---
 title: 'API Reference'
-description: 'Complete reference for all IRISX API endpoints'
+description: 'Complete reference for all Tazzi API endpoints'
 ---
 
-## Welcome to the IRISX API
+## Welcome to the Tazzi API
 
-The IRISX API provides a comprehensive set of endpoints for managing voice calls, SMS, email, webhooks, phone numbers, and analytics. Our REST API uses standard HTTP methods, returns JSON responses, and follows predictable resource-oriented URLs.
+The Tazzi API provides a comprehensive set of endpoints for managing voice calls, SMS, email, webhooks, phone numbers, and analytics. Our REST API uses standard HTTP methods, returns JSON responses, and follows predictable resource-oriented URLs.
 
 ## Base URL
 
 All API requests should be made to:
 
 ```
-https://api.useiris.com
+https://api.tazzi.com
 ```
 
 For beta testing and staging:
 
 ```
-http://54.160.220.243:3000
+http://3.83.53.69:3000
 ```
 
 ## Authentication
 
-IRISX supports two authentication methods:
+Tazzi supports two authentication methods:
 
 <CardGroup cols={2}>
   <Card title="JWT Bearer Token" icon="key">
@@ -37,24 +37,24 @@ IRISX supports two authentication methods:
 ### JWT Bearer Token Example
 
 ```bash
-curl https://api.useiris.com/v1/calls \
+curl https://api.tazzi.com/v1/calls \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
 ### API Key Example
 
 ```bash
-curl https://api.useiris.com/v1/calls \
+curl https://api.tazzi.com/v1/calls \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
 <Note>
-  Get your API key from **Settings → API Keys** in the IRISX portal after registering.
+  Get your API key from **Settings → API Keys** in the Tazzi portal after registering.
 </Note>
 
 ## Rate Limits
 
-To ensure fair usage and system stability, IRISX implements the following rate limits:
+To ensure fair usage and system stability, Tazzi implements the following rate limits:
 
 | Resource Type | Limit | Window |
 |--------------|-------|--------|
@@ -90,7 +90,7 @@ Request bodies must be valid JSON:
 {
   "to": "+15551234567",
   "from": "+15559876543",
-  "body": "Hello from IRISX!"
+  "body": "Hello from Tazzi!"
 }
 ```
 
@@ -125,7 +125,7 @@ All responses are returned in JSON format:
 
 ## HTTP Status Codes
 
-IRISX uses standard HTTP status codes:
+Tazzi uses standard HTTP status codes:
 
 | Code | Description |
 |------|-------------|
@@ -190,7 +190,7 @@ GET /v1/calls?page=2&limit=50
 
 ## Webhooks
 
-IRISX can notify your application of events via webhooks. All webhook payloads include:
+Tazzi can notify your application of events via webhooks. All webhook payloads include:
 
 ```json
 {
@@ -241,19 +241,19 @@ Use our official SDKs for easier integration:
 <CodeGroup>
 
 ```bash Node.js
-npm install @irisx/sdk
+npm install @tazzi/sdk
 ```
 
 ```bash Python
-pip install irisx
+pip install tazzi
 ```
 
 ```bash PHP
-composer require irisx/sdk
+composer require tazzi/sdk
 ```
 
 ```bash Ruby
-gem install irisx
+gem install tazzi
 ```
 
 </CodeGroup>
@@ -265,10 +265,10 @@ gem install irisx
 ## Need Help?
 
 <CardGroup cols={2}>
-  <Card title="Discord Community" icon="discord" href="https://discord.gg/irisx">
+  <Card title="Discord Community" icon="discord" href="https://discord.gg/tazzi">
     Join our Discord for support
   </Card>
-  <Card title="Email Support" icon="envelope" href="mailto:support@useiris.com">
-    support@useiris.com
+  <Card title="Email Support" icon="envelope" href="mailto:support@tazzi.com">
+    support@tazzi.com
   </Card>
 </CardGroup>

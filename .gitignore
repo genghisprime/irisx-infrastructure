@@ -6,3 +6,6 @@
 .env.local
 *.log
 irisx-production-firebase-adminsdk-fbsvc-292a7b67a3.json
+node_modules/
+api/node_modules/
+irisx-*/node_modules/

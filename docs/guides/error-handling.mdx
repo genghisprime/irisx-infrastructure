@@ -5,7 +5,7 @@ description: 'Build resilient applications with proper error handling, retry str
 
 ## Overview
 
-Robust error handling is critical for production applications. Learn how to handle API errors, implement retry strategies, and build resilient integrations with IRISX.
+Robust error handling is critical for production applications. Learn how to handle API errors, implement retry strategies, and build resilient integrations with Tazzi.
 
 <CardGroup cols={2}>
   <Card title="Status Codes" icon="code" href="#http-status-codes">
@@ -24,7 +24,7 @@ Robust error handling is critical for production applications. Learn how to hand
 
 ## HTTP Status Codes
 
-IRISX uses standard HTTP status codes to indicate success or failure.
+Tazzi uses standard HTTP status codes to indicate success or failure.
 
 ### Success Codes (2xx)
 
@@ -144,7 +144,7 @@ All error responses follow a consistent JSON structure.
 const axios = require('axios');
 
 const apiKey = 'your_api_key_here';
-const apiUrl = 'https://api.useiris.com';
+const apiUrl = 'https://api.tazzi.com';
 
 async function makeCallWithErrorHandling(to, from) {
   try {
@@ -225,7 +225,7 @@ import requests
 from requests.exceptions import RequestException, Timeout, ConnectionError
 
 API_KEY = 'your_api_key_here'
-API_URL = 'https://api.useiris.com'
+API_URL = 'https://api.tazzi.com'
 
 def make_call_with_error_handling(to, from_number):
     try:
@@ -290,7 +290,7 @@ def make_call_with_error_handling(to, from_number):
 
 function makeCallWithErrorHandling($to, $from) {
     $apiKey = getenv('API_KEY');
-    $apiUrl = 'https://api.useiris.com';
+    $apiUrl = 'https://api.tazzi.com';
 
     $ch = curl_init("$apiUrl/v1/calls");
 
@@ -464,7 +464,7 @@ Handle rate limits gracefully with intelligent retry logic.
 
 ### Rate Limit Headers
 
-IRISX includes rate limit information in response headers:
+Tazzi includes rate limit information in response headers:
 
 ```
 X-RateLimit-Limit: 10
@@ -676,7 +676,7 @@ async function makeCallWithErrorTracking(to, from) {
     // Track error in Sentry
     Sentry.captureException(error, {
       tags: {
-        api: 'irisx',
+        api: 'tazzi',
         endpoint: '/v1/calls'
       },
       extra: {
@@ -695,7 +695,7 @@ async function makeCallWithErrorTracking(to, from) {
 
 ## Common Error Codes
 
-Reference guide for IRISX-specific error codes.
+Reference guide for Tazzi-specific error codes.
 
 <AccordionGroup>
   <Accordion title="Authentication Errors">
@@ -827,7 +827,7 @@ graph TD
   <Card
     title="Status Page"
     icon="chart-line"
-    href="https://status.useiris.com"
+    href="https://status.tazzi.com"
   >
     Check API status
   </Card>
@@ -841,4 +841,4 @@ Build more resilient applications:
 - [Set up monitoring](/guides/monitoring) for API health
 - [Review security best practices](/concepts/security)
 
-Questions? Join our [Discord community](https://discord.gg/irisx) or email support@useiris.com.
+Questions? Join our [Discord community](https://discord.gg/tazzi) or email support@tazzi.com.

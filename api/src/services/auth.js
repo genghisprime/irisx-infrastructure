@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import { authenticator } from 'otplib';
 import { query } from '../db/connection.js';
 
 /**
@@ -161,10 +162,11 @@ class AuthService {
    */
   async login(email, password) {
     try {
-      // Get user with password hash
+      // Get user with password hash and 2FA status
       const result = await query(
         `SELECT u.id, u.tenant_id, u.email, u.password_hash, u.first_name, u.last_name,
                 u.phone, u.role, u.status, u.last_login_at,
+                u.two_factor_enabled, u.two_factor_secret,
                 t.name as tenant_name, t.status as tenant_status
          FROM users u
          JOIN tenants t ON t.id = u.tenant_id
@@ -195,52 +197,91 @@ class AuthService {
         throw new Error('Invalid email or password');
       }
 
-      // Generate tokens
-      const accessToken = this.generateAccessToken({
-        userId: user.id,
-        tenantId: user.tenant_id,
-        email: user.email,
-        role: user.role,
-      });
+      // Check if 2FA is enabled
+      if (user.two_factor_enabled) {
+        // Generate a pending 2FA token (valid for 5 minutes)
+        const pendingToken = this.generate2FAPendingToken(user);
 
-      const refreshToken = this.generateRefreshToken({
-        userId: user.id,
-        tenantId: user.tenant_id,
-      });
+        console.log(`[Auth] 2FA required for user: ${email}`);
 
-      // Store refresh token
-      await this.storeRefreshToken(user.id, refreshToken);
+        return {
+          requires_2fa: true,
+          pending_token: pendingToken,
+          message: 'Please provide your 2FA code to complete login',
+        };
+      }
 
-      // Update last login
-      await query(
-        'UPDATE users SET last_login_at = NOW() WHERE id = $1',
-        [user.id]
-      );
-
-      console.log(`[Auth] User logged in: ${email}`);
-
-      return {
-        user: {
-          id: user.id,
-          tenant_id: user.tenant_id,
-          email: user.email,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          phone: user.phone,
-          role: user.role,
-          status: user.status,
-          tenant_name: user.tenant_name,
-        },
-        tokens: {
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          expires_in: this.jwtExpiresIn,
-        },
-      };
+      // No 2FA - proceed with full login
+      return this.completeLogin(user);
     } catch (error) {
       console.error('[Auth] Login error:', error);
       throw error;
     }
+  }
+
+  /**
+   * Generate 2FA pending token (short-lived)
+   */
+  generate2FAPendingToken(user) {
+    return jwt.sign(
+      {
+        userId: user.id,
+        tenantId: user.tenant_id,
+        email: user.email,
+        pending_2fa: true,
+      },
+      this.jwtSecret,
+      { expiresIn: '5m' }
+    );
+  }
+
+  /**
+   * Complete login after password (and optionally 2FA) verification
+   */
+  async completeLogin(user) {
+    // Generate tokens
+    const accessToken = this.generateAccessToken({
+      userId: user.id,
+      tenantId: user.tenant_id,
+      email: user.email,
+      role: user.role,
+    });
+
+    const refreshToken = this.generateRefreshToken({
+      userId: user.id,
+      tenantId: user.tenant_id,
+    });
+
+    // Store refresh token
+    await this.storeRefreshToken(user.id, refreshToken);
+
+    // Update last login
+    await query(
+      'UPDATE users SET last_login_at = NOW() WHERE id = $1',
+      [user.id]
+    );
+
+    console.log(`[Auth] User logged in: ${user.email}`);
+
+    return {
+      user: {
+        id: user.id,
+        tenant_id: user.tenant_id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        phone: user.phone,
+        role: user.role,
+        status: user.status,
+        tenant_name: user.tenant_name,
+        two_factor_enabled: user.two_factor_enabled || false,
+      },
+      tokens: {
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        expires_in: this.jwtExpiresIn,
+      },
+    };
   }
 
   /**
@@ -511,6 +552,253 @@ class AuthService {
       console.error('[Auth] Password change error:', error);
       throw error;
     }
+  }
+
+  // =====================================================
+  // TWO-FACTOR AUTHENTICATION (2FA) METHODS
+  // =====================================================
+
+  /**
+   * Setup 2FA - Generate secret and return QR code URL
+   */
+  async setup2FA(userId) {
+    try {
+      // Check if 2FA is already enabled
+      const checkResult = await query(
+        `SELECT email, two_factor_enabled FROM users WHERE id = $1`,
+        [userId]
+      );
+
+      if (checkResult.rows.length === 0) {
+        throw new Error('User not found');
+      }
+
+      const user = checkResult.rows[0];
+
+      if (user.two_factor_enabled) {
+        throw new Error('2FA is already enabled. Disable it first to set up again.');
+      }
+
+      // Generate a new TOTP secret
+      const secret = authenticator.generateSecret();
+      const otpauth = authenticator.keyuri(user.email, 'IRISX', secret);
+
+      // Store the secret temporarily (not enabled yet until verified)
+      await query(
+        `UPDATE users
+         SET two_factor_secret = $1, updated_at = NOW()
+         WHERE id = $2`,
+        [secret, userId]
+      );
+
+      console.log(`[Auth] 2FA setup started for user: ${userId}`);
+
+      return {
+        secret,
+        otpauth_url: otpauth,
+        message: 'Scan this QR code with your authenticator app, then verify with a code to enable 2FA',
+      };
+    } catch (error) {
+      console.error('[Auth] 2FA setup error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enable 2FA - Verify code and enable
+   */
+  async enable2FA(userId, totpCode) {
+    try {
+      // Get the user's secret
+      const result = await query(
+        `SELECT two_factor_secret, two_factor_enabled FROM users WHERE id = $1`,
+        [userId]
+      );
+
+      if (result.rows.length === 0) {
+        throw new Error('User not found');
+      }
+
+      const user = result.rows[0];
+
+      if (!user.two_factor_secret) {
+        throw new Error('No 2FA secret found. Call setup first.');
+      }
+
+      if (user.two_factor_enabled) {
+        throw new Error('2FA is already enabled');
+      }
+
+      // Verify the TOTP code
+      const isValid = authenticator.verify({
+        token: totpCode,
+        secret: user.two_factor_secret,
+      });
+
+      if (!isValid) {
+        throw new Error('Invalid 2FA code. Please try again.');
+      }
+
+      // Enable 2FA
+      await query(
+        `UPDATE users
+         SET two_factor_enabled = true, updated_at = NOW()
+         WHERE id = $1`,
+        [userId]
+      );
+
+      console.log(`[Auth] 2FA enabled for user: ${userId}`);
+
+      return {
+        success: true,
+        message: '2FA has been enabled successfully',
+      };
+    } catch (error) {
+      console.error('[Auth] 2FA enable error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Disable 2FA - Requires password and current 2FA code
+   */
+  async disable2FA(userId, password, totpCode) {
+    try {
+      // Get user with password hash and 2FA info
+      const result = await query(
+        `SELECT password_hash, two_factor_secret, two_factor_enabled
+         FROM users WHERE id = $1`,
+        [userId]
+      );
+
+      if (result.rows.length === 0) {
+        throw new Error('User not found');
+      }
+
+      const user = result.rows[0];
+
+      if (!user.two_factor_enabled) {
+        throw new Error('2FA is not enabled');
+      }
+
+      // Verify password
+      const validPassword = await this.comparePassword(password, user.password_hash);
+      if (!validPassword) {
+        throw new Error('Invalid password');
+      }
+
+      // Verify the 2FA code
+      const isValid = authenticator.verify({
+        token: totpCode,
+        secret: user.two_factor_secret,
+      });
+
+      if (!isValid) {
+        throw new Error('Invalid 2FA code');
+      }
+
+      // Disable 2FA
+      await query(
+        `UPDATE users
+         SET two_factor_enabled = false, two_factor_secret = NULL, updated_at = NOW()
+         WHERE id = $1`,
+        [userId]
+      );
+
+      console.log(`[Auth] 2FA disabled for user: ${userId}`);
+
+      return {
+        success: true,
+        message: '2FA has been disabled successfully',
+      };
+    } catch (error) {
+      console.error('[Auth] 2FA disable error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verify 2FA code and complete login
+   */
+  async verify2FALogin(pendingToken, totpCode) {
+    try {
+      // Verify the pending token
+      let decoded;
+      try {
+        decoded = this.verifyToken(pendingToken);
+      } catch (err) {
+        if (err.message === 'Token expired') {
+          throw new Error('2FA verification window expired. Please login again.');
+        }
+        throw new Error('Invalid pending token');
+      }
+
+      // Ensure this is a pending 2FA token
+      if (!decoded.pending_2fa) {
+        throw new Error('Invalid token type');
+      }
+
+      // Get the user with their 2FA secret
+      const result = await query(
+        `SELECT u.id, u.tenant_id, u.email, u.first_name, u.last_name,
+                u.phone, u.role, u.status, u.two_factor_secret, u.two_factor_enabled,
+                t.name as tenant_name, t.status as tenant_status
+         FROM users u
+         JOIN tenants t ON t.id = u.tenant_id
+         WHERE u.id = $1 AND u.two_factor_enabled = true`,
+        [decoded.userId]
+      );
+
+      if (result.rows.length === 0) {
+        throw new Error('User not found or 2FA not enabled');
+      }
+
+      const user = result.rows[0];
+
+      if (user.status !== 'active') {
+        throw new Error('User account is inactive');
+      }
+
+      if (user.tenant_status !== 'active') {
+        throw new Error('Tenant account is inactive');
+      }
+
+      // Verify the TOTP code
+      const isValid = authenticator.verify({
+        token: totpCode,
+        secret: user.two_factor_secret,
+      });
+
+      if (!isValid) {
+        throw new Error('Invalid 2FA code');
+      }
+
+      // 2FA verified - complete login
+      console.log(`[Auth] 2FA verified for user: ${user.email}`);
+
+      return this.completeLogin(user);
+    } catch (error) {
+      console.error('[Auth] 2FA verification error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get 2FA status for a user
+   */
+  async get2FAStatus(userId) {
+    const result = await query(
+      `SELECT two_factor_enabled FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('User not found');
+    }
+
+    return {
+      enabled: result.rows[0].two_factor_enabled || false,
+    };
   }
 }
 

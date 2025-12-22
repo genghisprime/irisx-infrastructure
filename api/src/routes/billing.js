@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import billingService from '../services/billing.js';
+import pdfInvoiceService from '../services/pdf-invoice.js';
 
 const billing = new Hono();
 
@@ -400,6 +401,152 @@ billing.delete('/payment-methods/:id', async (c) => {
   } catch (error) {
     console.error('Error deleting payment method:', error);
     return c.json({ error: 'Failed to delete payment method' }, 500);
+  }
+});
+
+// ==== PDF INVOICE GENERATION ====
+
+// Get invoice PDF stats
+billing.get('/invoices/pdf/stats', async (c) => {
+  try {
+    const user = c.get('user') || {};
+    const tenantId = user.tenant_id || user.tenantId || null;
+    const { period } = c.req.query();
+
+    const stats = await pdfInvoiceService.getStats(tenantId, period || 'month');
+
+    return c.json(stats);
+  } catch (error) {
+    console.error('Error getting PDF invoice stats:', error);
+    return c.json({ error: 'Failed to get PDF invoice stats', message: error.message }, 500);
+  }
+});
+
+// Download invoice as PDF
+billing.get('/invoices/:id/pdf', async (c) => {
+  try {
+    const user = c.get('user') || {};
+    const tenantId = user.tenant_id || user.tenantId || null;
+    const { id } = c.req.param();
+
+    const result = await pdfInvoiceService.getInvoiceDownload(id, tenantId);
+
+    // Set appropriate headers for PDF download
+    c.header('Content-Type', result.contentType);
+    c.header('Content-Disposition', `attachment; filename="${result.filename}"`);
+
+    return c.body(result.data);
+  } catch (error) {
+    console.error('Error downloading invoice PDF:', error);
+    if (error.message === 'Invoice not found') {
+      return c.json({ error: 'Invoice not found' }, 404);
+    }
+    return c.json({ error: 'Failed to download invoice PDF', message: error.message }, 500);
+  }
+});
+
+// Preview invoice as HTML (for in-browser viewing)
+billing.get('/invoices/:id/preview', async (c) => {
+  try {
+    const user = c.get('user') || {};
+    const tenantId = user.tenant_id || user.tenantId || null;
+    const { id } = c.req.param();
+
+    // Get invoice data
+    const invoice = await billingService.getInvoice(id, tenantId);
+    if (!invoice) {
+      return c.json({ error: 'Invoice not found' }, 404);
+    }
+
+    const lineItems = await billingService.getInvoiceLineItems(id);
+
+    // Generate HTML preview
+    const html = await pdfInvoiceService.generateHTMLInvoice(invoice, lineItems);
+
+    c.header('Content-Type', 'text/html');
+    return c.body(html);
+  } catch (error) {
+    console.error('Error previewing invoice:', error);
+    return c.json({ error: 'Failed to preview invoice', message: error.message }, 500);
+  }
+});
+
+// Email invoice to customer
+billing.post('/invoices/:id/email', async (c) => {
+  try {
+    const user = c.get('user') || {};
+    const tenantId = user.tenant_id || user.tenantId || null;
+    const { id } = c.req.param();
+    const { recipient_email } = await c.req.json();
+
+    const result = await pdfInvoiceService.emailInvoice(id, tenantId, recipient_email);
+
+    return c.json(result);
+  } catch (error) {
+    console.error('Error emailing invoice:', error);
+    if (error.message === 'Invoice not found') {
+      return c.json({ error: 'Invoice not found' }, 404);
+    }
+    return c.json({ error: 'Failed to email invoice', message: error.message }, 500);
+  }
+});
+
+// Batch generate PDFs for multiple invoices
+billing.post('/invoices/batch-pdf', async (c) => {
+  try {
+    const user = c.get('user') || {};
+    const tenantId = user.tenant_id || user.tenantId || null;
+    const { invoice_ids } = await c.req.json();
+
+    if (!invoice_ids || !Array.isArray(invoice_ids) || invoice_ids.length === 0) {
+      return c.json({ error: 'invoice_ids array is required' }, 400);
+    }
+
+    if (invoice_ids.length > 50) {
+      return c.json({ error: 'Maximum 50 invoices per batch' }, 400);
+    }
+
+    const results = await pdfInvoiceService.batchGenerateInvoices(invoice_ids, tenantId);
+
+    return c.json({
+      total: invoice_ids.length,
+      successful: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length,
+      results
+    });
+  } catch (error) {
+    console.error('Error batch generating PDFs:', error);
+    return c.json({ error: 'Failed to batch generate PDFs', message: error.message }, 500);
+  }
+});
+
+// Regenerate invoice PDF (force regenerate even if cached)
+billing.post('/invoices/:id/regenerate-pdf', async (c) => {
+  try {
+    const user = c.get('user') || {};
+    const tenantId = user.tenant_id || user.tenantId || null;
+    const { id } = c.req.param();
+
+    // Get invoice data
+    const invoice = await billingService.getInvoice(id, tenantId);
+    if (!invoice) {
+      return c.json({ error: 'Invoice not found' }, 404);
+    }
+
+    // Force regenerate PDF
+    const result = await pdfInvoiceService.generateInvoicePDF(id, tenantId);
+
+    return c.json({
+      success: true,
+      invoice_id: id,
+      invoice_number: result.invoiceNumber,
+      format: result.format,
+      size_bytes: result.pdfData?.length || result.htmlData?.length,
+      message: 'Invoice PDF regenerated successfully'
+    });
+  } catch (error) {
+    console.error('Error regenerating invoice PDF:', error);
+    return c.json({ error: 'Failed to regenerate invoice PDF', message: error.message }, 500);
   }
 });
 

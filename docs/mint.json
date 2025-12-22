@@ -1,5 +1,5 @@
 {
-  "name": "IRISX",
+  "name": "Tazzi",
   "logo": {
     "dark": "/logo/dark.svg",
     "light": "/logo/light.svg"
@@ -17,12 +17,12 @@
   "topbarLinks": [
     {
       "name": "Support",
-      "url": "mailto:support@useiris.com"
+      "url": "mailto:support@tazzi.com"
     }
   ],
   "topbarCtaButton": {
     "name": "Dashboard",
-    "url": "https://portal.useiris.com"
+    "url": "https://admin.tazzi.com"
   },
   "tabs": [
     {
@@ -42,12 +42,12 @@
     {
       "name": "Community",
       "icon": "discord",
-      "url": "https://discord.gg/irisx"
+      "url": "https://discord.gg/tazzi"
     },
     {
       "name": "GitHub",
       "icon": "github",
-      "url": "https://github.com/irisx"
+      "url": "https://github.com/tazzi"
     }
   ],
   "navigation": [
@@ -154,12 +154,12 @@
     }
   ],
   "footerSocials": {
-    "twitter": "https://twitter.com/irisx",
-    "github": "https://github.com/irisx",
-    "linkedin": "https://www.linkedin.com/company/irisx"
+    "twitter": "https://twitter.com/tazzi",
+    "github": "https://github.com/tazzi",
+    "linkedin": "https://www.linkedin.com/company/tazzi"
   },
   "api": {
-    "baseUrl": "https://api.useiris.com",
+    "baseUrl": "https://api.tazzi.com",
     "auth": {
       "method": "key",
       "name": "X-API-Key"

@@ -33,7 +33,7 @@ Retrieve detailed information about a specific webhook endpoint.
 <RequestExample>
 
 ```bash cURL
-curl https://api.useiris.com/v1/webhooks/endpoints/1 \
+curl https://api.tazzi.com/v1/webhooks/endpoints/1 \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
@@ -42,7 +42,7 @@ const axios = require('axios');
 
 async function getWebhook(id) {
   const response = await axios.get(
-    `https://api.useiris.com/v1/webhooks/endpoints/${id}`,
+    `https://api.tazzi.com/v1/webhooks/endpoints/${id}`,
     {
       headers: { 'X-API-Key': 'YOUR_API_KEY' }
     }
@@ -57,7 +57,7 @@ import requests
 
 def get_webhook(webhook_id):
     response = requests.get(
-        f'https://api.useiris.com/v1/webhooks/endpoints/{webhook_id}',
+        f'https://api.tazzi.com/v1/webhooks/endpoints/{webhook_id}',
         headers={'X-API-Key': 'YOUR_API_KEY'}
     )
 

@@ -5,6 +5,7 @@ import { authenticate } from '../middleware/auth.js';
 import { authenticateJWT } from '../middleware/authMiddleware.js';
 import { strictRateLimit } from '../middleware/rateLimit.js';
 import crypto from 'crypto';
+import { dncService } from '../services/dnc-service.js';
 
 const calls = new Hono();
 
@@ -40,7 +41,8 @@ const createCallSchema = z.object({
   from: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (E.164)').optional(),
   record: z.boolean().default(false),
   metadata: z.record(z.any()).optional(),
-  dry_run: z.boolean().default(false)  // Dry run mode - skip FreeSWITCH for load testing
+  dry_run: z.boolean().default(false),  // Dry run mode - skip FreeSWITCH for load testing
+  skip_dnc_check: z.boolean().default(false)  // Skip DNC check (for system calls)
 });
 
 calls.post('/', authenticate, strictRateLimit, async (c) => {
@@ -50,7 +52,23 @@ calls.post('/', authenticate, strictRateLimit, async (c) => {
     const freeswitch = c.get('freeswitch');
     const body = await c.req.json();
     const validatedData = createCallSchema.parse(body);
-    const { to, from, record, metadata, dry_run } = validatedData;
+    const { to, from, record, metadata, dry_run, skip_dnc_check = false } = validatedData;
+
+    // DNC Compliance Check - Block calls to numbers on DNC list
+    if (!skip_dnc_check) {
+      const dncCheck = await dncService.checkDNC(tenantId, to);
+      if (dncCheck.blocked) {
+        console.log(`🚫 Call blocked by DNC: ${to} (tenant ${tenantId}) - ${dncCheck.reason}`);
+        return c.json({
+          error: 'DNC Violation',
+          message: `Call blocked: ${dncCheck.reason}`,
+          code: 'DNC_BLOCKED',
+          blocked: true,
+          contactId: dncCheck.contactId,
+          to
+        }, 403);
+      }
+    }
 
     let callerIdNumber = from;
     if (!callerIdNumber) {
@@ -161,6 +179,303 @@ calls.post('/', authenticate, strictRateLimit, async (c) => {
     }
     console.error('Create call error:', error);
     return c.json({ error: 'Internal Server Error', message: 'Failed to create call', code: 'CALL_CREATE_ERROR' }, 500);
+  }
+});
+
+// Validation schemas for in-call actions
+const sayActionSchema = z.object({
+  verb: z.literal('say'),
+  text: z.string().min(1).max(5000),
+  voice: z.string().default('en-US-Neural2-A'),
+  language: z.string().default('en-US')
+});
+
+const playActionSchema = z.object({
+  verb: z.literal('play'),
+  url: z.string().url(),
+  loop: z.number().int().min(1).max(100).default(1)
+});
+
+const gatherActionSchema = z.object({
+  verb: z.literal('gather'),
+  input: z.array(z.enum(['dtmf', 'speech'])).default(['dtmf']),
+  timeout: z.number().int().min(1).max(60).default(5),
+  num_digits: z.number().int().min(1).max(20).optional(),
+  finish_on_key: z.string().max(1).default('#'),
+  speech_model: z.string().default('phone_call'),
+  speech_language: z.string().default('en-US'),
+  action_url: z.string().url().optional()
+});
+
+const dialActionSchema = z.object({
+  verb: z.literal('dial'),
+  number: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (E.164)'),
+  timeout: z.number().int().min(5).max(120).default(30),
+  caller_id: z.string().regex(/^\+?[1-9]\d{1,14}$/).optional(),
+  record: z.boolean().default(false),
+  recording_status_callback_url: z.string().url().optional()
+});
+
+const enqueueActionSchema = z.object({
+  verb: z.literal('enqueue'),
+  queue_name: z.string().min(1).max(100),
+  wait_url: z.string().url().optional(),
+  max_wait_time: z.number().int().min(1).max(3600).default(300)
+});
+
+const recordActionSchema = z.object({
+  verb: z.literal('record'),
+  action: z.enum(['start', 'stop']).default('start'),
+  max_duration: z.number().int().min(1).max(3600).default(3600),
+  beep: z.boolean().default(true)
+});
+
+const hangupActionSchema = z.object({
+  verb: z.literal('hangup'),
+  reason: z.string().optional()
+});
+
+const holdActionSchema = z.object({
+  verb: z.literal('hold'),
+  music_url: z.string().url().optional()
+});
+
+const muteActionSchema = z.object({
+  verb: z.literal('mute'),
+  direction: z.enum(['inbound', 'outbound', 'both']).default('both')
+});
+
+const unmuteActionSchema = z.object({
+  verb: z.literal('unmute'),
+  direction: z.enum(['inbound', 'outbound', 'both']).default('both')
+});
+
+// In-Call Actions API - Execute actions on active calls
+// POST /v1/calls/:sid/actions
+calls.post('/:sid/actions', authenticate, async (c) => {
+  try {
+    const tenantId = c.get('tenantId');
+    const freeswitch = c.get('freeswitch');
+    const { sid } = c.req.param();
+    const body = await c.req.json();
+
+    // Verify call exists and belongs to tenant
+    const callResult = await query(
+      'SELECT id, uuid, status, from_number, to_number FROM calls WHERE call_sid = $1 AND tenant_id = $2',
+      [sid, tenantId]
+    );
+
+    if (callResult.rows.length === 0) {
+      return c.json({ error: 'Not Found', message: 'Call not found', code: 'CALL_NOT_FOUND' }, 404);
+    }
+
+    const call = callResult.rows[0];
+
+    // Check if call is in a state that allows actions
+    if (!['ringing', 'in-progress', 'answered'].includes(call.status)) {
+      return c.json({
+        error: 'Bad Request',
+        message: `Cannot execute action on call with status: ${call.status}`,
+        code: 'INVALID_CALL_STATE'
+      }, 400);
+    }
+
+    // Validate action/verb
+    const { verb } = body;
+    if (!verb) {
+      return c.json({
+        error: 'Validation Error',
+        message: 'Action verb is required',
+        code: 'MISSING_VERB'
+      }, 400);
+    }
+
+    let actionResult;
+
+    switch (verb) {
+      case 'say': {
+        const action = sayActionSchema.parse(body);
+        // TTS playback via FreeSWITCH
+        const ttsCmd = `uuid_broadcast ${call.uuid} 'say:${action.language}:${action.text}'`;
+        if (call.uuid) {
+          await freeswitch.api(ttsCmd);
+        }
+        actionResult = { verb: 'say', status: 'executed', text: action.text };
+        break;
+      }
+
+      case 'play': {
+        const action = playActionSchema.parse(body);
+        // Audio playback via FreeSWITCH
+        const playCmd = action.loop > 1
+          ? `uuid_broadcast ${call.uuid} 'playback_loop:${action.loop}:${action.url}'`
+          : `uuid_broadcast ${call.uuid} '${action.url}'`;
+        if (call.uuid) {
+          await freeswitch.api(playCmd);
+        }
+        actionResult = { verb: 'play', status: 'executed', url: action.url, loop: action.loop };
+        break;
+      }
+
+      case 'gather': {
+        const action = gatherActionSchema.parse(body);
+        // DTMF/Speech collection via FreeSWITCH
+        const gatherOpts = [];
+        if (action.num_digits) gatherOpts.push(`max_digits=${action.num_digits}`);
+        gatherOpts.push(`timeout=${action.timeout * 1000}`);
+        if (action.finish_on_key) gatherOpts.push(`terminators=${action.finish_on_key}`);
+
+        if (call.uuid) {
+          await freeswitch.api(`uuid_setvar ${call.uuid} gather_timeout ${action.timeout}`);
+          await freeswitch.api(`uuid_setvar ${call.uuid} gather_num_digits ${action.num_digits || 1}`);
+        }
+        actionResult = {
+          verb: 'gather',
+          status: 'started',
+          input: action.input,
+          timeout: action.timeout,
+          num_digits: action.num_digits
+        };
+        break;
+      }
+
+      case 'dial': {
+        const action = dialActionSchema.parse(body);
+        // Bridge/transfer to another number
+        const dialCmd = `uuid_transfer ${call.uuid} ${action.number}`;
+        if (call.uuid) {
+          await freeswitch.api(dialCmd);
+        }
+        actionResult = {
+          verb: 'dial',
+          status: 'initiated',
+          number: action.number,
+          timeout: action.timeout
+        };
+        break;
+      }
+
+      case 'enqueue': {
+        const action = enqueueActionSchema.parse(body);
+        // Add call to queue via FreeSWITCH mod_callcenter
+        if (call.uuid) {
+          await freeswitch.api(`callcenter_config queue add ${action.queue_name}`);
+          await freeswitch.api(`uuid_transfer ${call.uuid} callcenter_queue::${action.queue_name}`);
+        }
+        actionResult = {
+          verb: 'enqueue',
+          status: 'queued',
+          queue_name: action.queue_name,
+          max_wait_time: action.max_wait_time
+        };
+        break;
+      }
+
+      case 'record': {
+        const action = recordActionSchema.parse(body);
+        const recordingPath = `/var/lib/freeswitch/recordings/${tenantId}/${sid}_${Date.now()}.wav`;
+
+        if (action.action === 'start') {
+          if (call.uuid) {
+            await freeswitch.api(`uuid_record ${call.uuid} start ${recordingPath}`);
+          }
+          // Update call record with recording path
+          await query(
+            'UPDATE calls SET recording_url = $1 WHERE call_sid = $2',
+            [recordingPath, sid]
+          );
+          actionResult = { verb: 'record', status: 'recording_started', path: recordingPath };
+        } else {
+          if (call.uuid) {
+            await freeswitch.api(`uuid_record ${call.uuid} stop all`);
+          }
+          actionResult = { verb: 'record', status: 'recording_stopped' };
+        }
+        break;
+      }
+
+      case 'hangup': {
+        const action = hangupActionSchema.parse(body);
+        if (call.uuid) {
+          await freeswitch.hangup(call.uuid, action.reason || 'NORMAL_CLEARING');
+        }
+        await query(
+          'UPDATE calls SET status = $1, ended_at = NOW() WHERE call_sid = $2',
+          ['completed', sid]
+        );
+        actionResult = { verb: 'hangup', status: 'completed', reason: action.reason || 'NORMAL_CLEARING' };
+        break;
+      }
+
+      case 'hold': {
+        const action = holdActionSchema.parse(body);
+        if (call.uuid) {
+          await freeswitch.api(`uuid_hold ${call.uuid}`);
+          if (action.music_url) {
+            await freeswitch.api(`uuid_broadcast ${call.uuid} '${action.music_url}' aleg`);
+          }
+        }
+        actionResult = { verb: 'hold', status: 'held', music_url: action.music_url };
+        break;
+      }
+
+      case 'mute': {
+        const action = muteActionSchema.parse(body);
+        if (call.uuid) {
+          const leg = action.direction === 'both' ? '' : action.direction === 'inbound' ? 'read' : 'write';
+          await freeswitch.api(`uuid_audio ${call.uuid} start ${leg} mute`);
+        }
+        actionResult = { verb: 'mute', status: 'muted', direction: action.direction };
+        break;
+      }
+
+      case 'unmute': {
+        const action = unmuteActionSchema.parse(body);
+        if (call.uuid) {
+          const leg = action.direction === 'both' ? '' : action.direction === 'inbound' ? 'read' : 'write';
+          await freeswitch.api(`uuid_audio ${call.uuid} stop ${leg} mute`);
+        }
+        actionResult = { verb: 'unmute', status: 'unmuted', direction: action.direction };
+        break;
+      }
+
+      default:
+        return c.json({
+          error: 'Validation Error',
+          message: `Unknown verb: ${verb}. Supported verbs: say, play, gather, dial, enqueue, record, hangup, hold, mute, unmute`,
+          code: 'UNKNOWN_VERB'
+        }, 400);
+    }
+
+    // Log the action
+    await query(
+      'INSERT INTO call_logs (call_id, tenant_id, event_type, raw_event) VALUES ($1, $2, $3, $4)',
+      [call.id, tenantId, `action.${verb}`, JSON.stringify({ action: body, result: actionResult })]
+    );
+
+    console.log(`🎬 Call action executed: ${sid} -> ${verb}`);
+
+    return c.json({
+      sid,
+      action: actionResult,
+      executed_at: new Date().toISOString()
+    });
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({
+        error: 'Validation Error',
+        message: 'Invalid action parameters',
+        code: 'VALIDATION_ERROR',
+        details: error.errors
+      }, 400);
+    }
+    console.error('Call action error:', error);
+    return c.json({
+      error: 'Internal Server Error',
+      message: 'Failed to execute call action',
+      code: 'CALL_ACTION_ERROR'
+    }, 500);
   }
 });
 

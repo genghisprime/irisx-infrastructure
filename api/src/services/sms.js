@@ -1,6 +1,7 @@
 import twilio from 'twilio';
 import { query, getClient } from '../db/connection.js';
 import crypto from 'crypto';
+import { dncService } from './dnc-service.js';
 
 /**
  * SMS/MMS Service
@@ -41,8 +42,25 @@ export class SMSService {
       body,
       mediaUrls = [],
       metadata = {},
-      dry_run = false  // Dry run mode for load testing
+      dry_run = false,  // Dry run mode for load testing
+      skip_dnc_check = false  // Option to skip DNC check (for system messages)
     } = params;
+
+    // DNC Compliance Check - Block messages to numbers on DNC list
+    if (!skip_dnc_check) {
+      const dncCheck = await dncService.checkDNC(tenantId, to);
+      if (dncCheck.blocked) {
+        console.log(`🚫 SMS blocked by DNC: ${to} (tenant ${tenantId}) - ${dncCheck.reason}`);
+        return {
+          blocked: true,
+          reason: dncCheck.reason,
+          contactId: dncCheck.contactId,
+          status: 'dnc_blocked',
+          to,
+          from
+        };
+      }
+    }
 
     const client = await getClient();
 

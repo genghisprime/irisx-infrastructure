@@ -1,29 +1,29 @@
 ---
 title: 'PHP SDK'
-description: 'Official IRISX PHP SDK for seamless integration'
+description: 'Official Tazzi PHP SDK for seamless integration'
 ---
 
 ## Installation
 
-Install the IRISX SDK via Composer:
+Install the Tazzi SDK via Composer:
 
 ```bash
-composer require irisx/sdk
+composer require tazzi/sdk
 ```
 
 ## Quick Start
 
 ```php
 <?php
-use IRISX\Client;
+use Tazzi\Client;
 
 // Initialize with API key
-$irisx = new Client([
+$tazzi = new Client([
     'api_key' => 'your_api_key_here'
 ]);
 
 // Make your first call
-$call = $irisx->calls->create([
+$call = $tazzi->calls->create([
     'to' => '+15551234567',
     'from' => '+15559876543',
     'record' => true
@@ -40,7 +40,7 @@ echo "Call initiated: " . $call->uuid . "\n";
 <?php
 use IRISX\Client;
 
-$irisx = new Client([
+$tazzi = new Client([
     'api_key' => 'your_api_key_here'
 ]);
 ```
@@ -51,12 +51,12 @@ $irisx = new Client([
 <?php
 use IRISX\Client;
 
-$irisx = new Client([
+$tazzi = new Client([
     'token' => 'your_jwt_token_here'
 ]);
 
 // Handle token refresh
-$irisx->onTokenRefresh(function($newToken) {
+$tazzi->onTokenRefresh(function($newToken) {
     echo 'Token refreshed: ' . $newToken . "\n";
     // Save new token to secure storage
 });
@@ -68,7 +68,7 @@ $irisx->onTokenRefresh(function($newToken) {
 
 ```php
 <?php
-$call = $irisx->calls->create([
+$call = $tazzi->calls->create([
     'to' => '+15551234567',
     'from' => '+15559876543',
     'webhook_url' => 'https://yourapp.com/webhooks',
@@ -87,7 +87,7 @@ echo "Call UUID: " . $call->uuid . "\n";
 
 ```php
 <?php
-$call = $irisx->calls->get('123e4567-e89b-12d3-a456-426614174000');
+$call = $tazzi->calls->get('123e4567-e89b-12d3-a456-426614174000');
 
 echo "Status: " . $call->status . "\n";
 echo "Duration: " . $call->duration . "s\n";
@@ -98,7 +98,7 @@ echo "Cost: $" . $call->cost . "\n";
 
 ```php
 <?php
-$calls = $irisx->calls->list([
+$calls = $tazzi->calls->list([
     'status' => 'completed',
     'direction' => 'outbound',
     'start_date' => '2025-10-01',
@@ -120,7 +120,7 @@ foreach ($calls->data as $call) {
 
 ```php
 <?php
-$message = $irisx->sms->send([
+$message = $tazzi->sms->send([
     'to' => '+15551234567',
     'from' => '+15559876543',
     'body' => 'Hello! This is a test message.',
@@ -134,7 +134,7 @@ echo "Message ID: " . $message->id . "\n";
 
 ```php
 <?php
-$message = $irisx->sms->send([
+$message = $tazzi->sms->send([
     'to' => '+15551234567',
     'from' => '+15559876543',
     'body' => 'Check out this image!',
@@ -148,7 +148,7 @@ $message = $irisx->sms->send([
 
 ```php
 <?php
-$result = $irisx->sms->sendBulk([
+$result = $tazzi->sms->sendBulk([
     'from' => '+15559876543',
     'recipients' => [
         ['to' => '+15551111111', 'body' => 'Message 1'],
@@ -165,13 +165,13 @@ echo "Sent: " . $result->successful . ", Failed: " . $result->failed . "\n";
 ```php
 <?php
 // Create template
-$template = $irisx->sms->createTemplate([
+$template = $tazzi->sms->createTemplate([
     'name' => 'welcome',
     'body' => 'Hi {{name}}, welcome to {{company}}!'
 ]);
 
 // Send with template
-$message = $irisx->sms->sendTemplate([
+$message = $tazzi->sms->sendTemplate([
     'to' => '+15551234567',
     'from' => '+15559876543',
     'template_id' => $template->id,
@@ -186,7 +186,7 @@ $message = $irisx->sms->sendTemplate([
 
 ```php
 <?php
-$email = $irisx->email->send([
+$email = $tazzi->email->send([
     'to' => 'customer@example.com',
     'from' => 'noreply@yourcompany.com',
     'subject' => 'Welcome to Our Service',
@@ -205,8 +205,8 @@ echo "Email sent: " . $email->id . "\n";
 
 ```php
 <?php
-$webhook = $irisx->webhooks->create([
-    'url' => 'https://yourapp.com/webhooks/irisx',
+$webhook = $tazzi->webhooks->create([
+    'url' => 'https://yourapp.com/webhooks/tazzi',
     'events' => [
         'call.completed',
         'call.failed',
@@ -224,7 +224,7 @@ echo "Secret: " . $webhook->secret . "\n";  // Save this!
 
 ```php
 <?php
-$webhooks = $irisx->webhooks->list();
+$webhooks = $tazzi->webhooks->list();
 
 foreach ($webhooks as $webhook) {
     echo $webhook->id . ": " . $webhook->url . "\n";
@@ -247,11 +247,11 @@ function verifyWebhookSignature($payload, $signature, $secret) {
 }
 
 // With Laravel
-Route::post('/webhooks/irisx', function (Request $request) {
-    $signature = $request->header('X-IRISX-Signature');
+Route::post('/webhooks/tazzi', function (Request $request) {
+    $signature = $request->header('X-Tazzi-Signature');
     $payload = $request->json()->all();
 
-    if (!verifyWebhookSignature($payload, $signature, env('IRISX_WEBHOOK_SECRET'))) {
+    if (!verifyWebhookSignature($payload, $signature, env('TAZZI_WEBHOOK_SECRET'))) {
         return response('Invalid signature', 401);
     }
 
@@ -263,13 +263,13 @@ Route::post('/webhooks/irisx', function (Request $request) {
 });
 
 // With Symfony
-#[Route('/webhooks/irisx', name: 'webhook_irisx', methods: ['POST'])]
+#[Route('/webhooks/tazzi', name: 'webhook_irisx', methods: ['POST'])]
 public function handleWebhook(Request $request): Response
 {
-    $signature = $request->headers->get('X-IRISX-Signature');
+    $signature = $request->headers->get('X-Tazzi-Signature');
     $payload = json_decode($request->getContent(), true);
 
-    if (!verifyWebhookSignature($payload, $signature, $_ENV['IRISX_WEBHOOK_SECRET'])) {
+    if (!verifyWebhookSignature($payload, $signature, $_ENV['TAZZI_WEBHOOK_SECRET'])) {
         return new Response('Invalid signature', 401);
     }
 
@@ -284,7 +284,7 @@ public function handleWebhook(Request $request): Response
 
 ```php
 <?php
-$numbers = $irisx->phoneNumbers->search([
+$numbers = $tazzi->phoneNumbers->search([
     'country' => 'US',
     'area_code' => '415',
     'type' => 'local',
@@ -300,7 +300,7 @@ foreach ($numbers as $number) {
 
 ```php
 <?php
-$number = $irisx->phoneNumbers->purchase([
+$number = $tazzi->phoneNumbers->purchase([
     'phone_number' => '+14155551234',
     'friendly_name' => 'Support Line'
 ]);
@@ -312,7 +312,7 @@ echo "Purchased: " . $number->number . "\n";
 
 ```php
 <?php
-$irisx->phoneNumbers->update($numberId, [
+$tazzi->phoneNumbers->update($numberId, [
     'voice_webhook_url' => 'https://yourapp.com/webhooks/voice',
     'sms_webhook_url' => 'https://yourapp.com/webhooks/sms',
     'friendly_name' => 'Main Support Line'
@@ -325,7 +325,7 @@ $irisx->phoneNumbers->update($numberId, [
 
 ```php
 <?php
-$stats = $irisx->analytics->dashboard([
+$stats = $tazzi->analytics->dashboard([
     'start_date' => '2025-10-01',
     'end_date' => '2025-10-31'
 ]);
@@ -339,7 +339,7 @@ echo "Total Cost: $" . ($stats->calls->total_cost + $stats->sms->total_cost) . "
 
 ```php
 <?php
-$analytics = $irisx->analytics->calls([
+$analytics = $tazzi->analytics->calls([
     'start_date' => '2025-10-01',
     'end_date' => '2025-10-31',
     'group_by' => 'day'
@@ -354,12 +354,12 @@ foreach ($analytics->data as $day) {
 
 ```php
 <?php
-use IRISX\Exceptions\IRISXException;
-use IRISX\Exceptions\RateLimitException;
-use IRISX\Exceptions\ValidationException;
+use Tazzi\Exceptions\TazziException;
+use Tazzi\Exceptions\RateLimitException;
+use Tazzi\Exceptions\ValidationException;
 
 try {
-    $call = $irisx->calls->create([
+    $call = $tazzi->calls->create([
         'to' => '+15551234567',
         'from' => '+15559876543'
     ]);
@@ -370,7 +370,7 @@ try {
 } catch (ValidationException $e) {
     echo "Validation error: " . $e->getMessage() . "\n";
     echo "Details: " . json_encode($e->getDetails()) . "\n";
-} catch (IRISXException $e) {
+} catch (TazziException $e) {
     echo "API Error: " . $e->getMessage() . "\n";
     echo "Code: " . $e->getCode() . "\n";
 
@@ -386,8 +386,8 @@ try {
 
 ```php
 <?php
-use IRISX\Exceptions\{
-    IRISXException,
+use Tazzi\Exceptions\{
+    TazziException,
     RateLimitException,
     ValidationException,
     AuthenticationException,
@@ -395,12 +395,12 @@ use IRISX\Exceptions\{
 };
 
 try {
-    $number = $irisx->phoneNumbers->get('invalid_id');
+    $number = $tazzi->phoneNumbers->get('invalid_id');
 } catch (NotFoundException $e) {
     echo "Phone number not found\n";
 } catch (AuthenticationException $e) {
     echo "Authentication failed - check your API key\n";
-} catch (IRISXException $e) {
+} catch (TazziException $e) {
     echo "Error: " . $e->getMessage() . "\n";
 }
 ```
@@ -413,7 +413,7 @@ try {
 <?php
 use IRISX\Client;
 
-$irisx = new Client([
+$tazzi = new Client([
     'api_key' => 'your_api_key_here',
     'retry' => [
         'enabled' => true,
@@ -428,7 +428,7 @@ $irisx = new Client([
 
 ```php
 <?php
-$irisx = new Client([
+$tazzi = new Client([
     'api_key' => 'your_api_key_here',
     'timeout' => 60  // 60 seconds
 ]);
@@ -441,7 +441,7 @@ $irisx = new Client([
 use IRISX\Client;
 use Psr\Log\LoggerInterface;
 
-$irisx = new Client([
+$tazzi = new Client([
     'api_key' => 'your_api_key_here',
     'logger' => $monolog,  // PSR-3 compatible logger
     'log_level' => 'debug'
@@ -452,24 +452,24 @@ $irisx = new Client([
 
 ```bash
 # .env file
-IRISX_API_KEY=your_api_key_here
-IRISX_API_URL=https://api.useiris.com
-IRISX_WEBHOOK_SECRET=your_webhook_secret
+TAZZI_API_KEY=your_api_key_here
+TAZZI_API_URL=https://api.tazzi.com
+TAZZI_WEBHOOK_SECRET=your_webhook_secret
 ```
 
 ```php
 <?php
 // With Laravel
-$irisx = new Client([
-    'api_key' => env('IRISX_API_KEY'),
-    'base_url' => env('IRISX_API_URL'),
-    'webhook_secret' => env('IRISX_WEBHOOK_SECRET')
+$tazzi = new Client([
+    'api_key' => env('TAZZI_API_KEY'),
+    'base_url' => env('TAZZI_API_URL'),
+    'webhook_secret' => env('TAZZI_WEBHOOK_SECRET')
 ]);
 
 // With Symfony
-$irisx = new Client([
-    'api_key' => $_ENV['IRISX_API_KEY'],
-    'base_url' => $_ENV['IRISX_API_URL']
+$tazzi = new Client([
+    'api_key' => $_ENV['TAZZI_API_KEY'],
+    'base_url' => $_ENV['TAZZI_API_URL']
 ]);
 ```
 
@@ -498,7 +498,7 @@ $irisx = new Client([
 
 ## Examples
 
-Full working examples available at [github.com/irisx/examples](https://github.com/irisx/examples):
+Full working examples available at [github.com/tazzi/examples](https://github.com/tazzi/examples):
 
 - Simple outbound call
 - IVR menu with DTMF detection
@@ -510,9 +510,9 @@ Full working examples available at [github.com/irisx/examples](https://github.co
 ## Support
 
 - 📚 [Full API Reference](/api-reference)
-- 💬 [Discord Community](https://discord.gg/irisx)
-- 🐛 [GitHub Issues](https://github.com/irisx/sdk-php/issues)
-- 📧 Email: support@useiris.com
+- 💬 [Discord Community](https://discord.gg/tazzi)
+- 🐛 [GitHub Issues](https://github.com/tazzi/sdk-php/issues)
+- 📧 Email: support@tazzi.com
 
 ## Next Steps
 
@@ -520,7 +520,7 @@ Full working examples available at [github.com/irisx/examples](https://github.co
   <Card title="API Reference" icon="book" href="/api-reference">
     Explore all endpoints
   </Card>
-  <Card title="Code Examples" icon="code" href="https://github.com/irisx/examples">
+  <Card title="Code Examples" icon="code" href="https://github.com/tazzi/examples">
     See working examples
   </Card>
 </CardGroup>

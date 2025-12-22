@@ -1,11 +1,11 @@
 ---
 title: 'Error Tracking with Sentry'
-description: 'Monitor and debug production errors across IRISX platform'
+description: 'Monitor and debug production errors across Tazzi platform'
 ---
 
 ## Overview
 
-IRISX uses Sentry for real-time error tracking and performance monitoring across all applications. This guide covers setup, integration, and best practices.
+Tazzi uses Sentry for real-time error tracking and performance monitoring across all applications. This guide covers setup, integration, and best practices.
 
 ## Why Sentry?
 
@@ -20,9 +20,9 @@ IRISX uses Sentry for real-time error tracking and performance monitoring across
 
 | Project | DSN Environment Variable | Purpose |
 |---------|-------------------------|---------|
-| irisx-api | `SENTRY_DSN_API` | Backend API errors |
-| irisx-customer-portal | `SENTRY_DSN_PORTAL` | Customer dashboard errors |
-| irisx-agent-desktop | `SENTRY_DSN_AGENT` | Agent interface errors |
+| tazzi-api | `SENTRY_DSN_API` | Backend API errors |
+| tazzi-customer-portal | `SENTRY_DSN_PORTAL` | Customer dashboard errors |
+| tazzi-agent-desktop | `SENTRY_DSN_AGENT` | Agent interface errors |
 
 ## API Backend Integration
 
@@ -51,7 +51,7 @@ export function initSentry() {
     environment: process.env.NODE_ENV || 'development',
 
     // Release tracking
-    release: `irisx-api@${process.env.npm_package_version || 'unknown'}`,
+    release: `tazzi-api@${process.env.npm_package_version || 'unknown'}`,
 
     // Performance monitoring
     tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
@@ -277,7 +277,7 @@ export function initSentry(app, router) {
     environment: import.meta.env.MODE,
 
     // Release tracking
-    release: `irisx-customer-portal@${import.meta.env.VITE_APP_VERSION}`,
+    release: `tazzi-customer-portal@${import.meta.env.VITE_APP_VERSION}`,
 
     integrations: [
       Sentry.browserTracingIntegration({ router }),
@@ -427,7 +427,7 @@ import * as Sentry from '@sentry/vue';
 
 async function sendMessage() {
   try {
-    await irisx.sms.send({
+    await tazzi.sms.send({
       to: phoneNumber.value,
       from: selectedNumber.value,
       body: message.value,
@@ -522,7 +522,7 @@ export default defineConfig({
   plugins: [
     vue(),
     sentryVitePlugin({
-      org: 'irisx',
+      org: 'tazzi',
       project: 'customer-portal',
       authToken: process.env.SENTRY_AUTH_TOKEN,
       sourcemaps: {
@@ -539,7 +539,7 @@ export default defineConfig({
 // Add to package.json scripts
 {
   "scripts": {
-    "build": "tsc && sentry-cli sourcemaps upload --org=irisx --project=api ./dist"
+    "build": "tsc && sentry-cli sourcemaps upload --org=tazzi --project=api ./dist"
   }
 }
 ```

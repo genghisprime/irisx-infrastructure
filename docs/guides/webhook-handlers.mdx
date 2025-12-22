@@ -5,7 +5,7 @@ description: 'Production-ready webhook implementation with security, reliability
 
 ## Overview
 
-Webhooks enable real-time event notifications from IRISX to your application. Build robust webhook handlers that are secure, reliable, and production-ready.
+Webhooks enable real-time event notifications from Tazzi to your application. Build robust webhook handlers that are secure, reliable, and production-ready.
 
 <CardGroup cols={2}>
   <Card title="Setup" icon="plug" href="#webhook-setup">
@@ -32,7 +32,7 @@ Register webhook URLs to receive events:
 const axios = require('axios');
 
 const apiKey = 'your_api_key_here';
-const apiUrl = 'https://api.useiris.com';
+const apiUrl = 'https://api.tazzi.com';
 
 async function createWebhook(url, events) {
   const response = await axios.post(
@@ -197,7 +197,7 @@ Verify webhook authenticity to prevent spoofing.
 
 ```javascript
 function verifySignature(req) {
-  const signature = req.headers['x-irisx-signature'];
+  const signature = req.headers['x-tazzi-signature'];
   const timestamp = req.headers['x-irisx-timestamp'];
   const webhookSecret = process.env.WEBHOOK_SECRET;
 
@@ -232,7 +232,7 @@ function verifySignature(req) {
 ```javascript
 function webhookSecurityMiddleware(secret) {
   return (req, res, next) => {
-    const signature = req.headers['x-irisx-signature'];
+    const signature = req.headers['x-tazzi-signature'];
     const timestamp = req.headers['x-irisx-timestamp'];
 
     if (!signature || !timestamp) {
@@ -387,7 +387,7 @@ app.post('/webhooks/calls', async (req, res) => {
         await handleWebhookWithRetry(event);
       } catch (error) {
         console.error('Failed to process webhook:', error);
-        // Event will be retried by IRISX
+        // Event will be retried by Tazzi
       }
     });
   } catch (error) {
@@ -475,8 +475,8 @@ async function testWebhook(webhookUrl, event) {
   const response = await axios.post(webhookUrl, event, {
     headers: {
       'Content-Type': 'application/json',
-      'X-IRISX-Signature': signature,
-      'X-IRISX-Timestamp': timestamp.toString()
+      'X-Tazzi-Signature': signature,
+      'X-Tazzi-Timestamp': timestamp.toString()
     }
   });
 
@@ -532,8 +532,8 @@ describe('Webhook Handlers', () => {
 
     const response = await request(app)
       .post('/webhooks/calls')
-      .set('X-IRISX-Signature', signature)
-      .set('X-IRISX-Timestamp', timestamp.toString())
+      .set('X-Tazzi-Signature', signature)
+      .set('X-Tazzi-Timestamp', timestamp.toString())
       .send(event);
 
     expect(response.status).toBe(200);
@@ -544,8 +544,8 @@ describe('Webhook Handlers', () => {
 
     const response = await request(app)
       .post('/webhooks/calls')
-      .set('X-IRISX-Signature', 'invalid-signature')
-      .set('X-IRISX-Timestamp', Math.floor(Date.now() / 1000).toString())
+      .set('X-Tazzi-Signature', 'invalid-signature')
+      .set('X-Tazzi-Timestamp', Math.floor(Date.now() / 1000).toString())
       .send(event);
 
     expect(response.status).toBe(401);
@@ -563,8 +563,8 @@ describe('Webhook Handlers', () => {
 
     const response = await request(app)
       .post('/webhooks/calls')
-      .set('X-IRISX-Signature', signature)
-      .set('X-IRISX-Timestamp', oldTimestamp.toString())
+      .set('X-Tazzi-Signature', signature)
+      .set('X-Tazzi-Timestamp', oldTimestamp.toString())
       .send(event);
 
     expect(response.status).toBe(401);
@@ -588,8 +588,8 @@ app = Flask(__name__)
 WEBHOOK_SECRET = os.environ.get('WEBHOOK_SECRET')
 
 def verify_signature(request):
-    signature = request.headers.get('X-IRISX-Signature')
-    timestamp = request.headers.get('X-IRISX-Timestamp')
+    signature = request.headers.get('X-Tazzi-Signature')
+    timestamp = request.headers.get('X-Tazzi-Timestamp')
 
     if not signature or not timestamp:
         return False
@@ -634,8 +634,8 @@ if __name__ == '__main__':
 <?php
 
 function verifySignature($request) {
-    $signature = $_SERVER['HTTP_X_IRISX_SIGNATURE'] ?? '';
-    $timestamp = $_SERVER['HTTP_X_IRISX_TIMESTAMP'] ?? '';
+    $signature = $_SERVER['HTTP_X_TAZZI_SIGNATURE'] ?? '';
+    $timestamp = $_SERVER['HTTP_X_TAZZI_TIMESTAMP'] ?? '';
     $webhookSecret = getenv('WEBHOOK_SECRET');
 
     if (empty($signature) || empty($timestamp)) {
@@ -731,17 +731,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 ```mermaid
 sequenceDiagram
-    participant IRISX
+    participant Tazzi
     participant Webhook Endpoint
     participant Queue
     participant Worker
     participant Database
 
-    IRISX->>Webhook Endpoint: POST /webhooks (signed)
+    Tazzi->>Webhook Endpoint: POST /webhooks (signed)
     Webhook Endpoint->>Webhook Endpoint: Verify Signature
     Webhook Endpoint->>Webhook Endpoint: Check Idempotency
     Webhook Endpoint->>Queue: Add to Queue
-    Webhook Endpoint->>IRISX: 200 OK
+    Webhook Endpoint->>Tazzi: 200 OK
     Queue->>Worker: Process Event
     Worker->>Database: Update Records
     Worker->>Worker: Business Logic
@@ -830,4 +830,4 @@ Build production-ready integrations:
 - [Set up monitoring](/guides/monitoring) for webhook performance
 - [Learn about rate limiting](/concepts/rate-limiting) for API calls
 
-Questions? Join our [Discord community](https://discord.gg/irisx) or email support@useiris.com.
+Questions? Join our [Discord community](https://discord.gg/tazzi) or email support@tazzi.com.

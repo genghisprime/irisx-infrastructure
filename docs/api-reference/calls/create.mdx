@@ -6,7 +6,7 @@ description: 'Initiate a new outbound call with automatic carrier selection'
 
 ## Overview
 
-Create an outbound voice call with intelligent carrier routing and automatic failover. IRISX will select the best carrier based on destination, cost, and quality metrics.
+Create an outbound voice call with intelligent carrier routing and automatic failover. Tazzi will select the best carrier based on destination, cost, and quality metrics.
 
 ## Authentication
 
@@ -90,7 +90,7 @@ Create an outbound voice call with intelligent carrier routing and automatic fai
 <RequestExample>
 
 ```bash cURL
-curl -X POST https://api.useiris.com/v1/calls \
+curl -X POST https://api.tazzi.com/v1/calls \
   -H "X-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -112,7 +112,7 @@ const axios = require('axios');
 async function makeCall() {
   try {
     const response = await axios.post(
-      'https://api.useiris.com/v1/calls',
+      'https://api.tazzi.com/v1/calls',
       {
         to: '+15551234567',
         from: '+15559876543',
@@ -152,7 +152,7 @@ import requests
 
 def make_call():
     response = requests.post(
-        'https://api.useiris.com/v1/calls',
+        'https://api.tazzi.com/v1/calls',
         json={
             'to': '+15551234567',
             'from': '+15559876543',
@@ -184,7 +184,7 @@ make_call()
 
 ```php PHP
 <?php
-$ch = curl_init('https://api.useiris.com/v1/calls');
+$ch = curl_init('https://api.tazzi.com/v1/calls');
 
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
@@ -287,7 +287,7 @@ initiated → ringing → in-progress → completed
 
 ## Webhook Payload
 
-When you provide a `webhook_url`, IRISX will send POST requests for each status change:
+When you provide a `webhook_url`, Tazzi will send POST requests for each status change:
 
 ```json
 {
@@ -298,7 +298,7 @@ When you provide a `webhook_url`, IRISX will send POST requests for each status 
     "status": "completed",
     "duration": 125,
     "cost": 0.015,
-    "recording_url": "https://recordings.useiris.com/abc123.mp3"
+    "recording_url": "https://recordings.tazzi.com/abc123.mp3"
   }
 }
 ```

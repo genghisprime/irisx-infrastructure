@@ -393,12 +393,164 @@ class TTSService {
 
   /**
    * Generate speech with AWS Polly
-   * Cost: $4.00 per 1 million characters
+   * Cost: $4.00 per 1 million characters (standard)
+   *       $16.00 per 1 million characters (neural)
+   *
+   * AWS Polly Features:
+   * - 60+ voices in 30+ languages
+   * - Neural TTS (NTTS) for ultra-realistic speech
+   * - SSML support for advanced control
+   * - Newscaster style available
    */
   async generateWithAWSPolly(text, voice, tenantId) {
-    // TODO: Implement AWS Polly integration
-    // This would use AWS SDK
-    throw new Error('AWS Polly integration not yet implemented');
+    const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+    const region = process.env.AWS_REGION || 'us-east-1';
+
+    if (!accessKeyId || !secretAccessKey) {
+      throw new Error('AWS credentials not configured');
+    }
+
+    // AWS Polly Neural voices for better quality
+    const neuralVoices = ['Joanna', 'Matthew', 'Lupe', 'Pedro', 'Amy', 'Brian', 'Emma', 'Olivia', 'Aria', 'Ayanda'];
+    const isNeural = neuralVoices.includes(voice);
+
+    // Build request payload
+    const payload = {
+      Engine: isNeural ? 'neural' : 'standard',
+      LanguageCode: this.getPollyLanguageCode(voice),
+      OutputFormat: 'mp3',
+      Text: text,
+      TextType: text.includes('<speak>') ? 'ssml' : 'text',
+      VoiceId: voice || 'Joanna'
+    };
+
+    // Generate AWS Signature V4 for authentication
+    const timestamp = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
+    const dateStamp = timestamp.slice(0, 8);
+    const service = 'polly';
+    const host = `polly.${region}.amazonaws.com`;
+    const endpoint = `https://${host}/v1/speech`;
+
+    // Create canonical request
+    const canonicalHeaders = `content-type:application/json\nhost:${host}\nx-amz-date:${timestamp}\n`;
+    const signedHeaders = 'content-type;host;x-amz-date';
+    const payloadHash = crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex');
+
+    const canonicalRequest = [
+      'POST',
+      '/v1/speech',
+      '',
+      canonicalHeaders,
+      signedHeaders,
+      payloadHash
+    ].join('\n');
+
+    // Create string to sign
+    const algorithm = 'AWS4-HMAC-SHA256';
+    const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
+    const stringToSign = [
+      algorithm,
+      timestamp,
+      credentialScope,
+      crypto.createHash('sha256').update(canonicalRequest).digest('hex')
+    ].join('\n');
+
+    // Calculate signature
+    const getSignatureKey = (key, dateStamp, regionName, serviceName) => {
+      const kDate = crypto.createHmac('sha256', 'AWS4' + key).update(dateStamp).digest();
+      const kRegion = crypto.createHmac('sha256', kDate).update(regionName).digest();
+      const kService = crypto.createHmac('sha256', kRegion).update(serviceName).digest();
+      const kSigning = crypto.createHmac('sha256', kService).update('aws4_request').digest();
+      return kSigning;
+    };
+
+    const signingKey = getSignatureKey(secretAccessKey, dateStamp, region, service);
+    const signature = crypto.createHmac('sha256', signingKey).update(stringToSign).digest('hex');
+
+    // Create authorization header
+    const authorization = `${algorithm} Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Host': host,
+        'X-Amz-Date': timestamp,
+        'Authorization': authorization
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`AWS Polly API error: ${response.status} - ${errorText}`);
+    }
+
+    const audioBuffer = Buffer.from(await response.arrayBuffer());
+    const filename = `polly_${Date.now()}_${crypto.randomBytes(8).toString('hex')}.mp3`;
+    const filepath = path.join(this.cacheDir, filename);
+
+    await fs.writeFile(filepath, audioBuffer);
+
+    // Estimate duration
+    const estimatedDuration = Math.ceil((text.length / 5) / 150 * 60);
+
+    // Calculate cost: $4.00 per 1M chars (standard) or $16.00 per 1M chars (neural)
+    // Convert to cents: 0.0004 cents per char (standard) or 0.0016 cents per char (neural)
+    const costPerChar = isNeural ? 0.0016 : 0.0004;
+    const costCents = Math.ceil(text.length * costPerChar);
+
+    return {
+      filepath,
+      filename,
+      format: 'mp3',
+      provider: 'aws_polly',
+      voice,
+      engine: isNeural ? 'neural' : 'standard',
+      duration: estimatedDuration,
+      sizeBytes: audioBuffer.length,
+      costCents,
+      text
+    };
+  }
+
+  /**
+   * Get Polly language code for voice
+   */
+  getPollyLanguageCode(voice) {
+    const voiceLanguages = {
+      // English (US)
+      'Joanna': 'en-US', 'Matthew': 'en-US', 'Ivy': 'en-US', 'Joey': 'en-US',
+      'Kendra': 'en-US', 'Kimberly': 'en-US', 'Salli': 'en-US', 'Kevin': 'en-US',
+      'Ruth': 'en-US', 'Stephen': 'en-US',
+      // English (UK)
+      'Amy': 'en-GB', 'Emma': 'en-GB', 'Brian': 'en-GB', 'Arthur': 'en-GB',
+      // English (AU)
+      'Nicole': 'en-AU', 'Olivia': 'en-AU', 'Russell': 'en-AU',
+      // Spanish
+      'Lupe': 'es-US', 'Pedro': 'es-US', 'Penelope': 'es-US',
+      'Conchita': 'es-ES', 'Lucia': 'es-ES', 'Enrique': 'es-ES',
+      // French
+      'Celine': 'fr-FR', 'Mathieu': 'fr-FR', 'Lea': 'fr-FR',
+      // German
+      'Marlene': 'de-DE', 'Hans': 'de-DE', 'Vicki': 'de-DE',
+      // Italian
+      'Carla': 'it-IT', 'Giorgio': 'it-IT', 'Bianca': 'it-IT',
+      // Portuguese
+      'Camila': 'pt-BR', 'Vitoria': 'pt-BR', 'Ricardo': 'pt-BR',
+      // Japanese
+      'Mizuki': 'ja-JP', 'Takumi': 'ja-JP',
+      // Korean
+      'Seoyeon': 'ko-KR',
+      // Chinese
+      'Zhiyu': 'cmn-CN',
+      // Hindi
+      'Aditi': 'hi-IN',
+      // Arabic
+      'Zeina': 'arb',
+    };
+    return voiceLanguages[voice] || 'en-US';
   }
 
   /**

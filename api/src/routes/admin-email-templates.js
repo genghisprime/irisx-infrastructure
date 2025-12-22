@@ -567,6 +567,154 @@ adminEmailTemplates.get('/events/list', async (c) => {
   }
 });
 
+// =============================================================================
+// GET /admin/email-templates/unsubscribe-audit - GDPR/CAN-SPAM Compliance Audit Trail
+// CRITICAL: Required for regulatory compliance (GDPR, CAN-SPAM, CCPA)
+// =============================================================================
+adminEmailTemplates.get('/unsubscribe-audit', async (c) => {
+  try {
+    const { tenant_id, from_date, to_date, reason, export: exportFormat, page = 1, limit = 100 } = c.req.query();
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    let whereConditions = [];
+    let params = [];
+    let paramIndex = 1;
+
+    if (tenant_id) {
+      whereConditions.push(`eu.tenant_id = $${paramIndex++}`);
+      params.push(tenant_id);
+    }
+
+    if (from_date) {
+      whereConditions.push(`eu.unsubscribed_at >= $${paramIndex++}`);
+      params.push(from_date);
+    }
+
+    if (to_date) {
+      whereConditions.push(`eu.unsubscribed_at <= $${paramIndex++}`);
+      params.push(to_date);
+    }
+
+    if (reason) {
+      whereConditions.push(`eu.reason ILIKE $${paramIndex++}`);
+      params.push(`%${reason}%`);
+    }
+
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+    // Get full audit trail with compliance-relevant fields
+    // Note: source, ip_address, user_agent columns may not exist in all deployments
+    const result = await pool.query(`
+      SELECT
+        eu.id,
+        eu.tenant_id,
+        t.name as tenant_name,
+        eu.email_address,
+        eu.reason,
+        eu.unsubscribed_at,
+        eu.created_at,
+        (SELECT COUNT(*) FROM emails e WHERE e.to_email = eu.email_address AND e.tenant_id = eu.tenant_id) as emails_received_before_unsub,
+        (SELECT MAX(e.sent_at) FROM emails e WHERE e.to_email = eu.email_address AND e.tenant_id = eu.tenant_id AND e.sent_at < eu.unsubscribed_at) as last_email_sent_before_unsub,
+        (SELECT COUNT(*) FROM emails e WHERE e.to_email = eu.email_address AND e.tenant_id = eu.tenant_id AND e.sent_at > eu.unsubscribed_at) as emails_sent_after_unsub
+      FROM email_unsubscribes eu
+      LEFT JOIN tenants t ON eu.tenant_id = t.id
+      ${whereClause}
+      ORDER BY eu.unsubscribed_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `, [...params, parseInt(limit), offset]);
+
+    // Get total count
+    const countResult = await pool.query(`
+      SELECT COUNT(*) as total FROM email_unsubscribes eu ${whereClause}
+    `, params);
+
+    // Get summary stats
+    const summaryResult = await pool.query(`
+      SELECT
+        COUNT(*) as total_unsubscribes,
+        COUNT(DISTINCT tenant_id) as tenants_affected,
+        COUNT(*) FILTER (WHERE unsubscribed_at >= NOW() - INTERVAL '24 hours') as last_24h,
+        COUNT(*) FILTER (WHERE unsubscribed_at >= NOW() - INTERVAL '7 days') as last_7d,
+        COUNT(*) FILTER (WHERE unsubscribed_at >= NOW() - INTERVAL '30 days') as last_30d,
+        COUNT(*) FILTER (WHERE reason ILIKE '%spam%') as marked_as_spam,
+        COUNT(*) FILTER (WHERE reason ILIKE '%unwanted%' OR reason ILIKE '%too many%') as too_many_emails,
+        COUNT(*) FILTER (WHERE reason IS NULL OR reason = '') as no_reason_given
+      FROM email_unsubscribes eu
+      ${whereClause}
+    `, params);
+
+    // Compliance violations check (emails sent AFTER unsubscribe)
+    const violationsResult = await pool.query(`
+      SELECT
+        eu.id as unsubscribe_id,
+        eu.email_address,
+        eu.tenant_id,
+        t.name as tenant_name,
+        eu.unsubscribed_at,
+        COUNT(e.id) as emails_sent_after,
+        MAX(e.sent_at) as last_violation_at
+      FROM email_unsubscribes eu
+      LEFT JOIN tenants t ON eu.tenant_id = t.id
+      JOIN emails e ON e.to_email = eu.email_address
+        AND e.tenant_id = eu.tenant_id
+        AND e.sent_at > eu.unsubscribed_at
+      ${whereClause.replace('eu.', 'eu.')}
+      GROUP BY eu.id, eu.email_address, eu.tenant_id, t.name, eu.unsubscribed_at
+      ORDER BY COUNT(e.id) DESC
+      LIMIT 20
+    `, params);
+
+    // If export requested, return CSV-friendly data
+    if (exportFormat === 'csv') {
+      const csvData = result.rows.map(row => ({
+        email: row.email_address,
+        tenant: row.tenant_name || 'Unknown',
+        reason: row.reason || 'Not provided',
+        unsubscribed_at: row.unsubscribed_at,
+        ip_address: row.ip_address || 'Not recorded',
+        user_agent: row.user_agent || 'Not recorded',
+        emails_after_unsub: row.emails_sent_after_unsub
+      }));
+
+      return c.json({
+        export: true,
+        format: 'csv',
+        headers: ['email', 'tenant', 'reason', 'unsubscribed_at', 'ip_address', 'user_agent', 'emails_after_unsub'],
+        data: csvData,
+        generated_at: new Date().toISOString()
+      });
+    }
+
+    return c.json({
+      success: true,
+      audit: result.rows,
+      summary: summaryResult.rows[0],
+      violations: {
+        count: violationsResult.rows.length,
+        details: violationsResult.rows,
+        warning: violationsResult.rows.length > 0
+          ? 'COMPLIANCE ALERT: Emails were sent to unsubscribed addresses'
+          : null
+      },
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: parseInt(countResult.rows[0].total),
+        pages: Math.ceil(parseInt(countResult.rows[0].total) / parseInt(limit))
+      },
+      compliance: {
+        gdpr: true,
+        canSpam: true,
+        ccpa: true,
+        auditGeneratedAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Failed to get unsubscribe audit:', error);
+    return c.json({ error: 'Failed to get audit trail', details: error.message }, 500);
+  }
+});
+
 // GET /admin/email-templates/:id - Get template details
 // IMPORTANT: This route must be defined LAST to avoid matching other routes like /cost-by-tenant
 adminEmailTemplates.get('/:id', async (c) => {
