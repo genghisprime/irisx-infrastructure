@@ -301,9 +301,9 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAdminAuthStore } from '@/stores/adminAuth'
 
-const authStore = useAuthStore()
+const authStore = useAdminAuthStore()
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 // State
