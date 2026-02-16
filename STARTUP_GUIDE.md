@@ -318,8 +318,12 @@ in the respective directory.
 | Local Customer | http://localhost:5174 |
 | Local Agent | http://localhost:5175 |
 | Local Dashboard | http://localhost:5176 |
-| Production API | https://api.tazzi.com |
-| Production Admin | https://admin.tazzi.com |
+| **Production API** | http://3.211.106.196/api |
+| **Production Admin Portal** | http://3.211.106.196/admin/ |
+| **Production Customer Portal** | http://3.211.106.196/customer/ |
+| **Production Agent Desktop** | http://3.211.106.196/agent/ |
+| **Production Dashboard** | http://3.211.106.196/dashboard/ |
+| **Production API Docs** | http://3.211.106.196/docs |
 
 ---
 
