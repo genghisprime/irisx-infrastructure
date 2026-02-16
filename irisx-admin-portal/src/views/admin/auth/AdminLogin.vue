@@ -110,7 +110,7 @@
           >
             Use Test Credentials
           </button>
-          <p class="text-xs text-gray-500 mt-2 text-center">admin@irisx.internal / test12345</p>
+          <p class="text-xs text-gray-500 mt-2 text-center">admin@irisx.internal / Admin1234</p>
         </div>
       </div>
 
@@ -146,7 +146,7 @@ const passwordFocused = ref(false)
 
 function fillTestCredentials() {
   email.value = 'admin@irisx.internal'
-  password.value = 'test12345'
+  password.value = 'Admin1234'
 }
 
 async function handleLogin() {
