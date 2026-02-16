@@ -100,11 +100,11 @@
           </button>
         </form>
 
-        <!-- Info -->
-        <div class="mt-6 pt-6 border-t border-gray-200">
-          <p class="text-xs text-gray-500 text-center">
-            This portal is for authorized Tazzi staff only. All activities are logged and monitored.
-          </p>
+        <!-- Test Credentials -->
+        <div class="mt-6 pt-6 border-t border-gray-200 bg-yellow-50 -mx-8 -mb-8 px-8 py-4 rounded-b-lg">
+          <p class="text-xs text-gray-600 font-semibold mb-2">Test Credentials:</p>
+          <p class="text-xs text-gray-700 font-mono">Email: admin@irisx.internal</p>
+          <p class="text-xs text-gray-700 font-mono">Password: test12345</p>
         </div>
       </div>
 

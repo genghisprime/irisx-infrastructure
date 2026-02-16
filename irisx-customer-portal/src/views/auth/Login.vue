@@ -88,6 +88,13 @@
             </router-link>
           </p>
         </div>
+
+        <!-- Test Credentials -->
+        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+          <p class="text-xs text-gray-600 font-semibold mb-2">Test Credentials:</p>
+          <p class="text-xs text-gray-700 font-mono">Email: demo@demo.com</p>
+          <p class="text-xs text-gray-700 font-mono">Password: test123</p>
+        </div>
       </form>
     </div>
   </div>

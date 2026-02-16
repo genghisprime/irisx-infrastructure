@@ -79,6 +79,13 @@
             <span v-else>Sign in</span>
           </button>
         </div>
+
+        <!-- Test Credentials -->
+        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+          <p class="text-xs text-gray-600 font-semibold mb-2">Test Credentials (Demo Mode):</p>
+          <p class="text-xs text-gray-700 font-mono">Email: demo@irisx.com</p>
+          <p class="text-xs text-gray-700 font-mono">Password: demo123</p>
+        </div>
       </form>
     </div>
   </div>
