@@ -103,8 +103,14 @@
         <!-- Test Credentials -->
         <div class="mt-6 pt-6 border-t border-gray-200 bg-yellow-50 -mx-8 -mb-8 px-8 py-4 rounded-b-lg">
           <p class="text-xs text-gray-600 font-semibold mb-2">Test Credentials:</p>
-          <p class="text-xs text-gray-700 font-mono">Email: admin@irisx.internal</p>
-          <p class="text-xs text-gray-700 font-mono">Password: test12345</p>
+          <button
+            type="button"
+            @click="fillTestCredentials"
+            class="w-full mt-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-md transition-colors"
+          >
+            Use Test Credentials
+          </button>
+          <p class="text-xs text-gray-500 mt-2 text-center">admin@irisx.internal / test12345</p>
         </div>
       </div>
 
@@ -137,6 +143,11 @@ const passwordFocused = ref(false)
 // Removed aggressive autofill prevention on mount
 // Removed aggressive autofill detection - it was preventing legitimate password entry
 // Removed readonly attribute to allow copy/paste functionality
+
+function fillTestCredentials() {
+  email.value = 'admin@irisx.internal'
+  password.value = 'test12345'
+}
 
 async function handleLogin() {
   if (!email.value || !password.value) {

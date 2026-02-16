@@ -92,8 +92,14 @@
         <!-- Test Credentials -->
         <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
           <p class="text-xs text-gray-600 font-semibold mb-2">Test Credentials:</p>
-          <p class="text-xs text-gray-700 font-mono">Email: demo@demo.com</p>
-          <p class="text-xs text-gray-700 font-mono">Password: test123</p>
+          <button
+            type="button"
+            @click="fillTestCredentials"
+            class="w-full mt-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-md transition-colors"
+          >
+            Use Test Credentials
+          </button>
+          <p class="text-xs text-gray-500 mt-2 text-center">demo@demo.com / test123</p>
         </div>
       </form>
     </div>
@@ -113,6 +119,11 @@ const form = ref({
   password: '',
   rememberMe: false
 })
+
+function fillTestCredentials() {
+  form.value.email = 'demo@demo.com'
+  form.value.password = 'test123'
+}
 
 async function handleLogin() {
   const result = await authStore.login(form.value.email, form.value.password)
