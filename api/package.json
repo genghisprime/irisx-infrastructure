@@ -29,6 +29,7 @@
     "@aws-sdk/client-sns": "^3.922.0",
     "@aws-sdk/s3-request-presigner": "^3.919.0",
     "@hono/node-server": "^1.19.5",
+    "@hono/zod-validator": "^0.2.0",
     "@tensorflow/tfjs-node": "^4.22.0",
     "bcrypt": "^6.0.0",
     "csv-parse": "^6.1.0",
