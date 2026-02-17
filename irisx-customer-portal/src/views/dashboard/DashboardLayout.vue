@@ -186,6 +186,10 @@
             <SpeakerWaveIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/voice') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Voice Assistants
           </router-link>
+          <router-link to="/ai" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/ai') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <SparklesIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/ai') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            AI Settings
+          </router-link>
           <router-link to="/ivr" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/ivr') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
             <PhoneArrowUpRightIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/ivr') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             IVR Builder
@@ -224,6 +228,10 @@
         <!-- Settings & API -->
         <div style="padding-top: 16px;">
           <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Settings & API</h3>
+          <router-link to="/dashboard/settings" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/settings') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <Cog6ToothIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/settings') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Account Settings
+          </router-link>
           <router-link to="/dashboard/webhooks" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/webhooks') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
             <ArrowPathIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/webhooks') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Webhooks
@@ -240,8 +248,12 @@
             <ArrowTrendingUpIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/usage') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Usage
           </router-link>
+          <router-link to="/dashboard/billing" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/billing') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <CreditCardIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/billing') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Billing Portal
+          </router-link>
           <router-link to="/dashboard/billing-history" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/billing-history') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
-            <CreditCardIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/billing-history') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            <BanknotesIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/billing-history') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Billing History
           </router-link>
           <router-link to="/dashboard/data-import" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/data-import') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
@@ -336,7 +348,9 @@ import {
   CalendarDaysIcon,
   DocumentChartBarIcon,
   BookOpenIcon,
-  LinkIcon
+  LinkIcon,
+  SparklesIcon,
+  BanknotesIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
