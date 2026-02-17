@@ -3,7 +3,7 @@
  * Detects whether a call is answered by a human or machine
  */
 
-import { db } from '../database/connection.js';
+import db from '../db/connection.js';
 
 /**
  * AMD Detection Modes
