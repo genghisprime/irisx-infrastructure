@@ -3,7 +3,8 @@
  * Initializes WebSocket server for real-time transcript and event streaming
  */
 
-import { WebSocketServer } from 'ws';
+import pkg from 'ws';
+const { WebSocketServer } = pkg;
 import streamingHandler from '../websocket/streaming-handler.js';
 
 let wss = null;

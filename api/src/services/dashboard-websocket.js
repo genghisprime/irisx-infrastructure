@@ -10,7 +10,8 @@
  * - System health metrics
  */
 
-import { WebSocketServer } from 'ws';
+import pkg from 'ws';
+const { WebSocketServer } = pkg;
 import jwt from 'jsonwebtoken';
 import pool from '../db/connection.js';
 import redis from '../db/redis.js';
