@@ -290,6 +290,119 @@
           </RouterLink>
         </div>
 
+        <!-- Advanced Features -->
+        <div class="mb-6">
+          <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+            Advanced Features
+          </p>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/business-messaging"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/business-messaging' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Business Messaging
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/video"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/video' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            Video Calling
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/ai"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/ai' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            AI Management
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/voice"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/voice' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+            Voice Assistants
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/amd"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/amd' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+            </svg>
+            AMD Settings
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/translation"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/translation' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+            </svg>
+            Translation
+          </RouterLink>
+        </div>
+
+        <!-- Compliance & Security -->
+        <div class="mb-6">
+          <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+            Compliance & Security
+          </p>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/stir-shaken"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/stir-shaken' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            STIR/SHAKEN
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/traditional-social"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/traditional-social' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Social Platforms
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/dashboard/reports"
+            class="flex items-center px-3 py-2 rounded-md hover:bg-gray-800 transition-colors"
+            :class="{ 'bg-gray-800': $route.path === '/dashboard/reports' }"
+          >
+            <svg class="w-5 h-5 mr-3" style="width: 20px; height: 20px; min-width: 20px; max-width: 20px; margin-right: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Platform Reports
+          </RouterLink>
+        </div>
+
         <!-- Infrastructure -->
         <div class="mb-6">
           <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
@@ -483,7 +596,16 @@ const pageTitle = computed(() => {
     'ProviderCredentials': 'Provider Credentials',
     'FeatureFlags': 'Feature Flags',
     'SystemSettings': 'System Settings',
-    'ApiKeyManagement': 'API Keys Management'
+    'ApiKeyManagement': 'API Keys Management',
+    'BusinessMessagingHub': 'Business Messaging (Apple/Google/RCS)',
+    'VideoManagement': 'Video Calling Management',
+    'AIManagement': 'AI Engine Management',
+    'VoiceManagement': 'Voice Assistants',
+    'AMDConfiguration': 'AMD Settings',
+    'TranslationManagement': 'Translation Services',
+    'StirShakenManagement': 'STIR/SHAKEN Compliance',
+    'TraditionalSocialConfig': 'Social Platform Configuration',
+    'PlatformReports': 'Platform Reports'
   }
   return titles[route.name] || 'Tazzi Admin Portal'
 })
