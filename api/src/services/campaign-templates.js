@@ -3,11 +3,7 @@
  * Manage reusable campaign templates for SMS, Email, Voice
  */
 
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
+import pool from '../db/connection.js';
 
 class CampaignTemplatesService {
   /**
@@ -439,4 +435,4 @@ class CampaignTemplatesService {
   }
 }
 
-module.exports = new CampaignTemplatesService();
+export default new CampaignTemplatesService();

@@ -3,11 +3,8 @@
  * Handles job queuing, processing, and scheduling
  */
 
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
+import pool from '../db/connection.js';
+import os from 'os';
 
 class JobProcessorService {
   constructor() {
@@ -639,7 +636,7 @@ class JobProcessorService {
   async start(queues = ['default'], options = {}) {
     const {
       pollInterval = 1000,
-      hostname = require('os').hostname()
+      hostname = os.hostname()
     } = options;
 
     if (this.isRunning) {
@@ -773,4 +770,4 @@ class JobProcessorService {
   }
 }
 
-module.exports = new JobProcessorService();
+export default new JobProcessorService();

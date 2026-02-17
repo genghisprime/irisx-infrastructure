@@ -3,9 +3,9 @@
  * Manage reusable templates for campaigns
  */
 
-const { Hono } = require('hono');
-const { z } = require('zod');
-const templateService = require('../services/campaign-templates');
+import { Hono } from 'hono';
+import { z } from 'zod';
+import templateService from '../services/campaign-templates.js';
 
 const router = new Hono();
 
