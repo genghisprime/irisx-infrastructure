@@ -159,7 +159,7 @@
 
 <script setup>
 import { ref, onMounted, h } from 'vue'
-import api from '../services/api'
+import api from '@/utils/api'
 
 // Icons
 const SearchIcon = {

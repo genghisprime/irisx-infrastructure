@@ -393,9 +393,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useAuthStore } from '../stores/auth'
+import { useAdminAuthStore } from '@/stores/adminAuth'
 
-const authStore = useAuthStore()
+const authStore = useAdminAuthStore()
 
 const tabs = [
   { id: 'configurations', name: 'Configurations' },

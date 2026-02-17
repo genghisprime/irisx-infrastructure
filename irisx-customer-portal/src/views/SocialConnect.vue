@@ -218,7 +218,7 @@
 <script setup>
 import { ref, computed, onMounted, h } from 'vue'
 import { useRoute } from 'vue-router'
-import api from '../services/api'
+import api from '@/utils/api'
 
 // Icons (inline SVG components)
 const FacebookIcon = {

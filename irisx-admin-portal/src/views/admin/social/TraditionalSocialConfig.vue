@@ -251,7 +251,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, h } from 'vue'
-import adminApi from '../../../services/adminApi'
+import adminApi from '@/utils/api'
 
 // Icons
 const FacebookIcon = {
