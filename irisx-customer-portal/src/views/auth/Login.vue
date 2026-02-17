@@ -1,25 +1,28 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your account
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-          Tazzi Customer Portal
-        </p>
+  <div class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-900 flex items-center justify-center px-4">
+    <div class="max-w-md w-full">
+      <!-- Logo/Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-white mb-2">Tazzi</h1>
+        <p class="text-indigo-200">Customer Portal</p>
+        <p class="text-sm text-indigo-300 mt-2">Manage your communications</p>
       </div>
 
-      <form class="mt-8 space-y-6" @submit.prevent="handleLogin">
+      <!-- Login Card -->
+      <div class="bg-white rounded-lg shadow-2xl p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Sign In</h2>
+
         <!-- Error Message -->
-        <div v-if="authStore.error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {{ authStore.error }}
+        <div v-if="authStore.error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <p class="text-sm text-red-600">{{ authStore.error }}</p>
         </div>
 
-        <div class="rounded-md shadow-sm -space-y-px">
+        <form @submit.prevent="handleLogin">
           <!-- Email -->
-          <div>
-            <label for="email" class="sr-only">Email address</label>
+          <div class="mb-4">
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+              Email Address
+            </label>
             <input
               id="email"
               v-model="form.email"
@@ -27,60 +30,80 @@
               type="email"
               autocomplete="email"
               required
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Email address"
+              placeholder="you@company.com"
+              class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              :disabled="authStore.isLoading"
             />
           </div>
 
           <!-- Password -->
-          <div>
-            <label for="password" class="sr-only">Password</label>
+          <div class="mb-6">
+            <div class="flex items-center justify-between mb-2">
+              <label for="password" class="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="text-xs text-indigo-600 hover:text-indigo-700"
+              >
+                {{ showPassword ? 'Hide' : 'Show' }}
+              </button>
+            </div>
             <input
               id="password"
               v-model="form.password"
               name="password"
-              type="password"
+              :type="showPassword ? 'text' : 'password'"
               autocomplete="current-password"
               required
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Password"
+              placeholder="Enter your password"
+              class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              :disabled="authStore.isLoading"
             />
           </div>
-        </div>
 
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <input
-              id="remember-me"
-              v-model="form.rememberMe"
-              name="remember-me"
-              type="checkbox"
-              class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-            />
-            <label for="remember-me" class="ml-2 block text-sm text-gray-900">
-              Remember me
-            </label>
-          </div>
-
-          <div class="text-sm">
-            <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">
-              Forgot your password?
+          <!-- Remember Me & Forgot Password -->
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center">
+              <input
+                id="remember-me"
+                v-model="form.rememberMe"
+                name="remember-me"
+                type="checkbox"
+                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label for="remember-me" class="ml-2 block text-sm text-gray-700">
+                Remember me
+              </label>
+            </div>
+            <a href="#" class="text-sm text-indigo-600 hover:text-indigo-500">
+              Forgot password?
             </a>
           </div>
-        </div>
 
-        <div>
+          <!-- Submit Button -->
           <button
             type="submit"
             :disabled="authStore.isLoading"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
-            <span v-if="authStore.isLoading">Signing in...</span>
-            <span v-else>Sign in</span>
+            <svg
+              v-if="authStore.isLoading"
+              class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ authStore.isLoading ? 'Signing In...' : 'Sign In' }}
           </button>
-        </div>
+        </form>
 
-        <div class="text-center">
+        <!-- Sign Up Link -->
+        <div class="mt-6 text-center">
           <p class="text-sm text-gray-600">
             Don't have an account?
             <router-link to="/signup" class="font-medium text-indigo-600 hover:text-indigo-500">
@@ -90,7 +113,7 @@
         </div>
 
         <!-- Test Credentials -->
-        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+        <div class="mt-6 pt-6 border-t border-gray-200 bg-yellow-50 -mx-8 -mb-8 px-8 py-4 rounded-b-lg">
           <p class="text-xs text-gray-600 font-semibold mb-2">Test Credentials:</p>
           <button
             type="button"
@@ -101,7 +124,14 @@
           </button>
           <p class="text-xs text-gray-500 mt-2 text-center">demo@demo.com / test123</p>
         </div>
-      </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-center mt-8">
+        <p class="text-sm text-indigo-300">
+          Tazzi Platform v1.0 | Powered by Tazzi
+        </p>
+      </div>
     </div>
   </div>
 </template>
@@ -120,6 +150,8 @@ const form = ref({
   rememberMe: false
 })
 
+const showPassword = ref(false)
+
 function fillTestCredentials() {
   form.value.email = 'demo@demo.com'
   form.value.password = 'test123'
@@ -129,7 +161,6 @@ async function handleLogin() {
   const result = await authStore.login(form.value.email, form.value.password)
 
   if (result.success) {
-    // Redirect to dashboard on successful login
     router.push('/dashboard')
   }
 }

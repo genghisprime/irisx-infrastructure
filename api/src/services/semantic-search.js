@@ -3,7 +3,7 @@
  * Vector-based similarity search using pgvector and OpenAI embeddings
  */
 
-import db from '../db.js';
+import db from '../db/connection.js';
 
 class SemanticSearchService {
   constructor() {

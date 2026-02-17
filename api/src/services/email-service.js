@@ -1,17 +1,27 @@
 /**
- * Email Service with Least-Cost Routing (LCR) and Automatic Failover
+ * ============================================================================
+ * EMAIL SERVICE - UNIFIED PROVIDER ABSTRACTION
+ * ============================================================================
  *
  * Features:
- * - Automatic provider selection based on health score and cost
+ * - Automatic provider selection based on health score and cost (LCR)
  * - Automatic failover to backup providers on failure
  * - Health score updates after each delivery attempt
  * - Routing decision logging
- * - Support for multiple email providers (Elastic Email, SendGrid, Custom SMTP)
+ * - Support for multiple email providers (Elastic Email, SendGrid, SES, Mailgun)
+ *
+ * CUSTOMER-FACING ABSTRACTION:
+ * - Customers use IRISX Email API without knowing which provider is used
+ * - Provider details are NEVER exposed to customer API responses
+ * - Unified webhook handling for all providers
+ *
+ * Phase: Unified Provider Abstraction
  */
 
 import crypto from 'crypto';
 import pool from '../db/connection.js';
 import { createEmailProvider } from './email-providers/index.js';
+import channelRouter from './channel-router.js';
 
 /**
  * Decrypt provider credentials
@@ -236,14 +246,34 @@ export async function sendEmail(emailData) {
 
         console.log(`[Email Service] ✓ Email sent successfully via ${displayName} (${deliveryTime}s)`);
 
+        // Log usage via unified channel router
+        await channelRouter.logUsage({
+          channelType: 'email',
+          providerId: providerConfig.id,
+          tenantId: emailData.tenantId,
+          requestId: emailData.messageId?.toString() || crypto.randomUUID(),
+          success: true,
+          latencyMs: Date.now() - startTime,
+          costCents: Math.round((providerConfig.config?.email_rate_per_1000 || 0) / 10), // Convert to cents per email
+          metadata: {
+            hasAttachments,
+            recipientCount: Array.isArray(emailData.to) ? emailData.to.length : 1
+          }
+        });
+
+        // Return sanitized response (provider details hidden from customer)
         return {
           success: true,
-          provider: displayName,
-          providerId: providerConfig.id,
+          // Note: provider name NOT included for customer-facing abstraction
           messageId: result.messageId,
           deliveryTime,
-          attemptedProviders: attemptedProviders.length + 1,
-          response: result.response
+          // Internal tracking (not exposed to customer API):
+          _internal: {
+            provider: displayName,
+            providerId: providerConfig.id,
+            attemptedProviders: attemptedProviders.length + 1,
+            response: result.response
+          }
         };
       } else {
         throw new Error(result.error || 'Provider returned failure');
@@ -259,6 +289,18 @@ export async function sendEmail(emailData) {
         id: providerConfig.id,
         name: displayName,
         error: error.message
+      });
+
+      // Log failure via unified channel router
+      await channelRouter.logUsage({
+        channelType: 'email',
+        providerId: providerConfig.id,
+        tenantId: emailData.tenantId,
+        requestId: emailData.messageId?.toString() || crypto.randomUUID(),
+        success: false,
+        latencyMs: Date.now() - attemptStartTime,
+        costCents: 0,
+        metadata: { error: error.message }
       });
 
       lastError = error;

@@ -88,7 +88,20 @@ export const adminAPI = {
     create: (data) => apiClient.post('/admin/providers', data),
     update: (id, data) => apiClient.patch(`/admin/providers/${id}`, data),
     delete: (id) => apiClient.delete(`/admin/providers/${id}`),
-    test: (id) => apiClient.post(`/admin/providers/${id}/test`)
+    test: (id) => apiClient.post(`/admin/providers/${id}/test`),
+    health: () => apiClient.get('/admin/providers/health'),
+    usage: (params) => apiClient.get('/admin/providers/usage', { params }),
+    updateHealth: (id, data) => apiClient.post(`/admin/providers/${id}/health`, data),
+    routing: (channelType) => apiClient.get(`/admin/providers/routing/${channelType}`),
+    // Voice Catalog
+    voices: {
+      list: (params) => apiClient.get('/admin/providers/voices', { params }),
+      get: (code) => apiClient.get(`/admin/providers/voices/${code}`),
+      create: (data) => apiClient.post('/admin/providers/voices', data),
+      update: (code, data) => apiClient.patch(`/admin/providers/voices/${code}`, data),
+      delete: (code) => apiClient.delete(`/admin/providers/voices/${code}`),
+      test: (code) => apiClient.get(`/admin/providers/voices/${code}/test`)
+    }
   },
   recordings: {
     list: (params) => apiClient.get('/admin/recordings', { params }),

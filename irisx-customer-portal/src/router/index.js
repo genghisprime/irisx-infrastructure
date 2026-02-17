@@ -25,6 +25,7 @@ import EmailAutomation from '../views/EmailAutomation.vue'
 import EmailDeliverability from '../views/EmailDeliverability.vue'
 import WhatsAppMessages from '../views/WhatsAppMessages.vue'
 import SocialMessages from '../views/SocialMessages.vue'
+import SocialConnect from '../views/SocialConnect.vue'
 import Webhooks from '../views/dashboard/Webhooks.vue'
 import Conversations from '../views/dashboard/Conversations.vue'
 import AgentManagement from '../views/AgentManagement.vue'
@@ -46,6 +47,18 @@ import CampaignDashboard from '../views/CampaignDashboard.vue'
 import UnifiedAnalytics from '../views/UnifiedAnalytics.vue'
 import Contacts from '../views/Contacts.vue'
 import ContactLists from '../views/ContactLists.vue'
+import KnowledgeBase from '../views/KnowledgeBase.vue'
+import CallbackManagement from '../views/CallbackManagement.vue'
+import TenantSettings from '../views/TenantSettings.vue'
+import Wallboard from '../views/Wallboard.vue'
+import IVRFlows from '../views/IVRFlows.vue'
+import IVRFlowBuilder from '../views/IVRFlowBuilder.vue'
+import QualityManagement from '../views/QualityManagement.vue'
+import CRMIntegrations from '../views/CRMIntegrations.vue'
+import WorkforceManagement from '../views/WorkforceManagement.vue'
+import ReportBuilder from '../views/ReportBuilder.vue'
+import TranslationSettings from '../views/TranslationSettings.vue'
+import AISettings from '../views/AISettings.vue'
 
 const routes = [
   {
@@ -134,6 +147,11 @@ const routes = [
         path: 'social',
         name: 'SocialMessages',
         component: SocialMessages
+      },
+      {
+        path: 'social/connect',
+        name: 'SocialConnect',
+        component: SocialConnect
       },
       {
         path: 'webhooks',
@@ -239,8 +257,82 @@ const routes = [
         path: 'unified-analytics',
         name: 'UnifiedAnalytics',
         component: UnifiedAnalytics
+      },
+      {
+        path: 'knowledge-base',
+        name: 'KnowledgeBase',
+        component: KnowledgeBase
+      },
+      {
+        path: 'callbacks',
+        name: 'CallbackManagement',
+        component: CallbackManagement
+      },
+      {
+        path: 'settings',
+        name: 'TenantSettings',
+        component: TenantSettings
+      },
+      {
+        path: 'wallboard',
+        name: 'Wallboard',
+        component: Wallboard
       }
     ]
+  },
+  // IVR Flow Builder (full-screen editor outside dashboard layout)
+  {
+    path: '/ivr',
+    name: 'IVRFlows',
+    component: IVRFlows,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/ivr/:id',
+    name: 'IVRFlowBuilder',
+    component: IVRFlowBuilder,
+    meta: { requiresAuth: true }
+  },
+  // Quality Management
+  {
+    path: '/quality',
+    name: 'QualityManagement',
+    component: QualityManagement,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/integrations',
+    name: 'CRMIntegrations',
+    component: CRMIntegrations,
+    meta: { requiresAuth: true }
+  },
+  // Workforce Management
+  {
+    path: '/wfm',
+    name: 'WorkforceManagement',
+    component: WorkforceManagement,
+    meta: { requiresAuth: true }
+  },
+  // Report Builder
+  {
+    path: '/reports/builder',
+    name: 'ReportBuilder',
+    component: ReportBuilder,
+    meta: { requiresAuth: true }
+  },
+  // Translation Settings
+  {
+    path: '/translation',
+    name: 'TranslationSettings',
+    component: TranslationSettings,
+    meta: { requiresAuth: true }
+  },
+  // AI Settings
+  {
+    path: '/ai',
+    name: 'AISettings',
+    component: AISettings,
+    meta: { requiresAuth: true }
   }
 ]
 

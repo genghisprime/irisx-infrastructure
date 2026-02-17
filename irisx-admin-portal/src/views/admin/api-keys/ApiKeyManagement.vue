@@ -370,7 +370,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAdminAuthStore } from '../../../stores/adminAuth'
-import { adminAPI } from '../../../utils/api'
+import apiClient from '../../../utils/api'
 
 const authStore = useAdminAuthStore()
 
@@ -431,7 +431,7 @@ async function refreshData() {
 
 async function fetchStats() {
   try {
-    const response = await adminAPI.get('/admin/api-keys/stats')
+    const response = await apiClient.get('/admin/api-keys/stats')
     stats.value = response.data.stats || {}
     keysByTenant.value = response.data.keysByTenant || []
   } catch (err) {
@@ -451,7 +451,7 @@ async function fetchKeys() {
     params.append('page', pagination.value.page)
     params.append('limit', pagination.value.limit)
 
-    const response = await adminAPI.get(`/admin/api-keys?${params.toString()}`)
+    const response = await apiClient.get(`/admin/api-keys?${params.toString()}`)
     keys.value = response.data.keys || []
     pagination.value = response.data.pagination || { page: 1, limit: 50, total: 0, pages: 0 }
   } catch (err) {
@@ -464,7 +464,7 @@ async function fetchKeys() {
 
 async function fetchUsageSummary() {
   try {
-    const response = await adminAPI.get('/admin/api-keys/usage/summary')
+    const response = await apiClient.get('/admin/api-keys/usage/summary')
     staleKeys.value = response.data.staleKeys || []
   } catch (err) {
     console.error('Failed to fetch usage summary:', err)
@@ -473,7 +473,7 @@ async function fetchUsageSummary() {
 
 async function fetchTenants() {
   try {
-    const response = await adminAPI.get('/admin/tenants?limit=100')
+    const response = await apiClient.get('/admin/tenants?limit=100')
     tenants.value = response.data.tenants || []
   } catch (err) {
     console.error('Failed to fetch tenants:', err)
@@ -523,7 +523,7 @@ function revokeKey(key) {
 
 async function confirmRevoke() {
   try {
-    await adminAPI.delete(`/admin/api-keys/${keyToRevoke.value.id}`, {
+    await apiClient.delete(`/admin/api-keys/${keyToRevoke.value.id}`, {
       data: { reason: revokeReason.value }
     })
     showRevokeModal.value = false
@@ -541,7 +541,7 @@ async function bulkRevoke() {
   }
 
   try {
-    await adminAPI.post('/admin/api-keys/bulk-revoke', {
+    await apiClient.post('/admin/api-keys/bulk-revoke', {
       key_ids: selectedKeys.value,
       reason: 'Bulk admin revocation'
     })

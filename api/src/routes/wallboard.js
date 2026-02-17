@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { authenticate } from '../middleware/auth.js';
+import { authenticateJWT as authenticate } from '../middleware/authMiddleware.js';
 import wallboardService from '../services/wallboard.js';
 
 const wallboard = new Hono();
@@ -178,6 +178,29 @@ wallboard.get('/alerts', async (c) => {
   } catch (error) {
     console.error('[Wallboard] Error getting alerts:', error);
     return c.json({ error: 'Failed to get alerts' }, 500);
+  }
+});
+
+/**
+ * GET /wallboard/trends
+ * Get historical trend data for charts
+ */
+wallboard.get('/trends', async (c) => {
+  try {
+    const user = c.get('user');
+    const tenantId = user.tenantId;
+    const { queue_ids, hours = '12' } = c.req.query();
+
+    const queueIds = queue_ids ? queue_ids.split(',') : [];
+    const data = await wallboardService.getTrendData(tenantId, queueIds, parseInt(hours));
+
+    return c.json({
+      success: true,
+      ...data
+    });
+  } catch (error) {
+    console.error('[Wallboard] Error getting trend data:', error);
+    return c.json({ error: 'Failed to get trend data' }, 500);
   }
 });
 

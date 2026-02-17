@@ -1,0 +1,19 @@
+{
+  "name": "irisx",
+  "version": "1.0.0",
+  "description": "> **Next-generation unified communications platform: Voice + SMS + Email + Social from ONE API**",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "playwright": "^1.58.2"
+  }
+}

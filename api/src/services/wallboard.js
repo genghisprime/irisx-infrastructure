@@ -469,6 +469,134 @@ class WallboardService {
 
     await redisClient.publish(channel, message);
   }
+
+  /**
+   * Get historical trend data for wallboard charts
+   */
+  async getTrendData(tenantId, queueIds = null, hours = 12) {
+    try {
+      // Build queue filter
+      let queueFilter = '';
+      const params = [tenantId];
+      let paramCount = 2;
+
+      if (queueIds && queueIds.length > 0) {
+        queueFilter = ` AND queue_id = ANY($${paramCount})`;
+        params.push(queueIds);
+        paramCount++;
+      }
+
+      // Hourly call volume
+      const hourlyResult = await query(`
+        SELECT
+          DATE_TRUNC('hour', initiated_at) as hour,
+          TO_CHAR(DATE_TRUNC('hour', initiated_at), 'HH24:00') as label,
+          COUNT(CASE WHEN direction = 'inbound' THEN 1 END) as inbound,
+          COUNT(CASE WHEN direction = 'outbound' THEN 1 END) as outbound,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END) as answered,
+          COUNT(CASE WHEN status = 'abandoned' THEN 1 END) as abandoned
+        FROM calls
+        WHERE tenant_id = $1
+          AND initiated_at >= NOW() - INTERVAL '${hours} hours'
+          ${queueFilter}
+        GROUP BY DATE_TRUNC('hour', initiated_at)
+        ORDER BY hour ASC
+      `, params);
+
+      // Service level trend (hourly)
+      const slResult = await query(`
+        SELECT
+          DATE_TRUNC('hour', initiated_at) as hour,
+          TO_CHAR(DATE_TRUNC('hour', initiated_at), 'HH24:00') as label,
+          ROUND(
+            100.0 * COUNT(CASE WHEN wait_time <= 20 THEN 1 END) / NULLIF(COUNT(*), 0),
+            1
+          ) as value
+        FROM calls
+        WHERE tenant_id = $1
+          AND initiated_at >= NOW() - INTERVAL '${hours} hours'
+          AND status IN ('completed', 'abandoned')
+          ${queueFilter}
+        GROUP BY DATE_TRUNC('hour', initiated_at)
+        ORDER BY hour ASC
+      `, params);
+
+      // Channel distribution (today)
+      const channelResult = await query(`
+        SELECT
+          COALESCE(SUM(CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END), 0) as voice,
+          COALESCE(SUM(CASE WHEN s.id IS NOT NULL THEN 1 ELSE 0 END), 0) as sms,
+          COALESCE(SUM(CASE WHEN e.id IS NOT NULL THEN 1 ELSE 0 END), 0) as email
+        FROM (SELECT 1) dummy
+        LEFT JOIN calls c ON c.tenant_id = $1 AND c.initiated_at >= CURRENT_DATE
+        LEFT JOIN sms_messages s ON s.tenant_id = $1 AND s.created_at >= CURRENT_DATE
+        LEFT JOIN emails e ON e.tenant_id = $1 AND e.created_at >= CURRENT_DATE
+      `, [tenantId]);
+
+      // Get channel counts individually for accuracy
+      const voiceCount = await query(`
+        SELECT COUNT(*) as count FROM calls WHERE tenant_id = $1 AND initiated_at >= CURRENT_DATE
+      `, [tenantId]);
+
+      const smsCount = await query(`
+        SELECT COUNT(*) as count FROM sms_messages WHERE tenant_id = $1 AND created_at >= CURRENT_DATE
+      `, [tenantId]);
+
+      const emailCount = await query(`
+        SELECT COUNT(*) as count FROM emails WHERE tenant_id = $1 AND created_at >= CURRENT_DATE
+      `, [tenantId]);
+
+      // Agent utilization (last 4 hours)
+      const utilizationResult = await query(`
+        SELECT
+          DATE_TRUNC('hour', al.created_at) as hour,
+          TO_CHAR(DATE_TRUNC('hour', al.created_at), 'HH24:00') as label,
+          ROUND(AVG(
+            CASE
+              WHEN al.status IN ('on_call', 'wrap_up') THEN 100
+              WHEN al.status = 'available' THEN 50
+              ELSE 0
+            END
+          ), 0) as utilization,
+          ROUND(AVG(
+            CASE
+              WHEN al.status = 'on_call' THEN 100
+              WHEN al.status = 'wrap_up' THEN 75
+              ELSE 0
+            END
+          ), 0) as occupancy
+        FROM agent_activity_logs al
+        JOIN agents a ON a.id = al.agent_id
+        WHERE a.tenant_id = $1
+          AND al.created_at >= NOW() - INTERVAL '4 hours'
+        GROUP BY DATE_TRUNC('hour', al.created_at)
+        ORDER BY hour ASC
+      `, [tenantId]);
+
+      return {
+        hourly: hourlyResult.rows,
+        service_level_trend: slResult.rows.map(r => ({
+          ...r,
+          value: parseFloat(r.value) || 0
+        })),
+        channel_distribution: {
+          voice: parseInt(voiceCount.rows[0]?.count) || 0,
+          sms: parseInt(smsCount.rows[0]?.count) || 0,
+          email: parseInt(emailCount.rows[0]?.count) || 0,
+          chat: 0,
+          social: 0
+        },
+        utilization: utilizationResult.rows.map(r => ({
+          ...r,
+          utilization: parseInt(r.utilization) || 0,
+          occupancy: parseInt(r.occupancy) || 0
+        }))
+      };
+    } catch (error) {
+      console.error('[Wallboard] Error getting trend data:', error);
+      throw error;
+    }
+  }
 }
 
 export default new WallboardService();

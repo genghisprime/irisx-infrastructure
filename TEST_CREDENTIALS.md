@@ -2,13 +2,13 @@
 
 **Last Updated:** November 4, 2025
 **Password for Customer Portal accounts:** `test123`
-**Password for Admin Portal account:** `test12345` (requires 8+ characters)
+**Password for Admin Portal account:** `Admin1234` (requires 8+ characters)
 
 ---
 
 ## 🔐 Portal Login Credentials
 
-### Customer Portal (https://app.tazzi.com)
+### Customer Portal (https://customer.tazzi.com)
 
 **Test User 1 - Demo Account:**
 - **Email:** `demo@demo.com`
@@ -30,7 +30,7 @@
 
 **Platform Superadmin:**
 - **Email:** `admin@irisx.internal`
-- **Password:** `test12345` (Admin portal requires 8+ character passwords)
+- **Password:** `Admin1234` (Admin portal requires 8+ character passwords)
 - **Role:** Superadmin
 - **Tenant ID:** 1 (Platform tenant)
 - **Use Case:** Platform administration, tenant management, system settings
@@ -40,9 +40,8 @@
 ### Agent Desktop (https://agent.tazzi.com)
 
 **Agent Login:**
-You can use the same credentials as Customer Portal:
-- **Email:** `demo@demo.com` or `voicetest@irisx.com`
-- **Password:** `test123`
+- **Email:** `demo@irisx.com`
+- **Password:** `demo123` (Demo mode - works without backend)
 
 ---
 
@@ -67,7 +66,7 @@ You can use the same credentials as Customer Portal:
 
 ### 3. Test Admin Features
 **Portal:** Admin Portal
-**Login:** `admin@irisx.internal` / `test123`
+**Login:** `admin@irisx.internal` / `Admin1234`
 **Steps:**
 1. View tenant list
 2. Check system health
@@ -96,7 +95,7 @@ curl -X POST https://api.tazzi.com/admin/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "admin@irisx.internal",
-    "password": "test12345"
+    "password": "Admin1234"
   }'
 ```
 
@@ -178,8 +177,9 @@ ssh -i ~/.ssh/irisx-prod-key.pem ubuntu@3.83.53.69 \
 
 ## 📝 Notes
 
-1. **Customer Portal passwords:** `test123`
-2. **Admin Portal password:** `test12345` (requires min 8 characters)
+1. **Customer Portal password:** `test123`
+2. **Admin Portal password:** `Admin1234` (requires min 8 characters)
+3. **Agent Desktop password:** `demo123` (demo mode)
 3. **Auth Endpoints:**
    - Customer: `https://api.tazzi.com/v1/auth/login` (note the `/v1/` prefix!)
    - Admin: `https://api.tazzi.com/admin/auth/login`

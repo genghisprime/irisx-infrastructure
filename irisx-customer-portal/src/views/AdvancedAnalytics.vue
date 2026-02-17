@@ -13,6 +13,12 @@
           Export CSV
         </button>
         <button
+          @click="exportToExcel"
+          class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+        >
+          Export Excel
+        </button>
+        <button
           @click="exportData('pdf')"
           class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
         >
@@ -233,6 +239,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { apiClient } from '../utils/api'
+import { downloadExcel, downloadMultiSheetExcel } from '../utils/excelExport'
 
 const loading = ref(true)
 const selectedChannel = ref('all')
@@ -330,5 +337,76 @@ function getChannelIcon(channel) {
     'Social': '🌐'
   }
   return icons[channel] || '📊'
+}
+
+function exportToExcel() {
+  const filename = `analytics-${dateRange.value.start}-to-${dateRange.value.end}`
+
+  // Multi-sheet export with overview, channels, and agents
+  const sheets = [
+    {
+      name: 'Overview',
+      data: [{
+        metric: 'Total Interactions',
+        value: overview.value.total,
+        growth: `${overview.value.growth}%`
+      }, {
+        metric: 'Avg Response Time',
+        value: overview.value.avg_response_time,
+        growth: 'N/A'
+      }, {
+        metric: 'Customer Satisfaction',
+        value: `${overview.value.csat_score}%`,
+        growth: 'N/A'
+      }, {
+        metric: 'Resolution Rate',
+        value: `${overview.value.resolution_rate}%`,
+        growth: 'N/A'
+      }],
+      columns: [
+        { key: 'metric', label: 'Metric', width: 150 },
+        { key: 'value', label: 'Value', width: 100 },
+        { key: 'growth', label: 'Growth', width: 80 }
+      ]
+    },
+    {
+      name: 'Channel Performance',
+      data: channelStats.value.map(ch => ({
+        channel: ch.name,
+        volume: ch.volume,
+        avg_response: `${ch.avg_response}s`,
+        resolution_rate: `${ch.resolution_rate}%`,
+        csat: `${ch.csat}%`,
+        trend: `${ch.trend >= 0 ? '+' : ''}${ch.trend}%`
+      })),
+      columns: [
+        { key: 'channel', label: 'Channel', width: 100 },
+        { key: 'volume', label: 'Volume', width: 80, type: 'Number' },
+        { key: 'avg_response', label: 'Avg Response', width: 100 },
+        { key: 'resolution_rate', label: 'Resolution Rate', width: 110 },
+        { key: 'csat', label: 'CSAT', width: 80 },
+        { key: 'trend', label: 'Trend', width: 80 }
+      ]
+    },
+    {
+      name: 'Top Agents',
+      data: topAgents.value.map(agent => ({
+        name: agent.name,
+        interactions: agent.interactions,
+        avg_handle_time: `${agent.avg_handle_time}s`,
+        csat: `${agent.csat}%`,
+        resolution_rate: `${agent.resolution_rate}%`
+      })),
+      columns: [
+        { key: 'name', label: 'Agent Name', width: 150 },
+        { key: 'interactions', label: 'Interactions', width: 100, type: 'Number' },
+        { key: 'avg_handle_time', label: 'Avg Handle Time', width: 120 },
+        { key: 'csat', label: 'CSAT', width: 80 },
+        { key: 'resolution_rate', label: 'Resolution Rate', width: 110 }
+      ]
+    }
+  ]
+
+  downloadMultiSheetExcel(sheets, filename)
 }
 </script>

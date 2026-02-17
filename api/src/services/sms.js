@@ -2,10 +2,27 @@ import twilio from 'twilio';
 import { query, getClient } from '../db/connection.js';
 import crypto from 'crypto';
 import { dncService } from './dnc-service.js';
+import channelRouter from './channel-router.js';
 
 /**
- * SMS/MMS Service
- * Handles sending and receiving SMS/MMS messages via Twilio
+ * ============================================================================
+ * SMS/MMS SERVICE - UNIFIED PROVIDER ABSTRACTION
+ * ============================================================================
+ *
+ * MULTI-PROVIDER SUPPORT:
+ * - Twilio (primary, widely supported)
+ * - Telnyx (cost-effective alternative)
+ * - Bandwidth (enterprise)
+ * - Plivo (global coverage)
+ * - Vonage (international)
+ *
+ * CUSTOMER-FACING ABSTRACTION:
+ * - Customers use IRISX SMS API without knowing which provider is used
+ * - Automatic LCR (Least Cost Routing) based on destination
+ * - Automatic failover on provider errors
+ * - Unified webhook handling for all providers
+ *
+ * Phase: Unified Provider Abstraction
  */
 export class SMSService {
   constructor(config = {}) {
@@ -15,13 +32,44 @@ export class SMSService {
       ...config
     };
 
-    // Initialize Twilio client
+    // Provider clients cache
+    this.providerClients = new Map();
+
+    // Initialize default Twilio client (backwards compatibility)
     if (this.config.accountSid && this.config.authToken) {
       this.client = twilio(this.config.accountSid, this.config.authToken);
+      this.providerClients.set('twilio_default', this.client);
       console.log('✓ Twilio SMS client initialized');
     } else {
-      console.warn('⚠️ Twilio credentials not configured');
+      console.warn('⚠️ Twilio default credentials not configured');
     }
+  }
+
+  /**
+   * Get or create provider client with credentials
+   */
+  getProviderClient(providerName, credentials) {
+    const cacheKey = `${providerName}_${credentials?.account_sid || 'default'}`;
+
+    if (this.providerClients.has(cacheKey)) {
+      return this.providerClients.get(cacheKey);
+    }
+
+    let client;
+    switch (providerName) {
+      case 'twilio':
+        client = twilio(credentials.account_sid, credentials.auth_token);
+        break;
+      // Future providers can be added here
+      // case 'telnyx':
+      //   client = new TelnyxClient(credentials);
+      //   break;
+      default:
+        throw new Error(`Unknown SMS provider: ${providerName}`);
+    }
+
+    this.providerClients.set(cacheKey, client);
+    return client;
   }
 
   /**
@@ -107,11 +155,11 @@ export class SMSService {
 
       await client.query('COMMIT');
 
-      // Send via Twilio (async) or simulate if dry_run
+      // Send via best available provider (async) or simulate if dry_run
       if (!dry_run) {
-        // REAL SMS - Send via Twilio
-        this.sendViaTwilio(message.id, messageSid, from, to, body, mediaUrls)
-          .catch(err => console.error('Twilio send error:', err));
+        // REAL SMS - Use unified routing with failover
+        this.sendWithUnifiedRouting(message.id, messageSid, from, to, body, mediaUrls, tenantId)
+          .catch(err => console.error('SMS send error:', err));
         console.log(`📤 SMS queued: ${messageSid} from ${from} to ${to}`);
       } else {
         // DRY RUN MODE - Simulate SMS without Twilio
@@ -160,9 +208,144 @@ export class SMSService {
   }
 
   /**
-   * Send message via Twilio
+   * Send SMS with unified routing and automatic failover
+   * Selects best provider based on LCR, health, and availability
+   */
+  async sendWithUnifiedRouting(messageId, messageSid, from, to, body, mediaUrls, tenantId) {
+    const startTime = Date.now();
+    const requestId = messageSid;
+
+    try {
+      // Get providers with failover
+      const providers = await channelRouter.getSMSFallbacks(tenantId);
+
+      if (providers.length === 0) {
+        // Fallback to default Twilio if no providers configured
+        console.log(`[SMS] No providers configured, using default Twilio`);
+        return await this.sendViaTwilio(messageId, messageSid, from, to, body, mediaUrls);
+      }
+
+      let lastError;
+
+      for (const provider of providers) {
+        try {
+          const credentials = await channelRouter.getProviderCredentials(provider.id);
+          const result = await this.sendViaProvider(
+            provider.provider_name,
+            credentials,
+            messageId,
+            messageSid,
+            from,
+            to,
+            body,
+            mediaUrls
+          );
+
+          // Log success (provider hidden from customer)
+          await channelRouter.logUsage({
+            channelType: 'sms',
+            providerId: provider.id,
+            tenantId,
+            requestId,
+            success: true,
+            latencyMs: Date.now() - startTime,
+            costCents: Math.round((result.price || 0.0075) * 100),
+            metadata: { segments: this.estimateSegments(body) }
+          });
+
+          await channelRouter.updateProviderHealth(provider.id, true);
+
+          return result;
+
+        } catch (error) {
+          console.error(`[SMS] Provider ${provider.provider_name} failed:`, error.message);
+
+          await channelRouter.logUsage({
+            channelType: 'sms',
+            providerId: provider.id,
+            tenantId,
+            requestId,
+            success: false,
+            latencyMs: Date.now() - startTime,
+            costCents: 0,
+            metadata: { error: error.message }
+          });
+
+          await channelRouter.updateProviderHealth(provider.id, false);
+          lastError = error;
+        }
+      }
+
+      // All configured providers failed, try default Twilio as last resort
+      if (this.client) {
+        console.log(`[SMS] All configured providers failed, trying default Twilio`);
+        return await this.sendViaTwilio(messageId, messageSid, from, to, body, mediaUrls);
+      }
+
+      throw new Error(`All SMS providers failed. Last error: ${lastError?.message}`);
+
+    } catch (error) {
+      console.error(`❌ SMS send failed for message ${messageSid}:`, error);
+
+      // Update message status to failed
+      await query(
+        `UPDATE sms_messages
+         SET status = $1, failed_at = NOW(), error_code = $2, error_message = $3
+         WHERE id = $4`,
+        ['failed', error.code || 'ALL_PROVIDERS_FAILED', error.message, messageId]
+      );
+
+      await query(
+        `INSERT INTO sms_message_events (message_id, tenant_id, event_type, status, error_message)
+         SELECT id, tenant_id, $1, $2, $3 FROM sms_messages WHERE id = $4`,
+        ['failed', 'failed', error.message, messageId]
+      );
+
+      throw error;
+    }
+  }
+
+  /**
+   * Send SMS via specific provider
+   */
+  async sendViaProvider(providerName, credentials, messageId, messageSid, from, to, body, mediaUrls) {
+    switch (providerName) {
+      case 'twilio':
+        return await this.sendViaTwilioWithCreds(credentials, messageId, messageSid, from, to, body, mediaUrls);
+
+      // Future providers
+      // case 'telnyx':
+      //   return await this.sendViaTelnyx(credentials, messageId, messageSid, from, to, body, mediaUrls);
+      // case 'bandwidth':
+      //   return await this.sendViaBandwidth(credentials, messageId, messageSid, from, to, body, mediaUrls);
+
+      default:
+        throw new Error(`Unknown SMS provider: ${providerName}`);
+    }
+  }
+
+  /**
+   * Send message via Twilio with provided credentials
+   */
+  async sendViaTwilioWithCreds(credentials, messageId, messageSid, from, to, body, mediaUrls) {
+    const client = this.getProviderClient('twilio', credentials);
+    return await this._sendViaTwilioClient(client, messageId, messageSid, from, to, body, mediaUrls);
+  }
+
+  /**
+   * Send message via Twilio (using default credentials)
    */
   async sendViaTwilio(messageId, messageSid, from, to, body, mediaUrls) {
+    if (!this.client) {
+      throw new Error('Default Twilio client not configured');
+    }
+    return await this._sendViaTwilioClient(this.client, messageId, messageSid, from, to, body, mediaUrls);
+  }
+
+  /**
+   * Internal: Send via Twilio client instance
+   */
+  async _sendViaTwilioClient(client, messageId, messageSid, from, to, body, mediaUrls) {
     try {
       const twilioParams = {
         from,
@@ -176,11 +359,12 @@ export class SMSService {
 
       console.log(`📡 Sending SMS via Twilio: ${messageSid}`);
 
-      const twilioMessage = await this.client.messages.create(twilioParams);
+      const twilioMessage = await client.messages.create(twilioParams);
 
       // Update database with Twilio SID and status
+      // Note: carrier is stored internally but NOT exposed to customer API
       await query(
-        `UPDATE sms_messages 
+        `UPDATE sms_messages
          SET status = $1, sent_at = NOW(), carrier = $2, price = $3, price_unit = $4
          WHERE id = $5`,
         [twilioMessage.status, 'twilio', twilioMessage.price, twilioMessage.priceUnit, messageId]
@@ -195,26 +379,15 @@ export class SMSService {
 
       console.log(`✅ SMS sent via Twilio: ${twilioMessage.sid}`);
 
-      return twilioMessage;
+      return {
+        status: twilioMessage.status,
+        price: twilioMessage.price,
+        priceUnit: twilioMessage.priceUnit,
+        // Note: NOT returning provider name to customer
+      };
 
     } catch (error) {
       console.error(`❌ Twilio send failed for message ${messageSid}:`, error);
-
-      // Update message status to failed
-      await query(
-        `UPDATE sms_messages 
-         SET status = $1, failed_at = NOW(), error_code = $2, error_message = $3
-         WHERE id = $4`,
-        ['failed', error.code, error.message, messageId]
-      );
-
-      // Log failure event
-      await query(
-        `INSERT INTO sms_message_events (message_id, tenant_id, event_type, status, error_message)
-         SELECT id, tenant_id, $1, $2, $3 FROM sms_messages WHERE id = $4`,
-        ['failed', 'failed', error.message, messageId]
-      );
-
       throw error;
     }
   }

@@ -3,7 +3,7 @@
  * Recurring campaigns, triggered campaigns, A/B testing, preview dialer, approval workflows
  */
 
-import db from '../db.js';
+import db from '../db/connection.js';
 
 class CampaignEnhancementsService {
   // =========================================

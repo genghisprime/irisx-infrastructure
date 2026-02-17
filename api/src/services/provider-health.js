@@ -3,7 +3,7 @@
  * Monitor and score carrier/provider health
  */
 
-import db from '../db.js';
+import db from '../db/connection.js';
 
 class ProviderHealthService {
   // ===========================================

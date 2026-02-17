@@ -3,7 +3,7 @@
  * Security monitoring and enforcement for multi-tenant isolation
  */
 
-import db from '../db.js';
+import db from '../db/connection.js';
 
 class TenantIsolationService {
   // ===========================================

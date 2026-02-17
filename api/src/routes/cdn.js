@@ -6,8 +6,8 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import cdnService from '../services/cdn.js';
-import { authenticate, requireRole } from '../middleware/auth.js';
-import { authenticateAdmin } from '../middleware/adminAuth.js';
+import { authenticateJWT as authenticate, requireRole } from '../middleware/authMiddleware.js';
+import { authenticateAdmin } from './admin-auth.js';
 
 const cdn = new Hono();
 

@@ -4,7 +4,7 @@
  * Based on ITU-T G.107 E-Model specification
  */
 
-import db from '../db.js';
+import db from '../db/connection.js';
 
 // Codec quality parameters for E-Model calculation
 const CODEC_PARAMS = {

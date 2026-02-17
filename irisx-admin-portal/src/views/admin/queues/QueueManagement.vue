@@ -296,7 +296,8 @@ async function fetchQueues() {
   error.value = null
   try {
     const response = await adminAPI.queues.list()
-    queues.value = response.data
+    // Handle both array response and object with queues property
+    queues.value = Array.isArray(response.data) ? response.data : (response.data.queues || [])
   } catch (err) {
     console.error('Failed to fetch queues:', err)
     error.value = 'Failed to load queues'

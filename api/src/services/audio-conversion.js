@@ -8,7 +8,7 @@ import { promises as fs } from 'fs';
 import { randomUUID } from 'crypto';
 import path from 'path';
 import os from 'os';
-import db from '../db.js';
+import db from '../db/connection.js';
 
 class AudioConversionService {
   constructor() {

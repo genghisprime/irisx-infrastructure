@@ -18,7 +18,7 @@
     <div class="stats-grid" v-if="stats">
       <div class="stat-card">
         <div class="stat-icon discord">
-          <i class="fab fa-discord"></i>
+          <svg viewBox="0 0 127.14 96.36" width="24" height="24"><path fill="white" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
         </div>
         <div class="stat-info">
           <span class="stat-value">{{ stats.accounts?.discord_accounts || 0 }}</span>
@@ -27,7 +27,7 @@
       </div>
       <div class="stat-card">
         <div class="stat-icon slack">
-          <i class="fab fa-slack"></i>
+          <svg viewBox="0 0 127 127" width="24" height="24"><path d="M27.2 80c0 7.3-5.9 13.2-13.2 13.2C6.7 93.2.8 87.3.8 80c0-7.3 5.9-13.2 13.2-13.2h13.2V80zm6.6 0c0-7.3 5.9-13.2 13.2-13.2 7.3 0 13.2 5.9 13.2 13.2v33c0 7.3-5.9 13.2-13.2 13.2-7.3 0-13.2-5.9-13.2-13.2V80z" fill="#E01E5A"/><path d="M47 27c-7.3 0-13.2-5.9-13.2-13.2C33.8 6.5 39.7.6 47 .6c7.3 0 13.2 5.9 13.2 13.2V27H47zm0 6.7c7.3 0 13.2 5.9 13.2 13.2 0 7.3-5.9 13.2-13.2 13.2H13.9C6.6 60.1.7 54.2.7 46.9c0-7.3 5.9-13.2 13.2-13.2H47z" fill="#36C5F0"/><path d="M99.9 46.9c0-7.3 5.9-13.2 13.2-13.2 7.3 0 13.2 5.9 13.2 13.2 0 7.3-5.9 13.2-13.2 13.2H99.9V46.9zm-6.6 0c0 7.3-5.9 13.2-13.2 13.2-7.3 0-13.2-5.9-13.2-13.2V13.8C66.9 6.5 72.8.6 80.1.6c7.3 0 13.2 5.9 13.2 13.2v33.1z" fill="#2EB67D"/><path d="M80.1 99.8c7.3 0 13.2 5.9 13.2 13.2 0 7.3-5.9 13.2-13.2 13.2-7.3 0-13.2-5.9-13.2-13.2V99.8h13.2zm0-6.6c-7.3 0-13.2-5.9-13.2-13.2 0-7.3 5.9-13.2 13.2-13.2h33.1c7.3 0 13.2 5.9 13.2 13.2 0 7.3-5.9 13.2-13.2 13.2H80.1z" fill="#ECB22E"/></svg>
         </div>
         <div class="stat-info">
           <span class="stat-value">{{ stats.accounts?.slack_accounts || 0 }}</span>
@@ -36,7 +36,7 @@
       </div>
       <div class="stat-card">
         <div class="stat-icon teams">
-          <i class="fab fa-microsoft"></i>
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="white" d="M19.404 4.058c.665 0 1.204.539 1.204 1.204v8.168a4.17 4.17 0 0 1-4.167 4.167h-1.487c-.265 0-.48-.215-.48-.48V9.529c0-.927.751-1.679 1.679-1.679h2.77V5.262c0-.665.539-1.204 1.204-1.204h-.723zm-3.893 0a2.166 2.166 0 1 1 0 4.333 2.166 2.166 0 0 1 0-4.333zm-4.096 3.05h5.287a.84.84 0 0 1 .84.84v6.385a3.437 3.437 0 0 1-3.437 3.437h0a3.437 3.437 0 0 1-3.437-3.437V7.947a.84.84 0 0 1 .747-.84zM8.5 3.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm-4.5 6h9v8.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8.5z"/></svg>
         </div>
         <div class="stat-info">
           <span class="stat-value">{{ stats.accounts?.teams_accounts || 0 }}</span>
@@ -45,7 +45,7 @@
       </div>
       <div class="stat-card">
         <div class="stat-icon telegram">
-          <i class="fab fa-telegram"></i>
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="white" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
         </div>
         <div class="stat-info">
           <span class="stat-value">{{ stats.accounts?.telegram_accounts || 0 }}</span>
@@ -54,7 +54,7 @@
       </div>
       <div class="stat-card">
         <div class="stat-icon messages">
-          <i class="fas fa-comments"></i>
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="white" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
         </div>
         <div class="stat-info">
           <span class="stat-value">{{ formatNumber(stats.messages?.total_messages) }}</span>
@@ -63,7 +63,7 @@
       </div>
       <div class="stat-card">
         <div class="stat-icon active">
-          <i class="fas fa-chart-line"></i>
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="white" d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
         </div>
         <div class="stat-info">
           <span class="stat-value">{{ formatNumber(stats.messages?.messages_24h) }}</span>
@@ -136,7 +136,7 @@
               <tr v-for="account in accounts" :key="account.id">
                 <td>
                   <span :class="['platform-badge', account.platform]">
-                    <i :class="getPlatformIcon(account.platform)"></i>
+                    <span class="platform-logo" v-html="getPlatformSvg(account.platform)"></span>
                     {{ account.platform }}
                   </span>
                 </td>
@@ -240,7 +240,7 @@
               <tr v-for="message in messages" :key="message.id">
                 <td>
                   <span :class="['platform-badge', message.platform]">
-                    <i :class="getPlatformIcon(message.platform)"></i>
+                    <span class="platform-logo" v-html="getPlatformSvg(message.platform)"></span>
                   </span>
                 </td>
                 <td>{{ message.channel_name || message.platform_channel_id }}</td>
@@ -334,7 +334,7 @@
               <tr v-for="webhook in webhooks" :key="webhook.id" :class="{ 'error-row': webhook.processing_error }">
                 <td>
                   <span :class="['platform-badge', webhook.platform]">
-                    <i :class="getPlatformIcon(webhook.platform)"></i>
+                    <span class="platform-logo" v-html="getPlatformSvg(webhook.platform)"></span>
                   </span>
                 </td>
                 <td>{{ webhook.event_type || 'unknown' }}</td>
@@ -436,7 +436,7 @@
                 </td>
                 <td>
                   <span :class="['platform-badge', account.platform]">
-                    <i :class="getPlatformIcon(account.platform)"></i>
+                    <span class="platform-logo" v-html="getPlatformSvg(account.platform)"></span>
                   </span>
                 </td>
                 <td>{{ account.account_name }}</td>
@@ -476,7 +476,7 @@
               <tr v-for="failure in healthData.recentFailures" :key="failure.id" class="error-row">
                 <td>
                   <span :class="['platform-badge', failure.platform]">
-                    <i :class="getPlatformIcon(failure.platform)"></i>
+                    <span class="platform-logo" v-html="getPlatformSvg(failure.platform)"></span>
                   </span>
                 </td>
                 <td>{{ failure.event_type }}</td>
@@ -519,7 +519,7 @@
                   <td>{{ channel.channel_name }}</td>
                   <td>
                     <span :class="['platform-badge', channel.platform]">
-                      <i :class="getPlatformIcon(channel.platform)"></i>
+                      <span class="platform-logo" v-html="getPlatformSvg(channel.platform)"></span>
                     </span>
                   </td>
                   <td>{{ channel.account_name }}</td>
@@ -551,7 +551,7 @@
                   <td>{{ item.tenant_name || 'Unknown' }}</td>
                   <td>
                     <span :class="['platform-badge', item.platform]">
-                      <i :class="getPlatformIcon(item.platform)"></i>
+                      <span class="platform-logo" v-html="getPlatformSvg(item.platform)"></span>
                     </span>
                   </td>
                   <td>{{ formatNumber(item.message_count) }}</td>
@@ -569,7 +569,7 @@
           <div class="webhook-stats-grid">
             <div v-for="stat in analytics?.webhookStats || []" :key="stat.platform" class="webhook-stat-card">
               <div class="stat-header">
-                <i :class="getPlatformIcon(stat.platform)"></i>
+                <span class="platform-logo" v-html="getPlatformSvg(stat.platform)"></span>
                 <span>{{ stat.platform }}</span>
               </div>
               <div class="stat-body">
@@ -601,7 +601,7 @@
       <div class="modal-content large">
         <div class="modal-header">
           <h2>
-            <i :class="getPlatformIcon(selectedAccount?.platform)"></i>
+            <span class="platform-logo modal-logo" v-html="getPlatformSvg(selectedAccount?.platform)"></span>
             {{ selectedAccount?.account_name }}
           </h2>
           <button @click="showAccountModal = false" class="close-btn">
@@ -947,6 +947,17 @@ function getPlatformIcon(platform) {
   return icons[platform] || 'fas fa-comment';
 }
 
+// Get platform SVG for inline rendering
+function getPlatformSvg(platform) {
+  const svgs = {
+    discord: `<svg viewBox="0 0 127.14 96.36" width="16" height="16"><path fill="currentColor" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>`,
+    slack: `<svg viewBox="0 0 127 127" width="16" height="16"><path d="M27.2 80c0 7.3-5.9 13.2-13.2 13.2C6.7 93.2.8 87.3.8 80c0-7.3 5.9-13.2 13.2-13.2h13.2V80zm6.6 0c0-7.3 5.9-13.2 13.2-13.2 7.3 0 13.2 5.9 13.2 13.2v33c0 7.3-5.9 13.2-13.2 13.2-7.3 0-13.2-5.9-13.2-13.2V80z" fill="#E01E5A"/><path d="M47 27c-7.3 0-13.2-5.9-13.2-13.2C33.8 6.5 39.7.6 47 .6c7.3 0 13.2 5.9 13.2 13.2V27H47zm0 6.7c7.3 0 13.2 5.9 13.2 13.2 0 7.3-5.9 13.2-13.2 13.2H13.9C6.6 60.1.7 54.2.7 46.9c0-7.3 5.9-13.2 13.2-13.2H47z" fill="#36C5F0"/><path d="M99.9 46.9c0-7.3 5.9-13.2 13.2-13.2 7.3 0 13.2 5.9 13.2 13.2 0 7.3-5.9 13.2-13.2 13.2H99.9V46.9zm-6.6 0c0 7.3-5.9 13.2-13.2 13.2-7.3 0-13.2-5.9-13.2-13.2V13.8C66.9 6.5 72.8.6 80.1.6c7.3 0 13.2 5.9 13.2 13.2v33.1z" fill="#2EB67D"/><path d="M80.1 99.8c7.3 0 13.2 5.9 13.2 13.2 0 7.3-5.9 13.2-13.2 13.2-7.3 0-13.2-5.9-13.2-13.2V99.8h13.2zm0-6.6c-7.3 0-13.2-5.9-13.2-13.2 0-7.3 5.9-13.2 13.2-13.2h33.1c7.3 0 13.2 5.9 13.2 13.2 0 7.3-5.9 13.2-13.2 13.2H80.1z" fill="#ECB22E"/></svg>`,
+    teams: `<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M19.404 4.058c.665 0 1.204.539 1.204 1.204v8.168a4.17 4.17 0 0 1-4.167 4.167h-1.487c-.265 0-.48-.215-.48-.48V9.529c0-.927.751-1.679 1.679-1.679h2.77V5.262c0-.665.539-1.204 1.204-1.204h-.723zm-3.893 0a2.166 2.166 0 1 1 0 4.333 2.166 2.166 0 0 1 0-4.333zm-4.096 3.05h5.287a.84.84 0 0 1 .84.84v6.385a3.437 3.437 0 0 1-3.437 3.437h0a3.437 3.437 0 0 1-3.437-3.437V7.947a.84.84 0 0 1 .747-.84zM8.5 3.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm-4.5 6h9v8.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8.5z"/></svg>`,
+    telegram: `<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>`
+  };
+  return svgs[platform] || '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>';
+}
+
 function getHealthIcon(status) {
   const icons = {
     healthy: 'fas fa-check-circle',
@@ -1102,6 +1113,22 @@ function truncate(text, length) {
   font-size: 12px;
   font-weight: 500;
   text-transform: capitalize;
+}
+
+.platform-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.platform-logo :deep(svg) {
+  width: 16px;
+  height: 16px;
+}
+
+.platform-logo.modal-logo :deep(svg) {
+  width: 24px;
+  height: 24px;
 }
 
 .platform-badge.discord {

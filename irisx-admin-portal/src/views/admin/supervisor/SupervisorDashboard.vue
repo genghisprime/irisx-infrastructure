@@ -304,7 +304,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAdminAuthStore } from '@/stores/adminAuth'
 
 const authStore = useAdminAuthStore()
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
 // State
 const loading = ref(false)
@@ -370,7 +370,7 @@ const fetchActiveCalls = async () => {
     if (filters.value.queueId) params.append('queue_id', filters.value.queueId)
     if (filters.value.agentId) params.append('agent_id', filters.value.agentId)
 
-    const response = await fetch(`${API_URL}/v1/supervisor/active-calls?${params}`, {
+    const response = await fetch(`${API_URL}/admin/supervisor/active-calls?${params}`, {
       headers: {
         'Authorization': `Bearer ${authStore.token}`,
         'Content-Type': 'application/json'
@@ -391,7 +391,7 @@ const fetchActiveCalls = async () => {
 
 const fetchMySessions = async () => {
   try {
-    const response = await fetch(`${API_URL}/v1/supervisor/sessions`, {
+    const response = await fetch(`${API_URL}/admin/supervisor/sessions`, {
       headers: {
         'Authorization': `Bearer ${authStore.token}`,
         'Content-Type': 'application/json'
@@ -409,7 +409,7 @@ const fetchMySessions = async () => {
 
 const fetchAuditLog = async () => {
   try {
-    const response = await fetch(`${API_URL}/v1/supervisor/audit-log?limit=20`, {
+    const response = await fetch(`${API_URL}/admin/supervisor/audit-log?limit=20`, {
       headers: {
         'Authorization': `Bearer ${authStore.token}`,
         'Content-Type': 'application/json'
@@ -468,7 +468,7 @@ const escalateToBarge = async (callSid) => {
 
 const stopSession = async (callSid) => {
   try {
-    const response = await fetch(`${API_URL}/v1/supervisor/calls/${callSid}/stop`, {
+    const response = await fetch(`${API_URL}/admin/supervisor/calls/${callSid}/stop`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${authStore.token}`,
@@ -491,7 +491,7 @@ const stopSession = async (callSid) => {
 
 const performSupervisorAction = async (callSid, action) => {
   try {
-    const response = await fetch(`${API_URL}/v1/supervisor/calls/${callSid}/${action}`, {
+    const response = await fetch(`${API_URL}/admin/supervisor/calls/${callSid}/${action}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${authStore.token}`,

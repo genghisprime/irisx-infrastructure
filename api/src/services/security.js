@@ -3,7 +3,7 @@
  * IP Whitelisting, Email Verification, Account Lockouts, Session Management
  */
 
-import db from '../db.js';
+import db from '../db/connection.js';
 import crypto from 'crypto';
 
 class SecurityService {

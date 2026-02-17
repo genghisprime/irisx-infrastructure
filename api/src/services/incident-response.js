@@ -11,7 +11,7 @@
  * - Post-incident review automation
  */
 
-import pool from '../db.js';
+import pool from '../db/connection.js';
 
 // Incident severity levels
 const SEVERITY = {

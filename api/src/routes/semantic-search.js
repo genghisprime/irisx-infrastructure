@@ -255,6 +255,6 @@ router.post('/embedding', zValidator('json', z.object({
 });
 
 // Import db for direct queries
-import db from '../db.js';
+import db from '../db/connection.js';
 
 export default router;

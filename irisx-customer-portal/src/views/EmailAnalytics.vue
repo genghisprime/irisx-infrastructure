@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import DashboardLayout from './dashboard/DashboardLayout.vue';
+import { downloadMultiSheetExcel } from '../utils/excelExport';
 import { Line, Bar, Doughnut } from 'vue-chartjs';
 import {
   Chart as ChartJS,
@@ -352,7 +353,96 @@ function changeRange(range) {
 }
 
 function exportData() {
-  alert('Export functionality coming soon!');
+  const filename = `email-analytics-${dateRange.value}`;
+
+  const sheets = [
+    {
+      name: 'Overview',
+      data: [
+        { metric: 'Total Sent', value: metrics.value.sent },
+        { metric: 'Delivered', value: metrics.value.delivered },
+        { metric: 'Opens', value: metrics.value.opened },
+        { metric: 'Clicks', value: metrics.value.clicked },
+        { metric: 'Bounces', value: metrics.value.bounced },
+        { metric: 'Unsubscribed', value: metrics.value.unsubscribed },
+        { metric: 'Complaints', value: metrics.value.complained },
+        { metric: 'Open Rate', value: `${metrics.value.openRate}%` },
+        { metric: 'Click Rate', value: `${metrics.value.clickRate}%` },
+        { metric: 'Bounce Rate', value: `${metrics.value.bounceRate}%` },
+        { metric: 'Engagement Score', value: engagementScore.value },
+      ],
+      columns: [
+        { key: 'metric', label: 'Metric', width: 150 },
+        { key: 'value', label: 'Value', width: 100 }
+      ]
+    },
+    {
+      name: 'Devices',
+      data: [
+        { device: 'Desktop', opens: deviceData.value.desktop },
+        { device: 'Mobile', opens: deviceData.value.mobile },
+        { device: 'Tablet', opens: deviceData.value.tablet },
+      ],
+      columns: [
+        { key: 'device', label: 'Device', width: 100 },
+        { key: 'opens', label: 'Opens', width: 80, type: 'Number' }
+      ]
+    },
+    {
+      name: 'Email Clients',
+      data: Object.entries(clientData.value).map(([client, count]) => ({
+        client,
+        opens: count
+      })),
+      columns: [
+        { key: 'client', label: 'Email Client', width: 120 },
+        { key: 'opens', label: 'Opens', width: 80, type: 'Number' }
+      ]
+    },
+    {
+      name: 'Geography',
+      data: geographicData.value.map(geo => ({
+        country: geo.country,
+        opens: geo.opens,
+        clicks: geo.clicks,
+        click_rate: `${((geo.clicks / geo.opens) * 100).toFixed(1)}%`
+      })),
+      columns: [
+        { key: 'country', label: 'Country', width: 120 },
+        { key: 'opens', label: 'Opens', width: 80, type: 'Number' },
+        { key: 'clicks', label: 'Clicks', width: 80, type: 'Number' },
+        { key: 'click_rate', label: 'Click Rate', width: 100 }
+      ]
+    },
+    {
+      name: 'Top Links',
+      data: linkClicksData.value.map((link, i) => ({
+        rank: i + 1,
+        url: link.url,
+        total_clicks: link.clicks,
+        unique_clicks: link.uniqueClicks
+      })),
+      columns: [
+        { key: 'rank', label: 'Rank', width: 50, type: 'Number' },
+        { key: 'url', label: 'URL', width: 250 },
+        { key: 'total_clicks', label: 'Total Clicks', width: 100, type: 'Number' },
+        { key: 'unique_clicks', label: 'Unique Clicks', width: 100, type: 'Number' }
+      ]
+    },
+    {
+      name: 'Bounce Reasons',
+      data: Object.entries(bounceReasonsData.value).map(([reason, count]) => ({
+        reason,
+        count
+      })),
+      columns: [
+        { key: 'reason', label: 'Reason', width: 120 },
+        { key: 'count', label: 'Count', width: 80, type: 'Number' }
+      ]
+    }
+  ];
+
+  downloadMultiSheetExcel(sheets, filename);
 }
 
 onMounted(() => {

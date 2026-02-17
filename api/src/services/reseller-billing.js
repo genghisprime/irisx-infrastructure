@@ -11,7 +11,7 @@
  * - Custom branding per reseller
  */
 
-import pool from '../db.js';
+import pool from '../db/connection.js';
 
 // Reseller tiers
 const RESELLER_TIERS = {

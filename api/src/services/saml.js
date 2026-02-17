@@ -15,7 +15,7 @@ import { SignedXml, xpath } from 'xml-crypto';
 import { DOMParser } from '@xmldom/xmldom';
 import zlib from 'zlib';
 import crypto from 'crypto';
-import pool from '../db.js';
+import pool from '../db/connection.js';
 
 // SAML constants
 const SAML_NAMESPACES = {

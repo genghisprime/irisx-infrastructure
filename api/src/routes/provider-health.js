@@ -7,7 +7,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import providerHealth from '../services/provider-health.js';
-import db from '../db.js';
+import db from '../db/connection.js';
 
 const router = new Hono();
 

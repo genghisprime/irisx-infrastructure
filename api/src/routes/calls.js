@@ -1,8 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { query, getClient } from '../db/connection.js';
-import { authenticate } from '../middleware/auth.js';
-import { authenticateJWT } from '../middleware/authMiddleware.js';
+import { authenticateJWT, authenticateJWT as authenticate } from '../middleware/authMiddleware.js';
 import { strictRateLimit } from '../middleware/rateLimit.js';
 import crypto from 'crypto';
 import { dncService } from '../services/dnc-service.js';

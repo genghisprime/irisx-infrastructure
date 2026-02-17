@@ -472,7 +472,7 @@ export default {
       }
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/v1/imports/upload`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v1/imports/upload`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${authStore.token}`
@@ -507,7 +507,7 @@ export default {
       try {
         const contacts = JSON.parse(bulkJSON.value);
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/v1/imports/bulk`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v1/imports/bulk`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${authStore.token}`,
@@ -550,7 +550,7 @@ export default {
 
       submitting.value = true;
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/v1/imports/${pendingJob.value.job_id}/map`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v1/imports/${pendingJob.value.job_id}/map`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${authStore.token}`,
@@ -582,7 +582,7 @@ export default {
 
     const authorizeGoogleSheets = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/v1/imports/google/auth`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v1/imports/google/auth`, {
           headers: {
             'Authorization': `Bearer ${authStore.token}`
           }
@@ -622,7 +622,7 @@ export default {
       uploading.value = true;
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/v1/imports/google/sheet`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v1/imports/google/sheet`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -687,7 +687,7 @@ export default {
       }
 
       // Connect to WebSocket for real-time updates
-      const wsUrl = import.meta.env.VITE_API_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+      const wsUrl = import.meta.env.VITE_API_BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://');
       websocket = new WebSocket(`${wsUrl}/ws/imports`);
 
       websocket.onopen = () => {
@@ -755,7 +755,7 @@ export default {
         }
 
         try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/v1/imports/${activeImport.value.id}`, {
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v1/imports/${activeImport.value.id}`, {
             headers: {
               'Authorization': `Bearer ${authStore.token}`
             }
@@ -788,7 +788,7 @@ export default {
       if (!activeImport.value) return;
 
       try {
-        await fetch(`${import.meta.env.VITE_API_URL}/v1/imports/${activeImport.value.id}`, {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL}/v1/imports/${activeImport.value.id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${authStore.token}`
@@ -806,7 +806,7 @@ export default {
       if (!activeImport.value) return;
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/v1/imports/${activeImport.value.id}/errors`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v1/imports/${activeImport.value.id}/errors`, {
           headers: {
             'Authorization': `Bearer ${authStore.token}`
           }
@@ -827,7 +827,7 @@ export default {
 
     const downloadJobErrors = async (jobId) => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/v1/imports/${jobId}/errors`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v1/imports/${jobId}/errors`, {
           headers: {
             'Authorization': `Bearer ${authStore.token}`
           }
@@ -897,7 +897,7 @@ export default {
       if (!confirm('Are you sure you want to delete this import job?')) return;
 
       try {
-        await fetch(`${import.meta.env.VITE_API_URL}/v1/imports/${jobId}`, {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL}/v1/imports/${jobId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${authStore.token}`

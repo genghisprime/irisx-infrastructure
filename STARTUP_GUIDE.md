@@ -318,14 +318,14 @@ in the respective directory.
 | Local Customer | http://localhost:5174 |
 | Local Agent | http://localhost:5175 |
 | Local Dashboard | http://localhost:5176 |
-| **Production API** | http://api.tazzi.com |
-| **Production Admin Portal** | http://admin.tazzi.com |
-| **Production Customer Portal** | http://customer.tazzi.com |
-| **Production Agent Desktop** | http://agent.tazzi.com |
-| **Production Dashboard** | http://dashboard.tazzi.com |
-| **Production API Docs** | http://api.tazzi.com/docs |
+| **Production API** | https://api.tazzi.com |
+| **Production Admin Portal** | https://admin.tazzi.com |
+| **Production Customer Portal** | https://customer.tazzi.com |
+| **Production Agent Desktop** | https://agent.tazzi.com |
+| **Production Dashboard** | https://dashboard.tazzi.com |
+| **Production API Docs** | https://api.tazzi.com/docs |
 
-*IP-based access also available: http://3.211.106.196/admin/, /customer/, /agent/, /dashboard/, /docs*
+*All production URLs use SSL/TLS (HTTPS) via Let's Encrypt certificates (auto-renewing)*
 
 ---
 

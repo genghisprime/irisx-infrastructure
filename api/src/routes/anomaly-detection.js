@@ -373,6 +373,6 @@ router.put('/remediations/:id/reject', async (c) => {
 });
 
 // Import db for direct queries
-import db from '../db.js';
+import db from '../db/connection.js';
 
 export default router;

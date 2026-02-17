@@ -149,6 +149,7 @@ import { query } from '../db/connection.js';
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
+import channelRouter from './channel-router.js';
 
 class TTSService {
   constructor() {
@@ -176,13 +177,17 @@ class TTSService {
   /**
    * Generate speech from text with automatic provider failover
    *
+   * UNIFIED API:
+   * Customers use IRISX voice codes (aria, marcus, elena) NOT provider names.
+   * The ChannelRouter handles provider selection and failover automatically.
+   *
    * @param {Object} params
    * @param {string} params.text - Text to convert to speech
-   * @param {string} params.voice - Voice ID (optional)
-   * @param {string} params.provider - Preferred provider (optional)
+   * @param {string} params.voice - IRISX voice code (e.g., 'aria', 'marcus') OR legacy provider voice
+   * @param {string} params.provider - DEPRECATED: Use voice codes instead. Kept for backwards compatibility.
    * @param {number} params.tenantId - Tenant ID for tracking
    * @param {boolean} params.cache - Use cache (default: true)
-   * @returns {Promise<Object>} Audio file info
+   * @returns {Promise<Object>} Audio file info (provider details hidden from response)
    */
   async generateSpeech({ text, voice, provider, tenantId, cache = true }) {
     try {
@@ -195,60 +200,15 @@ class TTSService {
         throw new Error('Text exceeds maximum length of 4096 characters');
       }
 
-      // Check cache first
-      if (cache) {
-        const cachedAudio = await this.getFromCache(text, voice, provider);
-        if (cachedAudio) {
-          console.log('[TTS] ✅ Cache hit');
-          return cachedAudio;
-        }
+      // Check if voice is an IRISX unified voice code (lowercase, no provider prefix)
+      const isUnifiedVoice = voice && /^[a-z][a-z0-9_-]*$/.test(voice) && !provider;
+
+      if (isUnifiedVoice) {
+        return await this.generateWithUnifiedVoice({ text, voice, tenantId, cache });
       }
 
-      // Determine provider order
-      const providerOrder = provider
-        ? [provider, ...this.providers.filter(p => p !== provider)]
-        : this.providers;
-
-      let lastError;
-
-      // Try each provider in order
-      for (const currentProvider of providerOrder) {
-        try {
-          console.log(`[TTS] Attempting ${currentProvider}...`);
-
-          const result = await this.generateWithProvider({
-            text,
-            voice: voice || this.defaultVoices[currentProvider],
-            provider: currentProvider,
-            tenantId
-          });
-
-          // Cache the result
-          if (cache) {
-            await this.saveToCache(text, voice, provider, result);
-          }
-
-          // Track usage
-          await this.trackUsage({
-            tenantId,
-            provider: currentProvider,
-            text,
-            audioLengthSeconds: result.duration,
-            costCents: result.costCents
-          });
-
-          console.log(`[TTS] ✅ Success with ${currentProvider}`);
-          return result;
-
-        } catch (error) {
-          console.error(`[TTS] ${currentProvider} failed:`, error.message);
-          lastError = error;
-          continue;  // Try next provider
-        }
-      }
-
-      // All providers failed
-      throw new Error(`All TTS providers failed. Last error: ${lastError.message}`);
+      // Legacy path: Direct provider/voice specification (backwards compatibility)
+      return await this.generateWithLegacyVoice({ text, voice, provider, tenantId, cache });
 
     } catch (error) {
       console.error('[TTS] Error generating speech:', error);
@@ -257,16 +217,170 @@ class TTSService {
   }
 
   /**
-   * Generate speech with specific provider
+   * Generate speech using unified voice catalog (NEW - Recommended)
+   * Customers never see provider names - they use IRISX voice codes
    */
-  async generateWithProvider({ text, voice, provider, tenantId }) {
+  async generateWithUnifiedVoice({ text, voice, tenantId, cache = true }) {
+    // Check cache first (using voice code, provider-agnostic)
+    if (cache) {
+      const cachedAudio = await this.getFromCache(text, voice, 'unified');
+      if (cachedAudio) {
+        console.log('[TTS] ✅ Cache hit (unified voice)');
+        return this.sanitizeResponseForCustomer(cachedAudio);
+      }
+    }
+
+    const requestId = crypto.randomUUID();
+
+    try {
+      // Get voice configuration from catalog
+      const voiceConfig = await channelRouter.getVoice(voice);
+
+      // Get primary provider
+      const primaryProvider = await channelRouter.selectTTSProvider(voice, tenantId);
+
+      // Build provider list with fallbacks
+      const fallbacks = await channelRouter.getTTSFallbacks(voice);
+      const providers = [primaryProvider, ...fallbacks.map(fb => ({
+        providerId: fb.provider_id,
+        providerName: fb.provider_name,
+        voiceId: fb.voice_id,
+        credentials: null // Will be fetched on demand
+      }))];
+
+      // Execute with automatic failover
+      const result = await channelRouter.executeWithFailover(
+        'tts',
+        providers,
+        async (provider) => {
+          // Get credentials if not already loaded
+          if (!provider.credentials) {
+            provider.credentials = await channelRouter.getProviderCredentials(provider.providerId);
+          }
+
+          return await this.generateWithProvider({
+            text,
+            voice: provider.voiceId,
+            provider: provider.providerName,
+            tenantId,
+            credentials: provider.credentials
+          });
+        },
+        { tenantId, requestId, metadata: { voiceCode: voice, textLength: text.length } }
+      );
+
+      // Cache the result
+      if (cache) {
+        await this.saveToCache(text, voice, 'unified', result);
+      }
+
+      // Return sanitized response (no provider info)
+      return this.sanitizeResponseForCustomer(result, voice, voiceConfig.display_name);
+
+    } catch (error) {
+      console.error('[TTS] Unified voice generation failed:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Legacy generation with direct provider/voice specification
+   * Kept for backwards compatibility but DEPRECATED
+   */
+  async generateWithLegacyVoice({ text, voice, provider, tenantId, cache = true }) {
+    // Check cache first
+    if (cache) {
+      const cachedAudio = await this.getFromCache(text, voice, provider);
+      if (cachedAudio) {
+        console.log('[TTS] ✅ Cache hit');
+        return cachedAudio;
+      }
+    }
+
+    // Determine provider order
+    const providerOrder = provider
+      ? [provider, ...this.providers.filter(p => p !== provider)]
+      : this.providers;
+
+    let lastError;
+
+    // Try each provider in order
+    for (const currentProvider of providerOrder) {
+      try {
+        console.log(`[TTS] Attempting ${currentProvider}...`);
+
+        const result = await this.generateWithProvider({
+          text,
+          voice: voice || this.defaultVoices[currentProvider],
+          provider: currentProvider,
+          tenantId
+        });
+
+        // Cache the result
+        if (cache) {
+          await this.saveToCache(text, voice, provider, result);
+        }
+
+        // Track usage
+        await this.trackUsage({
+          tenantId,
+          provider: currentProvider,
+          text,
+          audioLengthSeconds: result.duration,
+          costCents: result.costCents
+        });
+
+        console.log(`[TTS] ✅ Success with ${currentProvider}`);
+        return result;
+
+      } catch (error) {
+        console.error(`[TTS] ${currentProvider} failed:`, error.message);
+        lastError = error;
+        continue;  // Try next provider
+      }
+    }
+
+    // All providers failed
+    throw new Error(`All TTS providers failed. Last error: ${lastError.message}`);
+  }
+
+  /**
+   * Remove provider information from response for customer API
+   * Customers should never see internal provider details
+   */
+  sanitizeResponseForCustomer(result, voiceCode = null, voiceDisplayName = null) {
+    return {
+      filepath: result.filepath,
+      filename: result.filename,
+      format: result.format,
+      voice: voiceCode || result.voice,
+      voiceName: voiceDisplayName || result.voice,
+      duration: result.duration,
+      sizeBytes: result.sizeBytes,
+      // Note: costCents is IRISX billing rate, not actual provider cost
+      costCents: result.costCents,
+      // Explicitly exclude: provider, text, engine, etc.
+    };
+  }
+
+  /**
+   * Generate speech with specific provider
+   *
+   * @param {Object} params
+   * @param {string} params.text - Text to synthesize
+   * @param {string} params.voice - Provider-specific voice ID
+   * @param {string} params.provider - Provider name (openai, elevenlabs, aws_polly)
+   * @param {number} params.tenantId - Tenant ID for billing
+   * @param {Object} params.credentials - Optional pre-fetched credentials (for unified routing)
+   */
+  async generateWithProvider({ text, voice, provider, tenantId, credentials }) {
     switch (provider) {
       case 'openai':
-        return await this.generateWithOpenAI(text, voice, tenantId);
+        return await this.generateWithOpenAI(text, voice, tenantId, credentials);
       case 'elevenlabs':
-        return await this.generateWithElevenLabs(text, voice, tenantId);
+        return await this.generateWithElevenLabs(text, voice, tenantId, credentials);
       case 'aws_polly':
-        return await this.generateWithAWSPolly(text, voice, tenantId);
+        return await this.generateWithAWSPolly(text, voice, tenantId, credentials);
       default:
         throw new Error(`Unknown TTS provider: ${provider}`);
     }
@@ -275,9 +389,14 @@ class TTSService {
   /**
    * Generate speech with OpenAI TTS
    * Cost: $0.015 per 1,000 characters
+   *
+   * @param {string} text - Text to synthesize
+   * @param {string} voice - OpenAI voice (alloy, echo, fable, onyx, nova, shimmer)
+   * @param {number} tenantId - Tenant ID
+   * @param {Object} credentials - Optional credentials from unified routing
    */
-  async generateWithOpenAI(text, voice, tenantId) {
-    const apiKey = process.env.OPENAI_API_KEY;
+  async generateWithOpenAI(text, voice, tenantId, credentials = null) {
+    const apiKey = credentials?.api_key || process.env.OPENAI_API_KEY;
     if (!apiKey) {
       throw new Error('OpenAI API key not configured');
     }
@@ -332,9 +451,14 @@ class TTSService {
   /**
    * Generate speech with ElevenLabs TTS
    * Cost: ~$0.30 per 1,000 characters
+   *
+   * @param {string} text - Text to synthesize
+   * @param {string} voice - ElevenLabs voice ID
+   * @param {number} tenantId - Tenant ID
+   * @param {Object} credentials - Optional credentials from unified routing
    */
-  async generateWithElevenLabs(text, voice, tenantId) {
-    const apiKey = process.env.ELEVENLABS_API_KEY;
+  async generateWithElevenLabs(text, voice, tenantId, credentials = null) {
+    const apiKey = credentials?.api_key || process.env.ELEVENLABS_API_KEY;
     if (!apiKey) {
       throw new Error('ElevenLabs API key not configured');
     }
@@ -401,11 +525,16 @@ class TTSService {
    * - Neural TTS (NTTS) for ultra-realistic speech
    * - SSML support for advanced control
    * - Newscaster style available
+   *
+   * @param {string} text - Text to synthesize
+   * @param {string} voice - AWS Polly voice ID (Joanna, Matthew, etc.)
+   * @param {number} tenantId - Tenant ID
+   * @param {Object} credentials - Optional credentials from unified routing
    */
-  async generateWithAWSPolly(text, voice, tenantId) {
-    const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-    const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-    const region = process.env.AWS_REGION || 'us-east-1';
+  async generateWithAWSPolly(text, voice, tenantId, credentials = null) {
+    const accessKeyId = credentials?.access_key_id || process.env.AWS_ACCESS_KEY_ID;
+    const secretAccessKey = credentials?.secret_access_key || process.env.AWS_SECRET_ACCESS_KEY;
+    const region = credentials?.region || process.env.AWS_REGION || 'us-east-1';
 
     if (!accessKeyId || !secretAccessKey) {
       throw new Error('AWS credentials not configured');
@@ -699,9 +828,30 @@ class TTSService {
   }
 
   /**
-   * List available voices for a provider
+   * List available voices (UNIFIED API - Recommended)
+   *
+   * Returns IRISX voice names that customers should use.
+   * Provider details are hidden - customers just pick a voice name.
+   *
+   * @param {Object} filters - Optional filters (quality_tier, gender, language)
+   * @returns {Promise<Array>} List of available voices
+   */
+  async listUnifiedVoices(filters = {}) {
+    return await channelRouter.listVoices(filters);
+  }
+
+  /**
+   * List available voices for a provider (LEGACY - Deprecated)
+   *
+   * @deprecated Use listUnifiedVoices() instead
    */
   async listVoices(provider = 'openai') {
+    // If no provider specified, return unified voices
+    if (!provider || provider === 'unified') {
+      return await this.listUnifiedVoices();
+    }
+
+    // Legacy provider-specific voices
     const voices = {
       openai: [
         { id: 'alloy', name: 'Alloy', gender: 'neutral' },

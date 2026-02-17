@@ -3,7 +3,7 @@
  * Statistical anomaly detection with auto-remediation
  */
 
-import db from '../db.js';
+import db from '../db/connection.js';
 
 class AnomalyDetectionService {
   constructor() {

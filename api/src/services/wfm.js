@@ -3,7 +3,7 @@
  * Shift scheduling, forecasting, adherence tracking
  */
 
-import db from '../db.js';
+import db from '../db/connection.js';
 
 class WFMService {
   // =========================================
@@ -127,6 +127,72 @@ class WFMService {
     `, [agentId, tenantId]);
 
     return result.rows;
+  }
+
+  // =========================================
+  // AGENT SHIFT PREFERENCES
+  // =========================================
+
+  async setAgentShiftPreferences(agentId, tenantId, preferences) {
+    const prefJson = JSON.stringify(preferences);
+
+    await db.query(`
+      INSERT INTO agent_preferences (agent_id, tenant_id, preference_type, preferences)
+      VALUES ($1, $2, 'shift_types', $3)
+      ON CONFLICT (agent_id, preference_type)
+      DO UPDATE SET preferences = $3, updated_at = NOW()
+    `, [agentId, tenantId, prefJson]);
+
+    return preferences;
+  }
+
+  async getAgentShiftPreferences(agentId, tenantId) {
+    const result = await db.query(`
+      SELECT preferences FROM agent_preferences
+      WHERE agent_id = $1 AND tenant_id = $2 AND preference_type = 'shift_types'
+    `, [agentId, tenantId]);
+
+    if (result.rows.length === 0) {
+      return {
+        morning: 'acceptable',
+        day: 'preferred',
+        evening: 'acceptable',
+        night: 'avoid',
+        weekend: 'acceptable'
+      };
+    }
+
+    return result.rows[0].preferences;
+  }
+
+  async setAgentHoursPreferences(agentId, tenantId, preferences) {
+    const prefJson = JSON.stringify(preferences);
+
+    await db.query(`
+      INSERT INTO agent_preferences (agent_id, tenant_id, preference_type, preferences)
+      VALUES ($1, $2, 'weekly_hours', $3)
+      ON CONFLICT (agent_id, preference_type)
+      DO UPDATE SET preferences = $3, updated_at = NOW()
+    `, [agentId, tenantId, prefJson]);
+
+    return preferences;
+  }
+
+  async getAgentHoursPreferences(agentId, tenantId) {
+    const result = await db.query(`
+      SELECT preferences FROM agent_preferences
+      WHERE agent_id = $1 AND tenant_id = $2 AND preference_type = 'weekly_hours'
+    `, [agentId, tenantId]);
+
+    if (result.rows.length === 0) {
+      return {
+        target: 40,
+        maximum: 45,
+        overtimeAvailable: true
+      };
+    }
+
+    return result.rows[0].preferences;
   }
 
   // =========================================
@@ -1216,6 +1282,217 @@ class WFMService {
       swaps: result.rows,
       pagination: { page, limit }
     };
+  }
+
+  async declineShiftSwap(swapId, agentId, tenantId) {
+    // Verify the swap is targeted at this agent
+    const swapResult = await db.query(`
+      SELECT * FROM shift_swaps
+      WHERE id = $1 AND tenant_id = $2 AND status = 'pending'
+        AND (target_agent_id = $3 OR target_agent_id IS NULL)
+    `, [swapId, tenantId, agentId]);
+
+    if (swapResult.rows.length === 0) {
+      throw new Error('Swap request not found or cannot be declined');
+    }
+
+    await db.query(`
+      UPDATE shift_swaps
+      SET status = 'declined', notes = CONCAT(COALESCE(notes, ''), ' [Declined by agent]'), updated_at = NOW()
+      WHERE id = $1
+    `, [swapId]);
+
+    return db.query(`SELECT * FROM shift_swaps WHERE id = $1`, [swapId]).then(r => r.rows[0]);
+  }
+
+  // =========================================
+  // SHIFT OFFERS
+  // =========================================
+
+  async createShiftOffer(tenantId, agentId, shiftId, offerType, preferredDate, notes) {
+    // Verify shift belongs to agent and is in the future
+    const shiftResult = await db.query(`
+      SELECT * FROM scheduled_shifts
+      WHERE id = $1 AND agent_id = $2 AND tenant_id = $3
+        AND date >= CURRENT_DATE
+        AND status != 'cancelled'
+    `, [shiftId, agentId, tenantId]);
+
+    if (shiftResult.rows.length === 0) {
+      throw new Error('Shift not found or cannot be offered');
+    }
+
+    // Check if shift is already being offered
+    const existingOffer = await db.query(`
+      SELECT id FROM shift_offers
+      WHERE shift_id = $1 AND status = 'open'
+    `, [shiftId]);
+
+    if (existingOffer.rows.length > 0) {
+      throw new Error('This shift is already being offered');
+    }
+
+    const result = await db.query(`
+      INSERT INTO shift_offers (
+        tenant_id, shift_id, offering_agent_id, offer_type, preferred_trade_date, notes
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
+    `, [tenantId, shiftId, agentId, offerType, preferredDate, notes]);
+
+    return result.rows[0];
+  }
+
+  async listShiftOffers(tenantId, options = {}) {
+    const { agent_id, exclude_agent_id, status = 'open', page = 1, limit = 50 } = options;
+
+    let query = `
+      SELECT
+        so.*,
+        u.name as agent_name,
+        sch.date as shift_date,
+        sch.start_time as shift_start,
+        sch.end_time as shift_end,
+        claimer.name as claimed_by_name
+      FROM shift_offers so
+      JOIN users u ON u.id = so.offering_agent_id
+      JOIN scheduled_shifts sch ON sch.id = so.shift_id
+      LEFT JOIN users claimer ON claimer.id = so.claimed_by_agent_id
+      WHERE so.tenant_id = $1
+    `;
+    const values = [tenantId];
+    let idx = 2;
+
+    if (agent_id) {
+      query += ` AND so.offering_agent_id = $${idx++}`;
+      values.push(agent_id);
+    }
+
+    if (exclude_agent_id) {
+      query += ` AND so.offering_agent_id != $${idx++}`;
+      values.push(exclude_agent_id);
+    }
+
+    if (status) {
+      query += ` AND so.status = $${idx++}`;
+      values.push(status);
+    }
+
+    // Only show offers for future shifts
+    query += ` AND sch.date >= CURRENT_DATE`;
+
+    query += ` ORDER BY sch.date ASC, sch.start_time ASC LIMIT $${idx++} OFFSET $${idx++}`;
+    values.push(limit, (page - 1) * limit);
+
+    const result = await db.query(query, values);
+
+    return {
+      offers: result.rows,
+      pagination: { page, limit }
+    };
+  }
+
+  async claimShiftOffer(offerId, claimingAgentId, tenantId) {
+    // Get the offer
+    const offerResult = await db.query(`
+      SELECT so.*, sch.date, sch.start_time, sch.end_time
+      FROM shift_offers so
+      JOIN scheduled_shifts sch ON sch.id = so.shift_id
+      WHERE so.id = $1 AND so.tenant_id = $2 AND so.status = 'open'
+    `, [offerId, tenantId]);
+
+    if (offerResult.rows.length === 0) {
+      throw new Error('Offer not found or no longer available');
+    }
+
+    const offer = offerResult.rows[0];
+
+    // Cannot claim own offer
+    if (offer.offering_agent_id === claimingAgentId) {
+      throw new Error('Cannot claim your own offer');
+    }
+
+    // Check for scheduling conflicts
+    const conflictResult = await db.query(`
+      SELECT id FROM scheduled_shifts
+      WHERE agent_id = $1 AND tenant_id = $2 AND date = $3 AND status != 'cancelled'
+        AND (
+          (start_time <= $4 AND end_time > $4)
+          OR (start_time < $5 AND end_time >= $5)
+          OR (start_time >= $4 AND end_time <= $5)
+        )
+    `, [claimingAgentId, tenantId, offer.date, offer.start_time, offer.end_time]);
+
+    if (conflictResult.rows.length > 0) {
+      throw new Error('You have a conflicting shift at this time');
+    }
+
+    // Update offer status
+    await db.query(`
+      UPDATE shift_offers
+      SET status = 'claimed', claimed_by_agent_id = $1, claimed_at = NOW()
+      WHERE id = $2
+    `, [claimingAgentId, offerId]);
+
+    // Check if auto-approve is enabled
+    const constraints = await this.getSchedulingConstraints(tenantId);
+
+    if (constraints.auto_approve_swaps) {
+      return this.approveShiftOffer(offerId, tenantId, null); // null = system approved
+    }
+
+    return db.query(`
+      SELECT so.*, u.name as claimed_by_name
+      FROM shift_offers so
+      LEFT JOIN users u ON u.id = so.claimed_by_agent_id
+      WHERE so.id = $1
+    `, [offerId]).then(r => r.rows[0]);
+  }
+
+  async approveShiftOffer(offerId, tenantId, approverId) {
+    const offerResult = await db.query(`
+      SELECT * FROM shift_offers WHERE id = $1 AND tenant_id = $2 AND status = 'claimed'
+    `, [offerId, tenantId]);
+
+    if (offerResult.rows.length === 0) {
+      throw new Error('Offer not found or not ready for approval');
+    }
+
+    const offer = offerResult.rows[0];
+
+    // Transfer the shift to the claiming agent
+    await db.query(`
+      UPDATE scheduled_shifts
+      SET agent_id = $1, notes = CONCAT(COALESCE(notes, ''), ' [Transferred via offer ', $2::text, ']'), updated_at = NOW()
+      WHERE id = $3
+    `, [offer.claimed_by_agent_id, offerId, offer.shift_id]);
+
+    // Update offer status
+    await db.query(`
+      UPDATE shift_offers
+      SET status = 'completed', approved_by = $1, approved_at = NOW()
+      WHERE id = $2
+    `, [approverId, offerId]);
+
+    return db.query(`SELECT * FROM shift_offers WHERE id = $1`, [offerId]).then(r => r.rows[0]);
+  }
+
+  async cancelShiftOffer(offerId, agentId, tenantId) {
+    // Verify ownership
+    const offerResult = await db.query(`
+      SELECT * FROM shift_offers
+      WHERE id = $1 AND tenant_id = $2 AND offering_agent_id = $3 AND status IN ('open', 'claimed')
+    `, [offerId, tenantId, agentId]);
+
+    if (offerResult.rows.length === 0) {
+      throw new Error('Offer not found or cannot be cancelled');
+    }
+
+    await db.query(`
+      UPDATE shift_offers
+      SET status = 'cancelled', updated_at = NOW()
+      WHERE id = $1
+    `, [offerId]);
   }
 }
 

@@ -3,7 +3,7 @@
  * MRR, Churn, LTV, and Revenue Analytics
  */
 
-import db from '../db.js';
+import db from '../db/connection.js';
 
 class BillingAnalyticsService {
   // ===========================================

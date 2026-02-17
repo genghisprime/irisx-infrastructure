@@ -162,11 +162,25 @@ const routes = [
         component: () => import('../views/admin/ivr/IVRManagement.vue'),
         meta: { requiresRole: 'admin' }
       },
-      // Social Media Hub
+      // Social Media Hub (Discord, Slack, Teams, Telegram)
       {
         path: 'social-media',
         name: 'SocialMediaHub',
         component: () => import('../views/admin/social/SocialMediaHub.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // Traditional Social Media (Facebook, Twitter, Instagram, LinkedIn)
+      {
+        path: 'traditional-social',
+        name: 'TraditionalSocialConfig',
+        component: () => import('../views/admin/social/TraditionalSocialConfig.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // AMD (Answering Machine Detection)
+      {
+        path: 'amd',
+        name: 'AMDConfiguration',
+        component: () => import('../views/AMDConfiguration.vue'),
         meta: { requiresRole: 'admin' }
       },
       // Billing Rates Management
@@ -271,6 +285,27 @@ const routes = [
         path: 'api-keys',
         name: 'ApiKeyManagement',
         component: () => import('../views/admin/api-keys/ApiKeyManagement.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // Platform Reports
+      {
+        path: 'reports',
+        name: 'PlatformReports',
+        component: () => import('../views/admin/reports/PlatformReports.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // Translation Services
+      {
+        path: 'translation',
+        name: 'TranslationManagement',
+        component: () => import('../views/admin/translation/TranslationManagement.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // AI Engine Management
+      {
+        path: 'ai',
+        name: 'AIManagement',
+        component: () => import('../views/admin/ai/AIManagement.vue'),
         meta: { requiresRole: 'admin' }
       }
     ]

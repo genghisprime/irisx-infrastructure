@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { authenticate, requireRole } from '../middleware/auth.js';
+import { authenticateJWT as authenticate, requireRole } from '../middleware/authMiddleware.js';
 import wfmService from '../services/wfm.js';
 
 const wfm = new Hono();
@@ -942,6 +942,293 @@ wfm.post('/swaps/:id/approve', requireRole(['admin', 'supervisor']), async (c) =
   } catch (error) {
     console.error('[WFM] Approve swap error:', error);
     return c.json({ error: error.message || 'Failed to approve swap' }, 500);
+  }
+});
+
+// =========================================
+// AGENT PREFERENCES
+// =========================================
+
+/**
+ * POST /wfm/preferences/shifts
+ * Set agent shift type preferences
+ */
+wfm.post('/preferences/shifts', async (c) => {
+  try {
+    const user = c.get('user');
+    const body = await c.req.json();
+
+    const schema = z.object({
+      morning: z.enum(['preferred', 'acceptable', 'avoid']).optional(),
+      day: z.enum(['preferred', 'acceptable', 'avoid']).optional(),
+      evening: z.enum(['preferred', 'acceptable', 'avoid']).optional(),
+      night: z.enum(['preferred', 'acceptable', 'avoid']).optional(),
+      weekend: z.enum(['preferred', 'acceptable', 'avoid']).optional()
+    });
+
+    const validated = schema.parse(body);
+    const preferences = await wfmService.setAgentShiftPreferences(user.id, user.tenantId, validated);
+
+    return c.json({
+      success: true,
+      data: preferences
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ error: 'Validation error', details: error.errors }, 400);
+    }
+    console.error('[WFM] Set shift preferences error:', error);
+    return c.json({ error: error.message || 'Failed to set preferences' }, 500);
+  }
+});
+
+/**
+ * GET /wfm/preferences/shifts
+ * Get agent shift type preferences
+ */
+wfm.get('/preferences/shifts', async (c) => {
+  try {
+    const user = c.get('user');
+    const preferences = await wfmService.getAgentShiftPreferences(user.id, user.tenantId);
+
+    return c.json({
+      success: true,
+      data: preferences
+    });
+  } catch (error) {
+    console.error('[WFM] Get shift preferences error:', error);
+    return c.json({ error: 'Failed to get preferences' }, 500);
+  }
+});
+
+/**
+ * POST /wfm/preferences/hours
+ * Set agent weekly hours preferences
+ */
+wfm.post('/preferences/hours', async (c) => {
+  try {
+    const user = c.get('user');
+    const body = await c.req.json();
+
+    const schema = z.object({
+      target: z.number().int().min(8).max(60),
+      maximum: z.number().int().min(8).max(60),
+      overtimeAvailable: z.boolean().optional()
+    });
+
+    const validated = schema.parse(body);
+    const preferences = await wfmService.setAgentHoursPreferences(user.id, user.tenantId, validated);
+
+    return c.json({
+      success: true,
+      data: preferences
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ error: 'Validation error', details: error.errors }, 400);
+    }
+    console.error('[WFM] Set hours preferences error:', error);
+    return c.json({ error: error.message || 'Failed to set preferences' }, 500);
+  }
+});
+
+/**
+ * GET /wfm/preferences/hours
+ * Get agent weekly hours preferences
+ */
+wfm.get('/preferences/hours', async (c) => {
+  try {
+    const user = c.get('user');
+    const preferences = await wfmService.getAgentHoursPreferences(user.id, user.tenantId);
+
+    return c.json({
+      success: true,
+      data: preferences
+    });
+  } catch (error) {
+    console.error('[WFM] Get hours preferences error:', error);
+    return c.json({ error: 'Failed to get preferences' }, 500);
+  }
+});
+
+// =========================================
+// SHIFT OFFERS
+// =========================================
+
+/**
+ * POST /wfm/offers
+ * Create a shift offer (give away or trade)
+ */
+wfm.post('/offers', async (c) => {
+  try {
+    const user = c.get('user');
+    const body = await c.req.json();
+
+    const schema = z.object({
+      shift_id: z.string().uuid(),
+      offer_type: z.enum(['giveaway', 'trade']),
+      preferred_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+      notes: z.string().optional()
+    });
+
+    const validated = schema.parse(body);
+    const offer = await wfmService.createShiftOffer(
+      user.tenantId,
+      user.id,
+      validated.shift_id,
+      validated.offer_type,
+      validated.preferred_date,
+      validated.notes
+    );
+
+    return c.json({
+      success: true,
+      data: offer
+    }, 201);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ error: 'Validation error', details: error.errors }, 400);
+    }
+    console.error('[WFM] Create offer error:', error);
+    return c.json({ error: error.message || 'Failed to create offer' }, 500);
+  }
+});
+
+/**
+ * GET /wfm/offers
+ * List shift offers
+ */
+wfm.get('/offers', async (c) => {
+  try {
+    const user = c.get('user');
+    const { status = 'open', page = '1', limit = '50' } = c.req.query();
+
+    const result = await wfmService.listShiftOffers(user.tenantId, {
+      status,
+      exclude_agent_id: user.id, // Don't show own offers
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+
+    return c.json({
+      success: true,
+      data: result.offers,
+      pagination: result.pagination
+    });
+  } catch (error) {
+    console.error('[WFM] List offers error:', error);
+    return c.json({ error: 'Failed to list offers' }, 500);
+  }
+});
+
+/**
+ * GET /wfm/offers/my
+ * List my shift offers
+ */
+wfm.get('/offers/my', async (c) => {
+  try {
+    const user = c.get('user');
+    const { status, page = '1', limit = '50' } = c.req.query();
+
+    const result = await wfmService.listShiftOffers(user.tenantId, {
+      agent_id: user.id,
+      status,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+
+    return c.json({
+      success: true,
+      data: result.offers,
+      pagination: result.pagination
+    });
+  } catch (error) {
+    console.error('[WFM] List my offers error:', error);
+    return c.json({ error: 'Failed to list offers' }, 500);
+  }
+});
+
+/**
+ * POST /wfm/offers/:id/claim
+ * Claim a shift offer
+ */
+wfm.post('/offers/:id/claim', async (c) => {
+  try {
+    const user = c.get('user');
+    const offerId = c.req.param('id');
+
+    const offer = await wfmService.claimShiftOffer(offerId, user.id, user.tenantId);
+
+    return c.json({
+      success: true,
+      data: offer
+    });
+  } catch (error) {
+    console.error('[WFM] Claim offer error:', error);
+    return c.json({ error: error.message || 'Failed to claim offer' }, 500);
+  }
+});
+
+/**
+ * POST /wfm/offers/:id/approve
+ * Approve a claimed shift offer (supervisor)
+ */
+wfm.post('/offers/:id/approve', requireRole(['admin', 'supervisor']), async (c) => {
+  try {
+    const user = c.get('user');
+    const offerId = c.req.param('id');
+
+    const offer = await wfmService.approveShiftOffer(offerId, user.tenantId, user.id);
+
+    return c.json({
+      success: true,
+      data: offer
+    });
+  } catch (error) {
+    console.error('[WFM] Approve offer error:', error);
+    return c.json({ error: error.message || 'Failed to approve offer' }, 500);
+  }
+});
+
+/**
+ * DELETE /wfm/offers/:id
+ * Cancel a shift offer
+ */
+wfm.delete('/offers/:id', async (c) => {
+  try {
+    const user = c.get('user');
+    const offerId = c.req.param('id');
+
+    await wfmService.cancelShiftOffer(offerId, user.id, user.tenantId);
+
+    return c.json({
+      success: true,
+      message: 'Offer cancelled'
+    });
+  } catch (error) {
+    console.error('[WFM] Cancel offer error:', error);
+    return c.json({ error: error.message || 'Failed to cancel offer' }, 500);
+  }
+});
+
+/**
+ * POST /wfm/swaps/:id/decline
+ * Decline a swap request
+ */
+wfm.post('/swaps/:id/decline', async (c) => {
+  try {
+    const user = c.get('user');
+    const swapId = c.req.param('id');
+
+    const swap = await wfmService.declineShiftSwap(swapId, user.id, user.tenantId);
+
+    return c.json({
+      success: true,
+      data: swap
+    });
+  } catch (error) {
+    console.error('[WFM] Decline swap error:', error);
+    return c.json({ error: error.message || 'Failed to decline swap' }, 500);
   }
 });
 

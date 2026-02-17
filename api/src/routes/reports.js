@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { authenticate } from '../middleware/auth.js';
+import { authenticateJWT as authenticate } from '../middleware/authMiddleware.js';
 import reportsService from '../services/reports.js';
 
 const reports = new Hono();

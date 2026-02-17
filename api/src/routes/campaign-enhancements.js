@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { authenticate, requireRole } from '../middleware/auth.js';
+import { authenticateJWT as authenticate, requireRole } from '../middleware/authMiddleware.js';
 import campaignEnhancementsService from '../services/campaign-enhancements.js';
 
 const campaignEnhancements = new Hono();

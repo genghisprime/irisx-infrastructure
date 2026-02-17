@@ -11,7 +11,7 @@
  * - Peak load prediction
  */
 
-import pool from '../db.js';
+import pool from '../db/connection.js';
 
 // Resource types being tracked
 const RESOURCE_TYPES = {

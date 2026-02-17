@@ -111,14 +111,34 @@ import emailTracking from './routes/email-tracking.js'; // Email Tracking (pixel
 import campaignTemplates from './routes/campaign-templates.js'; // Campaign Templates CRUD
 import unsubscribe from './routes/unsubscribe.js'; // Unsubscribe System (RFC 8058, preference center, suppression)
 import cdn from './routes/cdn.js'; // CDN/CloudFront Integration (signed URLs, cache invalidation)
-import adminIncidents from './routes/admin-incidents.js'; // Incident Response Automation
-import capacityPlanning from './routes/capacity-planning.js'; // Capacity Planning & Forecasting
-import saml from './routes/saml.js'; // SAML 2.0 SSO
-import adminResellers from './routes/admin-resellers.js'; // Reseller/White-Label Billing
-import nats from './routes/nats.js'; // NATS Messaging Integration
-import adminClickhouse from './routes/admin-clickhouse.js'; // ClickHouse Data Warehouse
-import voiceCloning from './routes/voice-cloning.js'; // Voice Cloning (custom TTS voices)
-import webrtcStreaming from './routes/webrtc-streaming.js'; // WebRTC Audio Streaming
+// TODO: Convert these to Hono (currently use Express Router)
+// import adminIncidents from './routes/admin-incidents.js'; // Incident Response Automation
+// import capacityPlanning from './routes/capacity-planning.js'; // Capacity Planning & Forecasting
+// import saml from './routes/saml.js'; // SAML 2.0 SSO
+// import adminResellers from './routes/admin-resellers.js'; // Reseller/White-Label Billing
+// TODO: These use Express Router - need conversion to Hono
+// import nats from './routes/nats.js'; // NATS Messaging Integration
+// import adminClickhouse from './routes/admin-clickhouse.js'; // ClickHouse Data Warehouse
+// import voiceCloning from './routes/voice-cloning.js'; // Voice Cloning (custom TTS voices)
+// import webrtcStreaming from './routes/webrtc-streaming.js'; // WebRTC Audio Streaming
+import adminSupervisor from './routes/admin-supervisor.js'; // Admin Supervisor (Monitor/Whisper/Barge)
+import systemStatus from './routes/system-status.js'; // System Health & Metrics
+import socialOAuth from './routes/social-oauth.js'; // Social Media OAuth (Facebook, Twitter, Instagram, LinkedIn)
+import traditionalSocial from './routes/traditional-social.js'; // Traditional Social Messaging (FB Messenger, Twitter DM, Instagram DM)
+import adminTraditionalSocial from './routes/admin-traditional-social.js'; // Admin Traditional Social Platform Config
+import knowledgeBase from './routes/knowledge-base.js'; // Knowledge Base (Articles, Categories, Search)
+import callbackQueue from './routes/callback-queue.js'; // Callback Queue (Scheduling, Requests, Rules)
+import tenantSettings from './routes/tenant-settings.js'; // Tenant Settings (Profile, Branding, Security)
+import ivrFlowBuilder from './routes/ivr-flow-builder.js'; // Visual IVR Flow Builder (drag-and-drop editor)
+import qualityManagement from './routes/quality-management.js'; // Quality Management (scorecards, evaluations, coaching)
+import crmIntegrations from './routes/crm-integrations.js'; // CRM Integrations (Salesforce, HubSpot, Zendesk)
+import amd from './routes/amd.js'; // Answering Machine Detection
+import screenPop from './routes/screen-pop.js'; // Screen Pop / Customer Info Panel
+import adminReports from './routes/admin-reports.js'; // Admin Platform Reports
+import scripts from './routes/scripts.js'; // Agent Scripts / Guided Workflows
+import translation from './routes/translation.js'; // Multi-provider Translation Services
+import aiEngine from './routes/ai-engine.js'; // AI Engine (Multi-provider LLM Abstraction)
+import adminAI from './routes/admin-ai.js'; // Admin AI Engine Management
 import { initWebSocket } from './services/websocket.js';
 import { initWallboardWebSocket } from './services/wallboard-websocket.js';
 import { initStreamingWebSocket } from './services/streaming-websocket.js';
@@ -501,14 +521,34 @@ app.route('/v1/templates', campaignTemplates); // Campaign Templates CRUD (SMS, 
 app.route('/unsubscribe', unsubscribe); // Unsubscribe System (public unsubscribe pages)
 app.route('/v1/unsubscribe', unsubscribe); // Unsubscribe API (authenticated endpoints)
 app.route('/v1/cdn', cdn); // CDN/CloudFront (signed URLs, cache invalidation, media delivery)
-app.route('/admin/incidents', adminIncidents); // Incident Response Automation (escalation, runbooks, postmortems)
-app.route('/admin/capacity', capacityPlanning); // Capacity Planning & Forecasting (trends, recommendations, scaling)
-app.route('/auth/saml', saml); // SAML 2.0 SSO (SP metadata, login, callback, logout, config)
-app.route('/admin/resellers', adminResellers); // Reseller/White-Label Billing (commissions, invoices, payouts)
-app.route('/v1/nats', nats); // NATS Messaging (campaign queues, call events, analytics)
-app.route('/admin/clickhouse', adminClickhouse); // ClickHouse Data Warehouse (analytics, ingestion, sync)
-app.route('/v1/voices', voiceCloning); // Voice Cloning (create, manage, generate with cloned voices)
-app.route('/v1/webrtc', webrtcStreaming); // WebRTC Audio Streaming (streams, sessions, rooms, recording)
+// TODO: Convert these to Hono (currently use Express Router)
+// app.route('/admin/incidents', adminIncidents); // Incident Response Automation
+// app.route('/admin/capacity', capacityPlanning); // Capacity Planning & Forecasting
+// app.route('/auth/saml', saml); // SAML 2.0 SSO
+// app.route('/admin/resellers', adminResellers); // Reseller/White-Label Billing
+// TODO: These use Express Router - need conversion to Hono
+// app.route('/v1/nats', nats); // NATS Messaging
+// app.route('/admin/clickhouse', adminClickhouse); // ClickHouse Data Warehouse
+// app.route('/v1/voices', voiceCloning); // Voice Cloning
+app.route('/admin/supervisor', adminSupervisor); // Admin Supervisor (Monitor/Whisper/Barge for admin portal)
+app.route('/admin/system', systemStatus); // System Health & Metrics (infrastructure monitoring)
+// app.route('/v1/webrtc', webrtcStreaming); // WebRTC Audio Streaming (uses Express)
+app.route('/v1/social/oauth', socialOAuth); // Social Media OAuth (Facebook, Twitter, Instagram, LinkedIn)
+app.route('/v1/social/traditional', traditionalSocial); // Traditional Social Messaging (FB Messenger, Twitter DM, Instagram DM)
+app.route('/admin/traditional-social', adminTraditionalSocial); // Admin Traditional Social Platform Config
+app.route('/v1/knowledge', knowledgeBase); // Knowledge Base (Articles, Categories, Search)
+app.route('/v1/callbacks', callbackQueue); // Callback Queue (Scheduling, Requests, Rules)
+app.route('/v1/tenant/settings', tenantSettings); // Tenant Settings (Profile, Branding, Security)
+app.route('/v1/ivr', ivrFlowBuilder); // Visual IVR Flow Builder (drag-and-drop editor)
+app.route('/v1/quality', qualityManagement); // Quality Management (scorecards, evaluations, coaching)
+app.route('/v1/crm', crmIntegrations); // CRM Integrations (Salesforce, HubSpot, Zendesk, Intercom)
+app.route('/v1/amd', amd); // Answering Machine Detection
+app.route('/v1/screen-pop', screenPop); // Screen Pop / Customer Info Panel
+app.route('/admin/reports', adminReports); // Admin Platform Reports
+app.route('/v1/scripts', scripts); // Agent Scripts / Guided Workflows
+app.route('/v1/translation', translation); // Multi-provider Translation Services
+app.route('/v1/ai', aiEngine); // AI Engine (Multi-provider LLM: OpenAI, Anthropic, Google, AWS, Azure, Cohere, Mistral, Groq)
+app.route('/admin/ai', adminAI); // Admin AI Engine Management (providers, credentials, models, usage)
 
 // 404 handler
 app.notFound((c) => {

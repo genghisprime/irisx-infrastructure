@@ -3,7 +3,7 @@
  * WebSocket-based streaming for transcripts, events, and metrics
  */
 
-import db from '../db.js';
+import db from '../db/connection.js';
 import { randomUUID } from 'crypto';
 
 class RealtimeStreamingService {
