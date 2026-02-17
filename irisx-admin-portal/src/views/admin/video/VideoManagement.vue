@@ -572,21 +572,58 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import api from '@/api';
-import {
-  VideoCameraIcon,
-  UsersIcon,
-  CpuChipIcon,
-  CalendarIcon,
-  ClockIcon,
-  EyeIcon,
-  XCircleIcon,
-  XMarkIcon,
-  PencilIcon,
-  TrashIcon,
-  ArrowDownTrayIcon,
-  MicrophoneIcon
-} from '@heroicons/vue/24/outline';
+import { useAdminAuthStore } from '@/stores/adminAuth';
+
+const authStore = useAdminAuthStore();
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+async function fetchWithAuth(url) {
+  const response = await fetch(`${API_BASE}${url}`, {
+    headers: {
+      'Authorization': `Bearer ${authStore.token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+async function postWithAuth(url, data = {}) {
+  const response = await fetch(`${API_BASE}${url}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${authStore.token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+async function patchWithAuth(url, data) {
+  const response = await fetch(`${API_BASE}${url}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${authStore.token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+async function deleteWithAuth(url) {
+  const response = await fetch(`${API_BASE}${url}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${authStore.token}`
+    }
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
 
 const stats = ref({});
 const rooms = ref([]);
@@ -633,8 +670,8 @@ async function refreshData() {
 
 async function loadStats() {
   try {
-    const response = await api.get('/admin/video/stats');
-    stats.value = response.data.stats;
+    const response = await fetchWithAuth('/admin/video/stats');
+    stats.value = response.stats || {};
   } catch (error) {
     console.error('Failed to load stats:', error);
   }
@@ -642,10 +679,9 @@ async function loadStats() {
 
 async function loadRooms() {
   try {
-    const response = await api.get('/admin/video/rooms', {
-      params: { status: roomFilter.value === 'all' ? undefined : roomFilter.value }
-    });
-    rooms.value = response.data.rooms;
+    const params = roomFilter.value === 'all' ? '' : `?status=${roomFilter.value}`;
+    const response = await fetchWithAuth(`/admin/video/rooms${params}`);
+    rooms.value = response.rooms || [];
   } catch (error) {
     console.error('Failed to load rooms:', error);
   }
@@ -653,8 +689,8 @@ async function loadRooms() {
 
 async function loadWorkers() {
   try {
-    const response = await api.get('/admin/video/workers');
-    workers.value = response.data.workers;
+    const response = await fetchWithAuth('/admin/video/workers');
+    workers.value = response.workers || [];
   } catch (error) {
     console.error('Failed to load workers:', error);
   }
@@ -662,10 +698,9 @@ async function loadWorkers() {
 
 async function loadRecordings() {
   try {
-    const response = await api.get('/admin/video/recordings', {
-      params: { status: recordingFilter.value || undefined }
-    });
-    recordings.value = response.data.recordings;
+    const params = recordingFilter.value ? `?status=${recordingFilter.value}` : '';
+    const response = await fetchWithAuth(`/admin/video/recordings${params}`);
+    recordings.value = response.recordings || [];
   } catch (error) {
     console.error('Failed to load recordings:', error);
   }
@@ -673,8 +708,8 @@ async function loadRecordings() {
 
 async function loadTenantSettings() {
   try {
-    const response = await api.get('/admin/video/tenants');
-    tenantSettings.value = response.data.tenants;
+    const response = await fetchWithAuth('/admin/video/tenants');
+    tenantSettings.value = response.tenants || [];
   } catch (error) {
     console.error('Failed to load tenant settings:', error);
   }
@@ -682,8 +717,8 @@ async function loadTenantSettings() {
 
 async function loadConfig() {
   try {
-    const response = await api.get('/admin/video/config');
-    platformConfig.value = response.data.config;
+    const response = await fetchWithAuth('/admin/video/config');
+    platformConfig.value = response.config || {};
   } catch (error) {
     console.error('Failed to load config:', error);
   }
@@ -691,10 +726,8 @@ async function loadConfig() {
 
 async function loadAnalytics() {
   try {
-    const response = await api.get('/admin/video/analytics', {
-      params: { startDate: analyticsStartDate.value, endDate: analyticsEndDate.value }
-    });
-    analytics.value = response.data.analytics;
+    const response = await fetchWithAuth(`/admin/video/analytics?startDate=${analyticsStartDate.value}&endDate=${analyticsEndDate.value}`);
+    analytics.value = response.analytics || {};
   } catch (error) {
     console.error('Failed to load analytics:', error);
   }
@@ -702,8 +735,8 @@ async function loadAnalytics() {
 
 async function viewRoom(room) {
   try {
-    const response = await api.get(`/admin/video/rooms/${room.id}`);
-    selectedRoom.value = response.data;
+    const response = await fetchWithAuth(`/admin/video/rooms/${room.id}`);
+    selectedRoom.value = response;
     showRoomDetails.value = true;
   } catch (error) {
     console.error('Failed to load room details:', error);
@@ -714,7 +747,7 @@ async function endRoom(room) {
   if (!confirm(`End room "${room.name}"? All participants will be disconnected.`)) return;
 
   try {
-    await api.post(`/admin/video/rooms/${room.id}/end`);
+    await postWithAuth(`/admin/video/rooms/${room.id}/end`);
     await loadRooms();
     await loadStats();
   } catch (error) {
@@ -724,7 +757,7 @@ async function endRoom(room) {
 
 async function toggleTenantVideo(tenant) {
   try {
-    await api.patch(`/admin/video/tenants/${tenant.tenantId}`, {
+    await patchWithAuth(`/admin/video/tenants/${tenant.tenantId}`, {
       video_enabled: !tenant.videoEnabled
     });
     await loadTenantSettings();
@@ -747,7 +780,7 @@ async function deleteRecording(recording) {
   if (!confirm('Delete this recording? This action cannot be undone.')) return;
 
   try {
-    await api.delete(`/admin/video/recordings/${recording.id}`);
+    await deleteWithAuth(`/admin/video/recordings/${recording.id}`);
     await loadRecordings();
   } catch (error) {
     console.error('Failed to delete recording:', error);

@@ -424,7 +424,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '@/api';
+import api from '@/utils/api';
 import {
   VideoCameraIcon,
   CalendarIcon,

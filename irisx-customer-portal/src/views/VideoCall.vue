@@ -335,7 +335,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import api from '@/api';
+import api from '@/utils/api';
 import {
   MicrophoneIcon,
   VideoCameraIcon,
