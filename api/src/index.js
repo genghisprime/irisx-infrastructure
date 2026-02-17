@@ -145,6 +145,8 @@ import videoCalls from './routes/video-calls.js'; // Video Calling (MediaSoup SF
 import adminVideo from './routes/admin-video.js'; // Admin Video Calling Management
 import stirShaken from './routes/stir-shaken.js'; // STIR/SHAKEN Compliance
 import adminStirShaken from './routes/admin-stir-shaken.js'; // Admin STIR/SHAKEN Management
+import businessMessaging, { webhookRouter as businessMessagingWebhooks } from './routes/business-messaging.js'; // Business Messaging (Apple, Google, RCS)
+import adminBusinessMessaging from './routes/admin-business-messaging.js'; // Admin Business Messaging Management
 import { initWebSocket } from './services/websocket.js';
 import { initVideoSignalingWebSocket } from './services/video-signaling-websocket.js';
 import { initWallboardWebSocket } from './services/wallboard-websocket.js';
@@ -562,6 +564,9 @@ app.route('/v1/video-calls', videoCalls); // Video Calling (rooms, participants,
 app.route('/admin/video', adminVideo); // Admin Video Calling Management (workers, config, analytics)
 app.route('/v1/stir-shaken', stirShaken); // STIR/SHAKEN Compliance (certificates, attestation, verification)
 app.route('/admin/stir-shaken', adminStirShaken); // Admin STIR/SHAKEN Management (platform config, robocall database)
+app.route('/v1/business-messaging', businessMessaging); // Business Messaging (Apple, Google, RCS)
+app.route('/webhooks/business-messaging', businessMessagingWebhooks); // Business Messaging Webhooks (no auth)
+app.route('/admin/business-messaging', adminBusinessMessaging); // Admin Business Messaging Management
 
 // 404 handler
 app.notFound((c) => {

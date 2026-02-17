@@ -328,6 +328,13 @@ const routes = [
         name: 'StirShakenManagement',
         component: () => import('../views/admin/compliance/StirShakenManagement.vue'),
         meta: { requiresRole: 'admin' }
+      },
+      // Business Messaging (Apple, Google, RCS)
+      {
+        path: 'business-messaging',
+        name: 'BusinessMessagingHub',
+        component: () => import('../views/admin/business-messaging/BusinessMessagingHub.vue'),
+        meta: { requiresRole: 'admin' }
       }
     ]
   }

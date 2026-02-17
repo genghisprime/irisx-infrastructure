@@ -15,7 +15,7 @@
 | Customer Portal | 37+ views | 5 features | ~85% |
 | Agent Desktop | 18 components | 3 features | ~85% |
 | Database | 110+ tables | 25+ tables | ~80% |
-| **Channels** | 8 channels | 10+ channels | ~45% |
+| **Channels** | 11 channels | 7+ channels | ~60% |
 
 **Overall Platform Completion: ~85%**
 
@@ -34,6 +34,7 @@
 - **Multi-Language Translation** (Google, AWS, DeepL, Azure, IBM Watson) ✅ NEW
 - **AI Engine Abstraction** (OpenAI, Anthropic, Google, AWS, Azure, Cohere, Mistral, Groq) ✅ NEW
 - **AI Voice Assistants** (IVR Bots with multi-provider TTS/STT) ✅ NEW
+- **Business Messaging** (Apple Business, Google Business, RCS with SMS fallback) ✅ NEW
 
 ### Critical Gaps:
 - ~~**Traditional Social Media** (Facebook, Twitter/X, LinkedIn, Instagram)~~ ✅ DONE
@@ -191,11 +192,32 @@ These features are explicitly defined in specs but have NO implementation:
 
 ### 0.6 Additional Missing Channels
 **Spec Reference:** `IRIS_Multi_Channel_Platform_Architecture.md`
-**Status:** ❌ NOT IMPLEMENTED
+**Status:** ✅ PARTIALLY IMPLEMENTED (2026-02-17)
 
-- [ ] Apple Business Messages
-- [ ] Google Business Messages
-- [ ] RCS Messaging
+**Implemented:**
+- [x] Apple Business Messages (iMessage for Business)
+- [x] Google Business Messages (Maps & Search Messaging)
+- [x] RCS Messaging (Rich Communication Services with SMS fallback)
+
+**Architecture:**
+- Database: `094_business_messaging.sql` - 20+ tables (accounts, conversations, messages, templates, webhook logs, capability cache for all three platforms)
+- Apple Service: `api/src/services/business-messaging/apple-business.js` (webhooks, rich links, list pickers, time pickers, Apple Pay)
+- Google Service: `api/src/services/business-messaging/google-business.js` (agents, locations, rich cards, carousels, suggestions, authentication)
+- RCS Service: `api/src/services/business-messaging/rcs-service.js` (multi-provider: Sinch, Google Jibe, Mavenir, Bandwidth)
+- Routes: `api/src/routes/business-messaging.js` at `/v1/business-messaging`
+- Admin Routes: `api/src/routes/admin-business-messaging.js` at `/admin/business-messaging`
+- Webhooks: `/webhooks/business-messaging/apple/:tenantId`, `/webhooks/business-messaging/google/:tenantId`, `/webhooks/business-messaging/rcs/:tenantId`
+- Admin Portal: `BusinessMessagingHub.vue` at `/dashboard/business-messaging`
+
+**Features:**
+- Multi-provider RCS with automatic SMS fallback
+- Rich messaging (cards, carousels, suggestions, quick replies)
+- Template management with approval workflow
+- Capability checking (RCS enabled/disabled per phone)
+- Cross-platform unified analytics
+- Webhook logging and monitoring
+
+**Still needed (lower priority):**
 - [ ] IPAWS/WEA (Emergency Alerts)
 - [ ] RSS Feed generation
 - [ ] Embeddable notification widgets
