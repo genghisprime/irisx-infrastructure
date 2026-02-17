@@ -3,7 +3,7 @@
  * Handles scorecards, evaluations, coaching, and calibration
  */
 
-import pool from '../db.js';
+import pool from '../db/connection.js';
 
 // =============================================================================
 // SCORECARDS

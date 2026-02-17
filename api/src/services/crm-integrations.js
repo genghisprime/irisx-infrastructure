@@ -3,7 +3,7 @@
  * Handles OAuth, sync, and field mapping for Salesforce, HubSpot, Zendesk
  */
 
-import pool from '../db.js';
+import pool from '../db/connection.js';
 import crypto from 'crypto';
 
 // Provider OAuth configurations (would come from env in production)

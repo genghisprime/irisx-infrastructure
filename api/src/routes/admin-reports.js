@@ -4,7 +4,7 @@
  */
 
 import { Hono } from 'hono';
-import { pool } from '../db.js';
+import pool from '../db/connection.js';
 import ExcelJS from 'exceljs';
 import { stringify } from 'csv-stringify/sync';
 

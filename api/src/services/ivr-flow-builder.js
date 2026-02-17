@@ -3,7 +3,7 @@
  * Visual drag-and-drop IVR flow creation
  */
 
-import pool from '../db.js';
+import pool from '../db/connection.js';
 
 // =============================================================================
 // FLOW MANAGEMENT

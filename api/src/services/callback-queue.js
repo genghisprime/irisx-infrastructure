@@ -3,7 +3,7 @@
  * Manages customer callback requests and scheduling
  */
 
-import pool from '../db.js';
+import pool from '../db/connection.js';
 
 // =============================================================================
 // CALLBACK REQUEST MANAGEMENT

@@ -3,7 +3,7 @@
  * Handles customer lookup and context for incoming calls
  */
 
-import { pool } from '../db.js';
+import pool from '../db/connection.js';
 
 /**
  * Look up a contact by phone number
