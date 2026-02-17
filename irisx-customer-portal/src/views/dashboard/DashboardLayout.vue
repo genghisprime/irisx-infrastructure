@@ -142,6 +142,56 @@
           </router-link>
         </div>
 
+        <!-- Advanced Features -->
+        <div style="padding-top: 16px;">
+          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Advanced Features</h3>
+          <router-link to="/business-messaging" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/business-messaging') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <DevicePhoneMobileIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/business-messaging') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Business Messaging
+          </router-link>
+          <router-link to="/video" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/video') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <VideoCameraIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/video') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Video Calling
+          </router-link>
+          <router-link to="/voice" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/voice') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <SpeakerWaveIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/voice') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Voice Assistants
+          </router-link>
+          <router-link to="/ivr" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/ivr') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <PhoneArrowUpRightIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/ivr') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            IVR Builder
+          </router-link>
+          <router-link to="/scripts" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/scripts') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <DocumentTextIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/scripts') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Agent Scripts
+          </router-link>
+          <router-link to="/amd" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/amd') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <ComputerDesktopIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/amd') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            AMD Settings
+          </router-link>
+          <router-link to="/translation" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/translation') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <LanguageIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/translation') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Translation
+          </router-link>
+        </div>
+
+        <!-- Compliance & Security -->
+        <div style="padding-top: 16px;">
+          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Compliance & Security</h3>
+          <router-link to="/stir-shaken" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/stir-shaken') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <ShieldCheckIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/stir-shaken') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            STIR/SHAKEN
+          </router-link>
+          <router-link to="/quality" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/quality') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <ClipboardDocumentCheckIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/quality') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Quality Management
+          </router-link>
+          <router-link to="/sso" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/sso') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <LockClosedIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/sso') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            SSO Settings
+          </router-link>
+        </div>
+
         <!-- Settings & API -->
         <div style="padding-top: 16px;">
           <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Settings & API</h3>
@@ -244,7 +294,15 @@ import {
   ArrowTrendingUpIcon,
   CreditCardIcon,
   ArrowUpTrayIcon,
-  KeyIcon
+  KeyIcon,
+  VideoCameraIcon,
+  SpeakerWaveIcon,
+  PhoneArrowUpRightIcon,
+  ComputerDesktopIcon,
+  LanguageIcon,
+  ShieldCheckIcon,
+  ClipboardDocumentCheckIcon,
+  LockClosedIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()

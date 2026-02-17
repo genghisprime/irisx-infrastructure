@@ -64,6 +64,9 @@ import VideoRooms from '../views/VideoRooms.vue'
 import VideoCall from '../views/VideoCall.vue'
 import BusinessMessaging from '../views/BusinessMessaging.vue'
 import StirShaken from '../views/StirShaken.vue'
+import AMDSettings from '../views/AMDSettings.vue'
+import AgentScripts from '../views/AgentScripts.vue'
+import SSOSettings from '../views/SSOSettings.vue'
 
 const routes = [
   {
@@ -371,6 +374,27 @@ const routes = [
     path: '/stir-shaken',
     name: 'StirShaken',
     component: StirShaken,
+    meta: { requiresAuth: true }
+  },
+  // AMD Settings
+  {
+    path: '/amd',
+    name: 'AMDSettings',
+    component: AMDSettings,
+    meta: { requiresAuth: true }
+  },
+  // Agent Scripts
+  {
+    path: '/scripts',
+    name: 'AgentScripts',
+    component: AgentScripts,
+    meta: { requiresAuth: true }
+  },
+  // SSO Settings
+  {
+    path: '/sso',
+    name: 'SSOSettings',
+    component: SSOSettings,
     meta: { requiresAuth: true }
   }
 ]
