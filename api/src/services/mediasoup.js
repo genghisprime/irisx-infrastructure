@@ -4,7 +4,7 @@
  * Manages workers, routers, transports, producers, and consumers
  */
 
-import { pool } from '../database.js';
+import pool from '../db/connection.js';
 import crypto from 'crypto';
 
 // MediaSoup will be dynamically imported to handle environments where it's not installed

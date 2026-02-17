@@ -3,7 +3,7 @@
  * Multi-provider TTS/STT with conversational AI for IVR bots
  */
 
-import { pool } from '../database.js';
+import pool from '../db/connection.js';
 
 // ============================================
 // Provider Adapters

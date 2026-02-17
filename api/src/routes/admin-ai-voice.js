@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { pool } from '../database.js';
+import pool from '../db/connection.js';
 
 const adminAIVoice = new Hono();
 

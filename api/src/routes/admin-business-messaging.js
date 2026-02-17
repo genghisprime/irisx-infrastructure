@@ -6,7 +6,7 @@
 
 import { Hono } from 'hono';
 import { adminAuthMiddleware, requireAdminRole } from '../middleware/adminAuth.js';
-import db from '../config/database.js';
+import db from '../db/connection.js';
 
 const router = new Hono();
 

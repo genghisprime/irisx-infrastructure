@@ -3,7 +3,7 @@
  * Handles certificate lifecycle, STI-CA integration, and certificate verification
  */
 
-import { pool } from '../../database.js';
+import pool from '../../db/connection.js';
 import crypto from 'crypto';
 
 // Certificate encryption key (should be from secure vault in production)

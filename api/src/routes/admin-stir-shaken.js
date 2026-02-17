@@ -4,7 +4,7 @@
  */
 
 import { Hono } from 'hono';
-import { pool } from '../database.js';
+import pool from '../db/connection.js';
 import certificateManager from '../services/stir-shaken/certificate-manager.js';
 import attestationService from '../services/stir-shaken/attestation-service.js';
 

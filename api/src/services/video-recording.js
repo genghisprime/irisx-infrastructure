@@ -3,7 +3,7 @@
  * Handles video recording storage and processing with S3
  */
 
-import { pool } from '../database.js';
+import pool from '../db/connection.js';
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import crypto from 'crypto';

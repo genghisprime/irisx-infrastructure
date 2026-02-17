@@ -6,7 +6,7 @@
 import { randomUUID } from 'crypto';
 import jwt from 'jsonwebtoken';
 import mediasoupService from '../services/mediasoup.js';
-import { pool } from '../database.js';
+import pool from '../db/connection.js';
 
 class VideoSignalingHandler {
     constructor() {

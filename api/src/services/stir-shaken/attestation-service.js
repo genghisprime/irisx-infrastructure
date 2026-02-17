@@ -3,7 +3,7 @@
  * Handles PASSporT token generation, signing, and verification
  */
 
-import { pool } from '../../database.js';
+import pool from '../../db/connection.js';
 import crypto from 'crypto';
 import certificateManager from './certificate-manager.js';
 

@@ -3,7 +3,7 @@
  * Handles Apple Business Chat/Messages integration
  */
 
-import { pool } from '../../database.js';
+import pool from '../../db/connection.js';
 import crypto from 'crypto';
 
 class AppleBusinessService {

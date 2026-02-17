@@ -5,7 +5,7 @@
  * Supports rich cards, carousels, suggested replies/actions, file sharing
  */
 
-import db from '../../config/database.js';
+import db from '../../db/connection.js';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 

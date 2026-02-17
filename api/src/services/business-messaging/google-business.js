@@ -3,7 +3,7 @@
  * Handles Google Business Messages (formerly Google My Business Messaging) integration
  */
 
-import { pool } from '../../database.js';
+import pool from '../../db/connection.js';
 import crypto from 'crypto';
 
 class GoogleBusinessService {

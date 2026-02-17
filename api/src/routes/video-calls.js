@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import { authenticateJWT } from '../middleware/authMiddleware.js';
 import mediasoupService from '../services/mediasoup.js';
-import { pool } from '../database.js';
+import pool from '../db/connection.js';
 import crypto from 'crypto';
 
 const videoCalls = new Hono();
