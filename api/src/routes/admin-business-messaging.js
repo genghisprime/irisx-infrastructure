@@ -5,7 +5,7 @@
  */
 
 import { Hono } from 'hono';
-import { authenticateAdmin } from './admin-auth.js';
+import { authenticateAdmin, requireAdminRole } from './admin-auth.js';
 import db from '../db/connection.js';
 
 const router = new Hono();
