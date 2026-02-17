@@ -24,6 +24,7 @@
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-cloudfront": "^3.922.0",
+    "@aws-sdk/cloudfront-signer": "^3.922.0",
     "@aws-sdk/client-cloudwatch": "^3.922.0",
     "@aws-sdk/client-s3": "^3.919.0",
     "@aws-sdk/client-ses": "^3.930.0",
