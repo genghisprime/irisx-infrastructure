@@ -3,9 +3,8 @@
  * Handles tracking pixels, link clicks, and engagement analytics
  */
 
-const { Hono } = require('hono');
-const { z } = require('zod');
-const emailTracking = require('../services/email-tracking');
+import { Hono } from 'hono';
+import emailTracking from '../services/email-tracking.js';
 
 const router = new Hono();
 
@@ -400,4 +399,4 @@ router.post('/maintenance/cleanup', async (c) => {
   }
 });
 
-module.exports = router;
+export default router;
