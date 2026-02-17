@@ -114,6 +114,18 @@
             <QueueListIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/queues') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Queue Management
           </router-link>
+          <router-link to="/dashboard/callbacks" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/callbacks') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <PhoneArrowDownLeftIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/callbacks') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Callbacks
+          </router-link>
+          <router-link to="/dashboard/wallboard" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/wallboard') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <PresentationChartLineIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/wallboard') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Wallboard
+          </router-link>
+          <router-link to="/wfm" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/wfm') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <CalendarDaysIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/wfm') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Workforce Management
+          </router-link>
         </div>
 
         <!-- Analytics -->
@@ -126,6 +138,23 @@
           <router-link to="/dashboard/unified-analytics" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/unified-analytics') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
             <CircleStackIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/unified-analytics') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
             Unified Analytics
+          </router-link>
+          <router-link to="/reports/builder" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/reports/builder') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <DocumentChartBarIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/reports/builder') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Report Builder
+          </router-link>
+        </div>
+
+        <!-- Knowledge & Support -->
+        <div style="padding-top: 16px;">
+          <h3 style="padding: 0 8px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Knowledge & Support</h3>
+          <router-link to="/dashboard/knowledge-base" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/dashboard/knowledge-base') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <BookOpenIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/dashboard/knowledge-base') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            Knowledge Base
+          </router-link>
+          <router-link to="/integrations" style="display: flex; align-items: center; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 6px; margin-bottom: 4px; text-decoration: none;" :style="isActive('/integrations') ? 'background-color: #e0e7ff; color: #4f46e5;' : 'color: #374151;'">
+            <LinkIcon style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" :style="isActive('/integrations') ? 'color: #4f46e5;' : 'color: #9ca3af;'" />
+            CRM Integrations
           </router-link>
         </div>
 
@@ -302,7 +331,12 @@ import {
   LanguageIcon,
   ShieldCheckIcon,
   ClipboardDocumentCheckIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  PhoneArrowDownLeftIcon,
+  CalendarDaysIcon,
+  DocumentChartBarIcon,
+  BookOpenIcon,
+  LinkIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
