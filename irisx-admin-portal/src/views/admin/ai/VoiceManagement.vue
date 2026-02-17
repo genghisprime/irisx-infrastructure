@@ -407,7 +407,7 @@
               <p class="text-sm text-gray-600 mt-2 line-clamp-3">{{ template.template_text }}</p>
               <div class="mt-2 flex flex-wrap gap-1">
                 <span v-for="variable in (template.variables || [])" :key="variable" class="px-1.5 py-0.5 bg-gray-200 rounded text-xs font-mono">
-                  {{ '{{' + variable + '}}' }}
+                  <span v-text="'{{' + variable + '}}'"></span>
                 </span>
               </div>
             </div>
