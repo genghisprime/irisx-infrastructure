@@ -666,4 +666,318 @@ router.get('/rcs/analytics', async (c) => {
   }
 });
 
+// ============================================
+// BUSINESS MESSAGING SETTINGS
+// ============================================
+
+import pool from '../db/connection.js';
+
+// Get tenant business messaging settings and overview
+router.get('/settings', async (c) => {
+  try {
+    const tenantId = c.get('tenantId');
+
+    // Get tenant settings
+    const settingsResult = await pool.query(
+      `SELECT * FROM tenant_business_messaging_settings WHERE tenant_id = $1`,
+      [tenantId]
+    );
+
+    // Get account counts
+    const appleCount = await pool.query(
+      `SELECT COUNT(*) as count FROM apple_business_accounts WHERE tenant_id = $1 AND status = 'active'`,
+      [tenantId]
+    );
+
+    const googleCount = await pool.query(
+      `SELECT COUNT(*) as count FROM google_business_agents WHERE tenant_id = $1 AND status = 'active'`,
+      [tenantId]
+    );
+
+    const rcsCount = await pool.query(
+      `SELECT COUNT(*) as count FROM rcs_agents WHERE tenant_id = $1 AND status = 'active'`,
+      [tenantId]
+    );
+
+    const settings = settingsResult.rows[0] || {
+      tenant_id: tenantId,
+      apple_enabled: false,
+      google_enabled: false,
+      rcs_enabled: false,
+      rcs_fallback_to_sms: true
+    };
+
+    return c.json({
+      settings,
+      accounts: {
+        apple: parseInt(appleCount.rows[0]?.count || 0),
+        google: parseInt(googleCount.rows[0]?.count || 0),
+        rcs: parseInt(rcsCount.rows[0]?.count || 0)
+      }
+    });
+  } catch (error) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Update tenant business messaging settings
+router.put('/settings', requireRole('admin'), async (c) => {
+  try {
+    const tenantId = c.get('tenantId');
+    const data = await c.req.json();
+
+    const result = await pool.query(`
+      INSERT INTO tenant_business_messaging_settings (
+        tenant_id, apple_enabled, google_enabled, rcs_enabled,
+        rcs_fallback_to_sms, apple_auto_reply_enabled, apple_auto_reply_message,
+        google_auto_reply_enabled, google_auto_reply_message, google_survey_enabled,
+        rcs_auto_reply_enabled, rcs_auto_reply_message,
+        business_hours, out_of_hours_message, max_response_time_minutes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      ON CONFLICT (tenant_id) DO UPDATE SET
+        apple_enabled = EXCLUDED.apple_enabled,
+        google_enabled = EXCLUDED.google_enabled,
+        rcs_enabled = EXCLUDED.rcs_enabled,
+        rcs_fallback_to_sms = EXCLUDED.rcs_fallback_to_sms,
+        apple_auto_reply_enabled = EXCLUDED.apple_auto_reply_enabled,
+        apple_auto_reply_message = EXCLUDED.apple_auto_reply_message,
+        google_auto_reply_enabled = EXCLUDED.google_auto_reply_enabled,
+        google_auto_reply_message = EXCLUDED.google_auto_reply_message,
+        google_survey_enabled = EXCLUDED.google_survey_enabled,
+        rcs_auto_reply_enabled = EXCLUDED.rcs_auto_reply_enabled,
+        rcs_auto_reply_message = EXCLUDED.rcs_auto_reply_message,
+        business_hours = EXCLUDED.business_hours,
+        out_of_hours_message = EXCLUDED.out_of_hours_message,
+        max_response_time_minutes = EXCLUDED.max_response_time_minutes,
+        updated_at = NOW()
+      RETURNING *
+    `, [
+      tenantId,
+      data.apple_enabled || false,
+      data.google_enabled || false,
+      data.rcs_enabled || false,
+      data.rcs_fallback_to_sms !== false,
+      data.apple_auto_reply_enabled || false,
+      data.apple_auto_reply_message || null,
+      data.google_auto_reply_enabled || false,
+      data.google_auto_reply_message || null,
+      data.google_survey_enabled !== false,
+      data.rcs_auto_reply_enabled || false,
+      data.rcs_auto_reply_message || null,
+      data.business_hours ? JSON.stringify(data.business_hours) : null,
+      data.out_of_hours_message || null,
+      data.max_response_time_minutes || 60
+    ]);
+
+    return c.json({ settings: result.rows[0] });
+  } catch (error) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get unified business messaging overview for tenant
+router.get('/overview', async (c) => {
+  try {
+    const tenantId = c.get('tenantId');
+
+    // Apple stats
+    const appleStats = await pool.query(`
+      SELECT
+        (SELECT COUNT(*) FROM apple_business_accounts WHERE tenant_id = $1) as accounts,
+        (SELECT COUNT(*) FROM apple_business_conversations WHERE tenant_id = $1) as conversations,
+        (SELECT COUNT(*) FROM apple_business_messages WHERE tenant_id = $1) as total_messages,
+        (SELECT COUNT(*) FROM apple_business_messages WHERE tenant_id = $1 AND created_at > NOW() - INTERVAL '24 hours') as messages_24h
+    `, [tenantId]);
+
+    // Google stats
+    const googleStats = await pool.query(`
+      SELECT
+        (SELECT COUNT(*) FROM google_business_agents WHERE tenant_id = $1) as agents,
+        (SELECT COUNT(*) FROM google_business_locations l JOIN google_business_agents a ON l.agent_id = a.id WHERE a.tenant_id = $1) as locations,
+        (SELECT COUNT(*) FROM google_business_conversations WHERE tenant_id = $1) as conversations,
+        (SELECT COUNT(*) FROM google_business_messages WHERE tenant_id = $1) as total_messages,
+        (SELECT COUNT(*) FROM google_business_messages WHERE tenant_id = $1 AND created_at > NOW() - INTERVAL '24 hours') as messages_24h
+    `, [tenantId]);
+
+    // RCS stats
+    const rcsStats = await pool.query(`
+      SELECT
+        (SELECT COUNT(*) FROM rcs_agents WHERE tenant_id = $1) as agents,
+        (SELECT COUNT(*) FROM rcs_conversations WHERE tenant_id = $1) as conversations,
+        (SELECT COUNT(*) FROM rcs_messages WHERE tenant_id = $1) as total_messages,
+        (SELECT COUNT(*) FROM rcs_messages WHERE tenant_id = $1 AND created_at > NOW() - INTERVAL '24 hours') as messages_24h,
+        (SELECT COUNT(*) FROM rcs_messages WHERE tenant_id = $1 AND used_fallback = true) as sms_fallback_count
+    `, [tenantId]);
+
+    return c.json({
+      apple: appleStats.rows[0],
+      google: googleStats.rows[0],
+      rcs: rcsStats.rows[0]
+    });
+  } catch (error) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// ============================================
+// BUSINESS REGISTRATION REQUESTS
+// ============================================
+
+// Submit Apple Business Messages registration request
+router.post('/register/apple', requireRole('admin'), async (c) => {
+  try {
+    const tenantId = c.get('tenantId');
+    const data = await c.req.json();
+
+    // Create pending Apple Business account
+    const result = await pool.query(`
+      INSERT INTO apple_business_accounts (
+        tenant_id, business_id, business_name, logo_url, icon_url,
+        primary_color, webhook_url, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
+      RETURNING *
+    `, [
+      tenantId,
+      data.business_id || `pending-${Date.now()}`,
+      data.business_name,
+      data.logo_url,
+      data.icon_url,
+      data.primary_color,
+      `${process.env.API_URL || 'https://api.irisx.com'}/webhooks/business-messaging/apple/${tenantId}`
+    ]);
+
+    return c.json({
+      account: result.rows[0],
+      message: 'Apple Business Messages registration submitted. You will be notified once approved by Apple.',
+      next_steps: [
+        'Complete Apple Business Register enrollment at business.apple.com',
+        'Provide your Apple Business ID once registration is complete',
+        'Configure your webhook URL in Apple Business Console'
+      ]
+    }, 201);
+  } catch (error) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Submit Google Business Messages registration request
+router.post('/register/google', requireRole('admin'), async (c) => {
+  try {
+    const tenantId = c.get('tenantId');
+    const data = await c.req.json();
+
+    // Create pending Google Business agent
+    const result = await pool.query(`
+      INSERT INTO google_business_agents (
+        tenant_id, agent_id, agent_name, brand_id, logo_url,
+        phone_number, privacy_policy_url, conversation_starters,
+        verification_contact_email, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending')
+      RETURNING *
+    `, [
+      tenantId,
+      data.agent_id || `pending-${Date.now()}`,
+      data.agent_name,
+      data.brand_id,
+      data.logo_url,
+      data.phone_number,
+      data.privacy_policy_url,
+      JSON.stringify(data.conversation_starters || []),
+      data.verification_email
+    ]);
+
+    return c.json({
+      agent: result.rows[0],
+      message: 'Google Business Messages registration submitted. Verification required.',
+      next_steps: [
+        'Register at business.google.com/businessmessages',
+        'Complete brand verification with Google',
+        'Configure entry points (Maps, Search, etc.)',
+        'Add business locations for local messaging'
+      ]
+    }, 201);
+  } catch (error) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Submit RCS registration request
+router.post('/register/rcs', requireRole('admin'), async (c) => {
+  try {
+    const tenantId = c.get('tenantId');
+    const data = await c.req.json();
+
+    // Create pending RCS agent
+    const result = await pool.query(`
+      INSERT INTO rcs_agents (
+        tenant_id, agent_id, agent_name, description, provider,
+        logo_url, banner_url, primary_color, secondary_color,
+        phone_number, website_url, privacy_policy_url, terms_of_service_url,
+        status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending')
+      RETURNING *
+    `, [
+      tenantId,
+      data.agent_id || `pending-${Date.now()}`,
+      data.agent_name,
+      data.description,
+      data.provider || 'google_jibe',
+      data.logo_url,
+      data.banner_url,
+      data.primary_color,
+      data.secondary_color,
+      data.phone_number,
+      data.website_url,
+      data.privacy_policy_url,
+      data.terms_of_service_url
+    ]);
+
+    return c.json({
+      agent: result.rows[0],
+      message: 'RCS agent registration submitted. Provider verification required.',
+      next_steps: [
+        'Complete business verification with your RCS provider',
+        'Upload branding assets (logo, banner)',
+        'Configure rich messaging capabilities',
+        'Test with RCS-capable devices'
+      ]
+    }, 201);
+  } catch (error) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get registration status
+router.get('/registration-status', async (c) => {
+  try {
+    const tenantId = c.get('tenantId');
+
+    const appleAccounts = await pool.query(
+      `SELECT id, business_name, business_id, status, verified_at, created_at
+       FROM apple_business_accounts WHERE tenant_id = $1 ORDER BY created_at DESC`,
+      [tenantId]
+    );
+
+    const googleAgents = await pool.query(
+      `SELECT id, agent_name, agent_id, status, verification_status, created_at
+       FROM google_business_agents WHERE tenant_id = $1 ORDER BY created_at DESC`,
+      [tenantId]
+    );
+
+    const rcsAgents = await pool.query(
+      `SELECT id, agent_name, agent_id, provider, status, verification_status, verified_at, created_at
+       FROM rcs_agents WHERE tenant_id = $1 ORDER BY created_at DESC`,
+      [tenantId]
+    );
+
+    return c.json({
+      apple: appleAccounts.rows,
+      google: googleAgents.rows,
+      rcs: rcsAgents.rows
+    });
+  } catch (error) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 export default router;

@@ -62,6 +62,7 @@ import AISettings from '../views/AISettings.vue'
 import VoiceAssistants from '../views/VoiceAssistants.vue'
 import VideoRooms from '../views/VideoRooms.vue'
 import VideoCall from '../views/VideoCall.vue'
+import BusinessMessaging from '../views/BusinessMessaging.vue'
 
 const routes = [
   {
@@ -355,6 +356,13 @@ const routes = [
     path: '/video/call/:roomId',
     name: 'VideoCall',
     component: VideoCall,
+    meta: { requiresAuth: true }
+  },
+  // Business Messaging
+  {
+    path: '/business-messaging',
+    name: 'BusinessMessaging',
+    component: BusinessMessaging,
     meta: { requiresAuth: true }
   }
 ]

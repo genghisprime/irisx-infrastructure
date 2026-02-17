@@ -407,7 +407,7 @@
             <tr v-for="account in rcsAccounts" :key="account.id" class="border-b border-zinc-700/50 hover:bg-zinc-700/30">
               <td class="px-4 py-3">
                 <div>
-                  <p class="text-zinc-100 font-medium">{{ account.brand_name }}</p>
+                  <p class="text-zinc-100 font-medium">{{ account.agent_name }}</p>
                   <p class="text-zinc-400 text-sm">{{ account.agent_id }}</p>
                 </div>
               </td>

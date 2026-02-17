@@ -54,7 +54,7 @@ router.get('/overview', async (c) => {
         COUNT(m.id) as total_messages,
         COUNT(m.id) FILTER (WHERE m.created_at > NOW() - INTERVAL '24 hours') as messages_24h,
         COUNT(m.id) FILTER (WHERE m.delivery_method = 'sms_fallback') as sms_fallback_count
-      FROM rcs_accounts a
+      FROM rcs_agents a
       LEFT JOIN rcs_conversations c ON c.tenant_id = a.tenant_id
       LEFT JOIN rcs_messages m ON m.conversation_id = c.id
     `);
@@ -66,7 +66,7 @@ router.get('/overview', async (c) => {
         t.name as tenant_name,
         (SELECT COUNT(*) FROM apple_business_accounts WHERE tenant_id = t.id) as apple_accounts,
         (SELECT COUNT(*) FROM google_business_agents WHERE tenant_id = t.id) as google_agents,
-        (SELECT COUNT(*) FROM rcs_accounts WHERE tenant_id = t.id) as rcs_accounts
+        (SELECT COUNT(*) FROM rcs_agents WHERE tenant_id = t.id) as rcs_agents
       FROM tenants t
       WHERE t.status = 'active'
       ORDER BY t.name
@@ -397,7 +397,7 @@ router.get('/rcs/accounts', async (c) => {
     let query = `
       SELECT a.*, t.name as tenant_name,
         (SELECT COUNT(*) FROM rcs_conversations WHERE tenant_id = a.tenant_id) as conversation_count
-      FROM rcs_accounts a
+      FROM rcs_agents a
       JOIN tenants t ON t.id = a.tenant_id
       WHERE 1=1
     `;
@@ -436,7 +436,7 @@ router.patch('/rcs/accounts/:id/status', requireAdminRole('admin'), async (c) =>
     const { status } = await c.req.json();
 
     const result = await db.query(`
-      UPDATE rcs_accounts
+      UPDATE rcs_agents
       SET status = $1, updated_at = NOW()
       WHERE id = $2
       RETURNING *
@@ -548,7 +548,7 @@ router.get('/rcs/analytics', async (c) => {
         COUNT(*) FILTER (WHERE m.delivery_method = 'sms_fallback') as sms_fallback
       FROM rcs_messages m
       LEFT JOIN rcs_conversations c ON c.id = m.conversation_id
-      LEFT JOIN rcs_accounts a ON a.tenant_id = m.tenant_id
+      LEFT JOIN rcs_agents a ON a.tenant_id = m.tenant_id
       WHERE 1=1 ${dateFilter} ${tenantFilter} ${providerFilter}
       GROUP BY DATE(m.created_at)
       ORDER BY date DESC
@@ -572,7 +572,7 @@ router.get('/rcs/analytics', async (c) => {
         a.provider,
         COUNT(*) as message_count,
         COUNT(DISTINCT a.tenant_id) as tenant_count
-      FROM rcs_accounts a
+      FROM rcs_agents a
       JOIN rcs_messages m ON m.tenant_id = a.tenant_id
       WHERE 1=1 ${dateFilter.replace('m.', 'm.')} ${tenantFilter}
       GROUP BY a.provider
