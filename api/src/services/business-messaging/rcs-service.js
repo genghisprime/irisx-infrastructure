@@ -6,8 +6,7 @@
  */
 
 import db from '../../db/connection.js';
-import { v4 as uuidv4 } from 'uuid';
-import crypto from 'crypto';
+import crypto, { randomUUID } from 'crypto';
 
 class RCSService {
   constructor() {
@@ -238,7 +237,7 @@ class RCSService {
   async handleIncomingMessage(tenantId, payload) {
     const senderPhone = payload.senderPhoneNumber || payload.from;
     const agentId = payload.agentId || payload.to;
-    const messageId = payload.messageId || uuidv4();
+    const messageId = payload.messageId || randomUUID();
     const text = payload.text || payload.message?.text;
     const contentInfo = payload.contentInfo || payload.message?.content;
 
@@ -346,7 +345,7 @@ class RCSService {
     `, [
       conversationId,
       tenantId,
-      uuidv4(),
+      randomUUID(),
       JSON.stringify({ postbackData, text })
     ]);
 
@@ -468,7 +467,7 @@ class RCSService {
     const conversation = await this.getConversation(tenantId, conversationId);
     const client = await this.getProviderClient(tenantId);
 
-    const messageId = uuidv4();
+    const messageId = randomUUID();
 
     const payload = {
       messageId,
@@ -542,7 +541,7 @@ class RCSService {
     const conversation = await this.getConversation(tenantId, conversationId);
     const client = await this.getProviderClient(tenantId);
 
-    const messageId = uuidv4();
+    const messageId = randomUUID();
 
     const richCard = {
       standaloneCard: {
@@ -602,7 +601,7 @@ class RCSService {
     const conversation = await this.getConversation(tenantId, conversationId);
     const client = await this.getProviderClient(tenantId);
 
-    const messageId = uuidv4();
+    const messageId = randomUUID();
 
     const carousel = {
       carouselCard: {
@@ -660,7 +659,7 @@ class RCSService {
     const conversation = await this.getConversation(tenantId, conversationId);
     const client = await this.getProviderClient(tenantId);
 
-    const messageId = uuidv4();
+    const messageId = randomUUID();
 
     const payload = {
       messageId,
