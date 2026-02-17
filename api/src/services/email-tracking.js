@@ -3,13 +3,10 @@
  * Handles tracking pixels, link tracking, and engagement metrics
  */
 
-const { Pool } = require('pg');
-const crypto = require('crypto');
-const UAParser = require('ua-parser-js');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
+import pool from '../db/connection.js';
+import crypto from 'crypto';
+import pkg from 'ua-parser-js';
+const UAParser = pkg;
 
 class EmailTrackingService {
   constructor() {
@@ -514,4 +511,4 @@ class EmailTrackingService {
   }
 }
 
-module.exports = new EmailTrackingService();
+export default new EmailTrackingService();
