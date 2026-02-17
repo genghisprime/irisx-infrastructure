@@ -3,8 +3,8 @@
  * Initializes WebSocket server for video call signaling
  */
 
-import pkg from 'ws';
-const { WebSocketServer } = pkg;
+import * as wsModule from 'ws';
+const { WebSocketServer } = wsModule;
 import videoSignalingHandler from '../websocket/video-signaling-handler.js';
 
 let wss = null;

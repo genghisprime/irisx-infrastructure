@@ -8,8 +8,8 @@
  * - Event-driven updates: Immediate
  */
 
-import pkg from 'ws';
-const { WebSocketServer } = pkg;
+import * as wsModule from 'ws';
+const { WebSocketServer } = wsModule;
 import jwt from 'jsonwebtoken';
 import wallboardService from './wallboard.js';
 import redisClient from '../db/redis.js';
