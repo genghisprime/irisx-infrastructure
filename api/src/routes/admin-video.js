@@ -4,9 +4,12 @@
  */
 
 import { Hono } from 'hono';
-import { authenticateAdmin } from './admin-auth.js';
+import { authenticateAdmin, requireAdminRole } from './admin-auth.js';
 import mediasoupService from '../services/mediasoup.js';
 import pool from '../db/connection.js';
+
+// Alias for backwards compatibility with existing code
+const requireRole = requireAdminRole;
 
 const adminVideo = new Hono();
 

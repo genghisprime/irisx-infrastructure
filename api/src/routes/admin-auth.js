@@ -45,6 +45,29 @@ const setup2FASchema = z.object({
 // MIDDLEWARE: Authenticate Admin JWT
 // =====================================================
 
+/**
+ * Require specific admin role(s)
+ * Must be used after authenticateAdmin middleware
+ */
+export const requireAdminRole = (allowedRoles) => {
+  // Handle both array and single string
+  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+
+  return async (c, next) => {
+    const admin = c.get('admin');
+
+    if (!admin) {
+      return c.json({ error: 'Admin authentication required' }, 401);
+    }
+
+    if (!roles.includes(admin.role)) {
+      return c.json({ error: 'Insufficient admin permissions' }, 403);
+    }
+
+    await next();
+  };
+};
+
 export async function authenticateAdmin(c, next) {
   try {
     const authHeader = c.req.header('Authorization');
