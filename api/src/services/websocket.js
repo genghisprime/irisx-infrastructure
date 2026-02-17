@@ -5,7 +5,8 @@
  * Clients connect and subscribe to specific job IDs
  */
 
-import { WebSocketServer } from 'ws';
+import pkg from 'ws';
+const { WebSocketServer } = pkg;
 
 let wss = null;
 
