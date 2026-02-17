@@ -37,10 +37,10 @@
 
 ### Critical Gaps:
 - ~~**Traditional Social Media** (Facebook, Twitter/X, LinkedIn, Instagram)~~ ✅ DONE
-- **Video Calling** (MediaSoup SFU) - NOT IMPLEMENTED
+- ~~**Video Calling** (MediaSoup SFU)~~ ✅ DONE
 - ~~**CRM Integrations** (Salesforce, HubSpot, Zendesk)~~ ✅ DONE
 - ~~**Visual IVR/Flow Builder**~~ ✅ DONE
-- **STIR/SHAKEN** compliance - NOT IMPLEMENTED
+- ~~**STIR/SHAKEN** compliance~~ ✅ DONE
 - ~~**AMD (Answering Machine Detection)**~~ ✅ DONE
 - ~~**Agent Desktop** is voice-only (no omnichannel inbox)~~ ✅ DONE (UnifiedInbox)
 
@@ -76,13 +76,30 @@ These features are explicitly defined in specs but have NO implementation:
 
 ### 0.2 Video Calling & Screen Share
 **Spec Reference:** Week 33-34 specs, `00_MASTER_CHECKLIST.md`
-**Status:** ❌ NOT IMPLEMENTED
+**Status:** ✅ IMPLEMENTED (2026-02-17)
 
-- [ ] MediaSoup SFU integration
-- [ ] Video calling capability
-- [ ] Screen sharing
-- [ ] Video recording
-- [ ] Video call analytics
+**Implemented:**
+- [x] MediaSoup SFU integration (workers, routers, transports)
+- [x] Video calling capability (rooms, participants, WebRTC)
+- [x] Screen sharing (screenshare producers/consumers)
+- [x] Video recording with S3 storage
+- [x] Video call analytics (stats, usage tracking)
+- [x] WebSocket signaling for real-time communication
+- [x] ICE/STUN/TURN server configuration
+- [x] Invitation system with join codes
+- [x] In-call chat messaging
+- [x] Recording management (start/stop, download)
+
+**Architecture:**
+- Database: `092_video_calling.sql` - 16 tables (rooms, participants, workers, routers, transports, producers, consumers, recordings, stats, chat, alerts, invitations, settings, config)
+- Service: `api/src/services/mediasoup.js` (SFU management)
+- Service: `api/src/services/video-recording.js` (S3 recording pipeline)
+- Routes: `api/src/routes/video-calls.js` at `/v1/video-calls`
+- Routes: `api/src/routes/admin-video.js` at `/admin/video`
+- WebSocket: `api/src/websocket/video-signaling-handler.js` at `/ws/video`
+- Admin Portal: `VideoManagement.vue` at `/dashboard/video`
+- Customer Portal: `VideoRooms.vue` at `/video`, `VideoCall.vue` at `/video/call/:roomId`
+- Agent Desktop: `VideoCallWidget.vue` component
 
 ---
 
@@ -115,12 +132,37 @@ These features are explicitly defined in specs but have NO implementation:
 
 ### 0.4 STIR/SHAKEN Compliance
 **Spec Reference:** Week 31-32 specs
-**Status:** ❌ NOT IMPLEMENTED
+**Status:** ✅ IMPLEMENTED (2026-02-17)
 
-- [ ] STIR/SHAKEN certificate management
-- [ ] Call attestation levels (A, B, C)
-- [ ] Verification service integration
-- [ ] Compliance reporting
+**Implemented:**
+- [x] STIR/SHAKEN certificate management (request, import, verify, revoke)
+- [x] Service Provider Code (SPC) registration with STI-PA
+- [x] Number authority records for attestation eligibility
+- [x] Call attestation levels (A, B, C) with PASSporT token generation
+- [x] Outbound call signing with Identity header generation
+- [x] Inbound call verification (signature validation, freshness check)
+- [x] Robocall mitigation database (classification, risk scoring, auto-block)
+- [x] Compliance reporting (daily, weekly, monthly, FCC filing)
+- [x] Tenant STIR/SHAKEN settings (enable/disable, thresholds, defaults)
+- [x] Platform configuration management (STI-CA providers, PASSporT TTL)
+- [x] Full audit trail for all certificate and attestation actions
+
+**Architecture:**
+- Database: `093_stir_shaken.sql` - 13 tables (certificates, SPC, attestations, number_authority, verification_services, sti_pa, compliance_reports, audit_log, robocall_database, tenant_settings, platform_config)
+- Certificate Service: `api/src/services/stir-shaken/certificate-manager.js`
+- Attestation Service: `api/src/services/stir-shaken/attestation-service.js`
+- Routes: `api/src/routes/stir-shaken.js` at `/v1/stir-shaken`
+- Admin Routes: `api/src/routes/admin-stir-shaken.js` at `/admin/stir-shaken`
+- Admin Portal: `StirShakenManagement.vue` at `/dashboard/stir-shaken`
+
+**API Endpoints:**
+- Certificates: CRUD, import, verify, set-primary, revoke
+- SPC: Register, list
+- Numbers: Add authority, check eligibility
+- Attestation: Sign outbound, verify inbound
+- Robocall: Report, check database
+- Reports: Generate, list compliance reports
+- Settings: Get/update tenant settings
 
 ---
 
@@ -803,7 +845,11 @@ mediasoup_rooms
 hipaa_audit_log
 gdpr_requests
 consent_records
-stir_shaken_attestations
+-- stir_shaken_attestations ✅ IMPLEMENTED (093_stir_shaken.sql)
+-- stir_shaken_certificates, stir_shaken_spc, stir_shaken_attestations,
+-- stir_shaken_number_authority, stir_shaken_verification_services,
+-- stir_shaken_sti_pa, stir_shaken_compliance_reports, stir_shaken_audit_log,
+-- stir_shaken_robocall_database, tenant_stir_shaken_settings, platform_stir_shaken_config
 ```
 
 ---

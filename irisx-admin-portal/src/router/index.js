@@ -314,6 +314,20 @@ const routes = [
         name: 'VoiceManagement',
         component: () => import('../views/admin/ai/VoiceManagement.vue'),
         meta: { requiresRole: 'admin' }
+      },
+      // Video Calling Management
+      {
+        path: 'video',
+        name: 'VideoManagement',
+        component: () => import('../views/admin/video/VideoManagement.vue'),
+        meta: { requiresRole: 'admin' }
+      },
+      // STIR/SHAKEN Compliance Management
+      {
+        path: 'stir-shaken',
+        name: 'StirShakenManagement',
+        component: () => import('../views/admin/compliance/StirShakenManagement.vue'),
+        meta: { requiresRole: 'admin' }
       }
     ]
   }

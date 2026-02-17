@@ -60,6 +60,8 @@ import ReportBuilder from '../views/ReportBuilder.vue'
 import TranslationSettings from '../views/TranslationSettings.vue'
 import AISettings from '../views/AISettings.vue'
 import VoiceAssistants from '../views/VoiceAssistants.vue'
+import VideoRooms from '../views/VideoRooms.vue'
+import VideoCall from '../views/VideoCall.vue'
 
 const routes = [
   {
@@ -340,6 +342,19 @@ const routes = [
     path: '/voice',
     name: 'VoiceAssistants',
     component: VoiceAssistants,
+    meta: { requiresAuth: true }
+  },
+  // Video Calling
+  {
+    path: '/video',
+    name: 'VideoRooms',
+    component: VideoRooms,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/video/call/:roomId',
+    name: 'VideoCall',
+    component: VideoCall,
     meta: { requiresAuth: true }
   }
 ]

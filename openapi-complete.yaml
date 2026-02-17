@@ -93,6 +93,10 @@ tags:
     description: Data import and export
   - name: System Status
     description: System health and monitoring
+  - name: Video Calling
+    description: Video calling and screen sharing with MediaSoup SFU
+  - name: STIR/SHAKEN
+    description: STIR/SHAKEN compliance for caller ID authentication and anti-spoofing
 
 paths:
   # ==================== AUTHENTICATION ====================
@@ -2482,6 +2486,840 @@ paths:
         '200':
           description: Event types
 
+  # ==================== VIDEO CALLING ====================
+  /video-calls/rooms:
+    post:
+      tags: [Video Calling]
+      summary: Create a video room
+      description: Creates a new video room for instant or scheduled meetings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Room name
+                roomType:
+                  type: string
+                  enum: [instant, scheduled, recurring, webinar]
+                  default: instant
+                maxParticipants:
+                  type: integer
+                  default: 10
+                maxVideoParticipants:
+                  type: integer
+                  default: 6
+                settings:
+                  type: object
+                  properties:
+                    video_enabled:
+                      type: boolean
+                    audio_enabled:
+                      type: boolean
+                    screenshare_enabled:
+                      type: boolean
+                    recording_enabled:
+                      type: boolean
+                    waiting_room_enabled:
+                      type: boolean
+                scheduledAt:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Room created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  room:
+                    $ref: '#/components/schemas/VideoRoom'
+    get:
+      tags: [Video Calling]
+      summary: List video rooms
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [waiting, active, ended]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of video rooms
+
+  /video-calls/rooms/{roomId}:
+    get:
+      tags: [Video Calling]
+      summary: Get room details
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Room details with participants
+    patch:
+      tags: [Video Calling]
+      summary: Update room settings
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                settings:
+                  type: object
+      responses:
+        '200':
+          description: Room updated
+
+  /video-calls/rooms/{roomId}/end:
+    post:
+      tags: [Video Calling]
+      summary: End a video room
+      description: Ends the room and disconnects all participants
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Room ended successfully
+
+  /video-calls/rooms/code/{roomCode}:
+    get:
+      tags: [Video Calling]
+      summary: Get room by code
+      description: Lookup a room by its join code
+      parameters:
+        - name: roomCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Room found
+        '404':
+          description: Room not found or ended
+
+  /video-calls/rooms/{roomId}/invitations:
+    post:
+      tags: [Video Calling]
+      summary: Create invitation
+      description: Send an invitation to join the video room
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                invitedUserId:
+                  type: string
+                  format: uuid
+                message:
+                  type: string
+                expiresInHours:
+                  type: integer
+                  default: 24
+      responses:
+        '200':
+          description: Invitation created with join URL
+
+  /video-calls/rooms/{roomId}/recording/start:
+    post:
+      tags: [Video Calling]
+      summary: Start recording
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recordingType:
+                  type: string
+                  enum: [composite, individual]
+                format:
+                  type: string
+                  default: mp4
+                resolution:
+                  type: string
+                  default: 1280x720
+      responses:
+        '200':
+          description: Recording started
+
+  /video-calls/rooms/{roomId}/recording/stop:
+    post:
+      tags: [Video Calling]
+      summary: Stop recording
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Recording stopped
+
+  /video-calls/rooms/{roomId}/recordings:
+    get:
+      tags: [Video Calling]
+      summary: Get room recordings
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of recordings
+
+  /video-calls/recordings/{recordingId}/download:
+    get:
+      tags: [Video Calling]
+      summary: Get recording download URL
+      parameters:
+        - name: recordingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Presigned download URL
+
+  /video-calls/settings:
+    get:
+      tags: [Video Calling]
+      summary: Get video settings
+      responses:
+        '200':
+          description: Tenant video settings
+    patch:
+      tags: [Video Calling]
+      summary: Update video settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                videoEnabled:
+                  type: boolean
+                maxConcurrentRooms:
+                  type: integer
+                maxRoomParticipants:
+                  type: integer
+                defaultVideoQuality:
+                  type: string
+                  enum: [low, sd, hd, fhd]
+                recordingEnabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Settings updated
+
+  /video-calls/analytics:
+    get:
+      tags: [Video Calling]
+      summary: Get video usage analytics
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Video usage analytics
+
+  /video-calls/ice-servers:
+    get:
+      tags: [Video Calling]
+      summary: Get ICE servers
+      description: Returns STUN/TURN server configuration for WebRTC
+      responses:
+        '200':
+          description: ICE server configuration
+
+  # ==================== STIR/SHAKEN ====================
+  /stir-shaken/certificates:
+    get:
+      tags: [STIR/SHAKEN]
+      summary: List certificates
+      description: Get all STIR/SHAKEN certificates for the tenant
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, active, expiring, expired, revoked]
+      responses:
+        '200':
+          description: List of certificates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  certificates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StirShakenCertificate'
+
+    post:
+      tags: [STIR/SHAKEN]
+      summary: Request new certificate
+      description: Request a new STIR/SHAKEN certificate from an STI-CA
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stiCaProvider:
+                  type: string
+                  description: STI-CA provider name
+                commonName:
+                  type: string
+                  description: Certificate common name
+                organizationName:
+                  type: string
+                spcToken:
+                  type: string
+                  description: Service Provider Code
+      responses:
+        '201':
+          description: Certificate request submitted
+
+  /stir-shaken/certificates/import:
+    post:
+      tags: [STIR/SHAKEN]
+      summary: Import certificate
+      description: Import an existing STIR/SHAKEN certificate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - publicCertificate
+              properties:
+                publicCertificate:
+                  type: string
+                  description: PEM-encoded public certificate
+                privateKey:
+                  type: string
+                  description: PEM-encoded private key
+                certificateChain:
+                  type: string
+                  description: PEM-encoded certificate chain
+      responses:
+        '201':
+          description: Certificate imported
+
+  /stir-shaken/certificates/{certificateId}:
+    get:
+      tags: [STIR/SHAKEN]
+      summary: Get certificate
+      description: Get certificate details by ID
+      parameters:
+        - name: certificateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Certificate details
+        '404':
+          description: Certificate not found
+
+    delete:
+      tags: [STIR/SHAKEN]
+      summary: Delete certificate
+      parameters:
+        - name: certificateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Certificate deleted
+
+  /stir-shaken/certificates/{certificateId}/set-primary:
+    post:
+      tags: [STIR/SHAKEN]
+      summary: Set primary certificate
+      description: Set a certificate as the primary signing certificate
+      parameters:
+        - name: certificateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Certificate set as primary
+
+  /stir-shaken/certificates/{certificateId}/revoke:
+    post:
+      tags: [STIR/SHAKEN]
+      summary: Revoke certificate
+      parameters:
+        - name: certificateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Certificate revoked
+
+  /stir-shaken/spc:
+    get:
+      tags: [STIR/SHAKEN]
+      summary: Get SPC records
+      description: Get Service Provider Code records for the tenant
+      responses:
+        '200':
+          description: SPC records
+
+    post:
+      tags: [STIR/SHAKEN]
+      summary: Register SPC
+      description: Register a Service Provider Code
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - spcToken
+              properties:
+                spcToken:
+                  type: string
+                  description: 4-digit Service Provider Code
+                ocn:
+                  type: string
+                  description: Operating Company Number
+                carrierName:
+                  type: string
+                certificateId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: SPC registered
+
+  /stir-shaken/numbers:
+    get:
+      tags: [STIR/SHAKEN]
+      summary: Get authorized numbers
+      description: Get phone numbers authorized for attestation
+      responses:
+        '200':
+          description: List of authorized numbers
+
+    post:
+      tags: [STIR/SHAKEN]
+      summary: Add number authority
+      description: Add a phone number authority record for attestation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phoneNumber
+              properties:
+                phoneNumber:
+                  type: string
+                authorityType:
+                  type: string
+                  enum: [owned, ported, allocated, delegated, toll_free]
+                loaDocumentUrl:
+                  type: string
+                  description: Letter of Authorization URL
+                loaExpiryDate:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Number authority added
+
+  /stir-shaken/numbers/{phoneNumber}/eligibility:
+    get:
+      tags: [STIR/SHAKEN]
+      summary: Check attestation eligibility
+      description: Check if a phone number is eligible for A-level attestation
+      parameters:
+        - name: phoneNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Eligibility status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  eligibility:
+                    type: object
+                    properties:
+                      authorized:
+                        type: boolean
+                      attestationLevel:
+                        type: string
+                        enum: [A, B, C]
+                      reason:
+                        type: string
+
+  /stir-shaken/sign:
+    post:
+      tags: [STIR/SHAKEN]
+      summary: Sign outbound call
+      description: Generate PASSporT token and Identity header for an outbound call
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - origTn
+                - destTn
+              properties:
+                origTn:
+                  type: string
+                  description: Originating telephone number
+                destTn:
+                  type: string
+                  description: Destination telephone number
+                callId:
+                  type: string
+                  format: uuid
+                callOrigin:
+                  type: string
+                  enum: [direct, gateway, sip_trunk]
+      responses:
+        '200':
+          description: Call signed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  identityHeader:
+                    type: string
+                    description: SIP Identity header value
+                  attestationLevel:
+                    type: string
+                    enum: [A, B, C]
+
+  /stir-shaken/verify:
+    post:
+      tags: [STIR/SHAKEN]
+      summary: Verify inbound call
+      description: Verify the Identity header of an inbound call
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - origTn
+                - destTn
+              properties:
+                identityHeader:
+                  type: string
+                  description: SIP Identity header value
+                origTn:
+                  type: string
+                destTn:
+                  type: string
+                callId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  verification:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum: [verified, failed, no_signature, expired, invalid_cert]
+                      attestationLevel:
+                        type: string
+
+  /stir-shaken/stats:
+    get:
+      tags: [STIR/SHAKEN]
+      summary: Get attestation statistics
+      description: Get attestation statistics for a time period
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Attestation statistics
+
+  /stir-shaken/attestations:
+    get:
+      tags: [STIR/SHAKEN]
+      summary: Get recent attestations
+      description: Get recent attestation records
+      parameters:
+        - name: direction
+          in: query
+          schema:
+            type: string
+            enum: [inbound, outbound]
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of attestations
+
+  /stir-shaken/robocall/report:
+    post:
+      tags: [STIR/SHAKEN]
+      summary: Report robocaller
+      description: Report a phone number as a suspected robocaller
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phoneNumber
+              properties:
+                phoneNumber:
+                  type: string
+                classification:
+                  type: string
+                  enum: [suspected, known_robocaller, legitimate]
+                riskScore:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+                reportedReason:
+                  type: string
+      responses:
+        '200':
+          description: Report submitted
+
+  /stir-shaken/robocall/check/{phoneNumber}:
+    get:
+      tags: [STIR/SHAKEN]
+      summary: Check robocall database
+      description: Check if a phone number is in the robocall database
+      parameters:
+        - name: phoneNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Robocall check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  result:
+                    type: object
+                    properties:
+                      found:
+                        type: boolean
+                      classification:
+                        type: string
+                      riskScore:
+                        type: integer
+                      autoBlock:
+                        type: boolean
+
+  /stir-shaken/reports:
+    get:
+      tags: [STIR/SHAKEN]
+      summary: Get compliance reports
+      description: Get generated compliance reports
+      parameters:
+        - name: reportType
+          in: query
+          schema:
+            type: string
+            enum: [daily, weekly, monthly, on_demand, fcc_filing]
+      responses:
+        '200':
+          description: List of compliance reports
+
+    post:
+      tags: [STIR/SHAKEN]
+      summary: Generate compliance report
+      description: Generate a new compliance report
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                reportType:
+                  type: string
+                  enum: [daily, weekly, monthly, on_demand, fcc_filing]
+      responses:
+        '201':
+          description: Report generated
+
+  /stir-shaken/settings:
+    get:
+      tags: [STIR/SHAKEN]
+      summary: Get tenant settings
+      description: Get STIR/SHAKEN settings for the tenant
+      responses:
+        '200':
+          description: Tenant settings
+
+    put:
+      tags: [STIR/SHAKEN]
+      summary: Update tenant settings
+      description: Update STIR/SHAKEN settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stirShakenEnabled:
+                  type: boolean
+                signingEnabled:
+                  type: boolean
+                verificationEnabled:
+                  type: boolean
+                defaultAttestationLevel:
+                  type: string
+                  enum: [A, B, C]
+                acceptUnverifiedCalls:
+                  type: boolean
+                blockFailedVerification:
+                  type: boolean
+                blockRobocallScoreThreshold:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+      responses:
+        '200':
+          description: Settings updated
+
   # ==================== ANALYTICS ====================
   /analytics/stats:
     get:
@@ -4151,6 +4989,266 @@ components:
                   type: object
 
   schemas:
+    StirShakenCertificate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, active, expiring, expired, revoked, failed]
+        commonName:
+          type: string
+        subjectDn:
+          type: string
+        issuerDn:
+          type: string
+        serialNumber:
+          type: string
+        notBefore:
+          type: string
+          format: date-time
+        notAfter:
+          type: string
+          format: date-time
+        keyAlgorithm:
+          type: string
+          default: ES256
+        isPrimary:
+          type: boolean
+        autoRenew:
+          type: boolean
+        stiCaName:
+          type: string
+          description: STI Certification Authority name
+        lastVerifiedAt:
+          type: string
+          format: date-time
+        verificationStatus:
+          type: string
+          enum: [pending, verified, failed]
+        createdAt:
+          type: string
+          format: date-time
+
+    StirShakenAttestation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        callId:
+          type: string
+          format: uuid
+        origTn:
+          type: string
+          description: Originating telephone number
+        destTn:
+          type: string
+          description: Destination telephone number
+        direction:
+          type: string
+          enum: [inbound, outbound]
+        attestationLevel:
+          type: string
+          enum: [A, B, C]
+          description: |
+            A - Full Attestation: SP is responsible for origination and verified caller ID
+            B - Partial Attestation: SP originated call but cannot verify caller ID
+            C - Gateway Attestation: SP received from another network, cannot verify
+        verificationStatus:
+          type: string
+          enum: [pending, verified, failed, no_signature, expired, invalid_cert]
+        verificationError:
+          type: string
+        robocallScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        spamLikelihood:
+          type: string
+          enum: [low, medium, high, very_high]
+        createdAt:
+          type: string
+          format: date-time
+
+    StirShakenSettings:
+      type: object
+      properties:
+        stirShakenEnabled:
+          type: boolean
+        signingEnabled:
+          type: boolean
+        verificationEnabled:
+          type: boolean
+        defaultAttestationLevel:
+          type: string
+          enum: [A, B, C]
+        requireNumberVerification:
+          type: boolean
+        acceptUnverifiedCalls:
+          type: boolean
+        blockFailedVerification:
+          type: boolean
+        blockRobocallScoreThreshold:
+          type: integer
+          minimum: 0
+          maximum: 100
+        preferredStiCa:
+          type: string
+        autoRenewCertificates:
+          type: boolean
+        enableComplianceReports:
+          type: boolean
+        reportFrequency:
+          type: string
+          enum: [daily, weekly, monthly]
+
+    RobocallEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        phoneNumber:
+          type: string
+        classification:
+          type: string
+          enum: [known_robocaller, suspected, legitimate, unknown]
+        riskScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        reportSource:
+          type: string
+        reportCount:
+          type: integer
+        reportedName:
+          type: string
+        reportedReason:
+          type: string
+        autoBlock:
+          type: boolean
+        firstReportedAt:
+          type: string
+          format: date-time
+        lastReportedAt:
+          type: string
+          format: date-time
+
+    VideoRoom:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        roomCode:
+          type: string
+          description: Unique 9-character join code (XXX-XXX-XXX)
+        roomType:
+          type: string
+          enum: [instant, scheduled, recurring, webinar]
+        status:
+          type: string
+          enum: [waiting, active, ended, cancelled]
+        maxParticipants:
+          type: integer
+        maxVideoParticipants:
+          type: integer
+        settings:
+          type: object
+          properties:
+            video_enabled:
+              type: boolean
+            audio_enabled:
+              type: boolean
+            screenshare_enabled:
+              type: boolean
+            recording_enabled:
+              type: boolean
+            waiting_room_enabled:
+              type: boolean
+            require_authentication:
+              type: boolean
+        scheduledAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+        durationSeconds:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    VideoParticipant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [host, co-host, participant, viewer]
+        status:
+          type: string
+          enum: [joining, connected, reconnecting, disconnected, kicked]
+        isAudioEnabled:
+          type: boolean
+        isVideoEnabled:
+          type: boolean
+        isScreensharing:
+          type: boolean
+        isHandRaised:
+          type: boolean
+        joinedAt:
+          type: string
+          format: date-time
+        leftAt:
+          type: string
+          format: date-time
+
+    VideoRecording:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        videoRoomId:
+          type: string
+          format: uuid
+        recordingType:
+          type: string
+          enum: [composite, individual]
+        status:
+          type: string
+          enum: [recording, processing, completed, failed]
+        format:
+          type: string
+        resolution:
+          type: string
+        durationSeconds:
+          type: number
+        fileSize:
+          type: integer
+        thumbnailUrl:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        stoppedAt:
+          type: string
+          format: date-time
+
     SuccessResponse:
       type: object
       properties:

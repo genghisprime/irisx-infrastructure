@@ -141,7 +141,12 @@ import aiEngine from './routes/ai-engine.js'; // AI Engine (Multi-provider LLM A
 import adminAI from './routes/admin-ai.js'; // Admin AI Engine Management
 import aiVoice from './routes/ai-voice.js'; // AI Voice Assistants (IVR Bots, TTS/STT)
 import adminAIVoice from './routes/admin-ai-voice.js'; // Admin AI Voice Management
+import videoCalls from './routes/video-calls.js'; // Video Calling (MediaSoup SFU)
+import adminVideo from './routes/admin-video.js'; // Admin Video Calling Management
+import stirShaken from './routes/stir-shaken.js'; // STIR/SHAKEN Compliance
+import adminStirShaken from './routes/admin-stir-shaken.js'; // Admin STIR/SHAKEN Management
 import { initWebSocket } from './services/websocket.js';
+import { initVideoSignalingWebSocket } from './services/video-signaling-websocket.js';
 import { initWallboardWebSocket } from './services/wallboard-websocket.js';
 import { initStreamingWebSocket } from './services/streaming-websocket.js';
 import { initDashboardWebSocket } from './services/dashboard-websocket.js';
@@ -553,6 +558,10 @@ app.route('/v1/ai', aiEngine); // AI Engine (Multi-provider LLM: OpenAI, Anthrop
 app.route('/admin/ai', adminAI); // Admin AI Engine Management (providers, credentials, models, usage)
 app.route('/v1/voice', aiVoice); // AI Voice Assistants (IVR Bots, TTS/STT, Conversations)
 app.route('/admin/voice', adminAIVoice); // Admin AI Voice Management (providers, credentials, analytics)
+app.route('/v1/video-calls', videoCalls); // Video Calling (rooms, participants, recordings, invitations)
+app.route('/admin/video', adminVideo); // Admin Video Calling Management (workers, config, analytics)
+app.route('/v1/stir-shaken', stirShaken); // STIR/SHAKEN Compliance (certificates, attestation, verification)
+app.route('/admin/stir-shaken', adminStirShaken); // Admin STIR/SHAKEN Management (platform config, robocall database)
 
 // 404 handler
 app.notFound((c) => {
