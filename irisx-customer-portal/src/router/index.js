@@ -63,6 +63,7 @@ import VoiceAssistants from '../views/VoiceAssistants.vue'
 import VideoRooms from '../views/VideoRooms.vue'
 import VideoCall from '../views/VideoCall.vue'
 import BusinessMessaging from '../views/BusinessMessaging.vue'
+import StirShaken from '../views/StirShaken.vue'
 
 const routes = [
   {
@@ -363,6 +364,13 @@ const routes = [
     path: '/business-messaging',
     name: 'BusinessMessaging',
     component: BusinessMessaging,
+    meta: { requiresAuth: true }
+  },
+  // STIR/SHAKEN Compliance
+  {
+    path: '/stir-shaken',
+    name: 'StirShaken',
+    component: StirShaken,
     meta: { requiresAuth: true }
   }
 ]
