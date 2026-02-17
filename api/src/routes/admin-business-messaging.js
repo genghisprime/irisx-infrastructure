@@ -5,13 +5,13 @@
  */
 
 import { Hono } from 'hono';
-import { adminAuthMiddleware, requireAdminRole } from '../middleware/adminAuth.js';
+import { authenticateAdmin } from './admin-auth.js';
 import db from '../db/connection.js';
 
 const router = new Hono();
 
 // Apply admin auth middleware
-router.use('*', adminAuthMiddleware);
+router.use('*', authenticateAdmin);
 
 // ============================================
 // OVERVIEW & DASHBOARD

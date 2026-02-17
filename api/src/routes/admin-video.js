@@ -4,7 +4,7 @@
  */
 
 import { Hono } from 'hono';
-import { authenticateAdmin, requireRole } from '../middleware/adminAuthMiddleware.js';
+import { authenticateAdmin } from './admin-auth.js';
 import mediasoupService from '../services/mediasoup.js';
 import pool from '../db/connection.js';
 
