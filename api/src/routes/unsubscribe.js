@@ -3,9 +3,9 @@
  * Public and authenticated endpoints for managing unsubscriptions
  */
 
-const { Hono } = require('hono');
-const { z } = require('zod');
-const unsubscribeService = require('../services/unsubscribe');
+import { Hono } from 'hono';
+import { z } from 'zod';
+import unsubscribeService from '../services/unsubscribe.js';
 
 const router = new Hono();
 
@@ -536,4 +536,4 @@ router.get('/api/stats', async (c) => {
   }
 });
 
-module.exports = router;
+export default router;

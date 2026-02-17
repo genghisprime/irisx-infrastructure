@@ -3,12 +3,8 @@
  * Manage email/SMS unsubscribe preferences and suppression
  */
 
-const { Pool } = require('pg');
-const crypto = require('crypto');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
+import pool from '../db/connection.js';
+import crypto from 'crypto';
 
 class UnsubscribeService {
   /**
@@ -569,4 +565,4 @@ class UnsubscribeService {
   }
 }
 
-module.exports = new UnsubscribeService();
+export default new UnsubscribeService();
