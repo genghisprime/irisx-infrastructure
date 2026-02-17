@@ -5,7 +5,7 @@
  */
 
 import { Hono } from 'hono';
-import { authMiddleware, requireRole } from '../middleware/auth.js';
+import { authenticateJWT, requireRole } from '../middleware/authMiddleware.js';
 import appleBusinessService from '../services/business-messaging/apple-business.js';
 import googleBusinessService from '../services/business-messaging/google-business.js';
 import rcsService from '../services/business-messaging/rcs-service.js';
@@ -13,7 +13,7 @@ import rcsService from '../services/business-messaging/rcs-service.js';
 const router = new Hono();
 
 // Apply auth middleware to all routes
-router.use('*', authMiddleware);
+router.use('*', authenticateJWT);
 
 // ============================================
 // WEBHOOKS (No auth required - verified by signature)
