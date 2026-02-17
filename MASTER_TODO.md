@@ -33,6 +33,7 @@
 - Analytics (ClickHouse)
 - **Multi-Language Translation** (Google, AWS, DeepL, Azure, IBM Watson) ✅ NEW
 - **AI Engine Abstraction** (OpenAI, Anthropic, Google, AWS, Azure, Cohere, Mistral, Groq) ✅ NEW
+- **AI Voice Assistants** (IVR Bots with multi-provider TTS/STT) ✅ NEW
 
 ### Critical Gaps:
 - ~~**Traditional Social Media** (Facebook, Twitter/X, LinkedIn, Instagram)~~ ✅ DONE
@@ -888,24 +889,34 @@ Unified AI abstraction layer that provides:
 ---
 
 ### 5.3 AI Voice Assistants (IVR Bots)
-**Status:** ❌ NOT IMPLEMENTED
+**Status:** ✅ IMPLEMENTED (2026-02-17)
 **Impact:** Critical - Enables 24/7 automated voice support
 
-**Features:**
-- [ ] Conversational IVR using LLM (natural language understanding)
-- [ ] Voice bot builder (visual flow with AI nodes)
-- [ ] Intent recognition from speech
-- [ ] Dynamic responses based on customer data
-- [ ] Seamless handoff to human agents
-- [ ] Multi-language voice bots
-- [ ] Voice bot analytics (containment rate, CSAT)
+**Implemented:**
+- [x] Conversational IVR using LLM (natural language understanding)
+- [x] Voice bot builder (visual flow with AI nodes in IVR Flow Builder)
+- [x] Intent recognition from speech
+- [x] Dynamic responses based on customer data
+- [x] Seamless handoff to human agents
+- [x] Multi-language voice bots (10+ languages)
+- [x] Voice bot analytics (conversations, completion rates, sentiment)
 
 **Technical Components:**
-- [ ] Real-time STT → LLM → TTS pipeline
-- [ ] Conversation state management
-- [ ] Function calling for actions (lookup order, check balance, etc.)
-- [ ] Integration with existing IVR flow builder
-- [ ] Voice activity detection (know when customer stops speaking)
+- [x] Multi-provider TTS (ElevenLabs, OpenAI, Google, AWS Polly, Azure)
+- [x] Multi-provider STT (Deepgram, OpenAI Whisper, Google, AWS Transcribe, AssemblyAI, Azure)
+- [x] Conversation state management with context
+- [x] Intent/Entity detection with training phrases
+- [x] Integration with IVR flow builder (6 new AI node types)
+- [x] Outbound campaign support (surveys, reminders, collections)
+- [x] Voice cloning support (custom voices)
+- [x] BYOK credentials for voice providers
+
+**Database:** `091_ai_voice_assistants.sql` - 15 tables
+**Service:** `api/src/services/ai-voice.js`
+**Routes:** `api/src/routes/ai-voice.js`, `api/src/routes/admin-ai-voice.js`
+**Admin Portal:** `/admin/voice` - VoiceManagement.vue
+**Customer Portal:** `/voice` - VoiceAssistants.vue
+**IVR Integration:** 6 AI nodes (ai_conversation, ai_listen, ai_speak, ai_intent, ai_collect, ai_confirm)
 
 ---
 

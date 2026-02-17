@@ -159,6 +159,24 @@
             <template v-else-if="node.node_type === 'condition'">
               {{ node.config?.variable || 'No condition' }}
             </template>
+            <template v-else-if="node.node_type === 'ai_conversation'">
+              {{ node.config?.assistant_name || 'Select AI Assistant' }}
+            </template>
+            <template v-else-if="node.node_type === 'ai_listen'">
+              {{ node.config?.language || 'en-US' }} - {{ node.config?.max_duration || '5' }}s
+            </template>
+            <template v-else-if="node.node_type === 'ai_speak'">
+              {{ node.config?.text?.substring(0, 30) || 'Enter text' }}{{ node.config?.text?.length > 30 ? '...' : '' }}
+            </template>
+            <template v-else-if="node.node_type === 'ai_intent'">
+              {{ node.config?.intents?.length || 0 }} intents
+            </template>
+            <template v-else-if="node.node_type === 'ai_collect'">
+              {{ node.config?.entity_name || 'Define entity to collect' }}
+            </template>
+            <template v-else-if="node.node_type === 'ai_confirm'">
+              {{ node.config?.confirm_field || 'Select field to confirm' }}
+            </template>
             <template v-else>
               {{ node.config?.description || 'Click to configure' }}
             </template>
@@ -377,6 +395,160 @@
               <input v-model="selectedNode.config.value" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="value" />
             </div>
           </template>
+
+          <!-- AI Conversation Node -->
+          <template v-else-if="selectedNode.node_type === 'ai_conversation'">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">AI Assistant</label>
+              <select v-model="selectedNode.config.assistant_id" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm">
+                <option value="">Select an AI Assistant...</option>
+                <option v-for="assistant in aiAssistants" :key="assistant.id" :value="assistant.id">
+                  {{ assistant.name }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Max Turns</label>
+              <input v-model.number="selectedNode.config.max_turns" @change="updateNode" type="number" min="1" max="50" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="10" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Timeout (seconds)</label>
+              <input v-model.number="selectedNode.config.timeout_seconds" @change="updateNode" type="number" min="10" max="600" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="60" />
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" v-model="selectedNode.config.allow_transfer" @change="updateNode" class="rounded" />
+              <label class="text-sm text-gray-700">Allow transfer to agent</label>
+            </div>
+          </template>
+
+          <!-- AI Listen Node -->
+          <template v-else-if="selectedNode.node_type === 'ai_listen'">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+              <select v-model="selectedNode.config.language" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm">
+                <option value="en-US">English (US)</option>
+                <option value="en-GB">English (UK)</option>
+                <option value="es-ES">Spanish (Spain)</option>
+                <option value="es-MX">Spanish (Mexico)</option>
+                <option value="fr-FR">French</option>
+                <option value="de-DE">German</option>
+                <option value="it-IT">Italian</option>
+                <option value="pt-BR">Portuguese (Brazil)</option>
+                <option value="ja-JP">Japanese</option>
+                <option value="zh-CN">Chinese (Simplified)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Max Duration (seconds)</label>
+              <input v-model.number="selectedNode.config.max_duration" @change="updateNode" type="number" min="1" max="60" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="5" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Store Result In</label>
+              <input v-model="selectedNode.config.result_variable" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="user_speech" />
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" v-model="selectedNode.config.enable_barge" @change="updateNode" class="rounded" />
+              <label class="text-sm text-gray-700">Enable barge-in</label>
+            </div>
+          </template>
+
+          <!-- AI Speak Node -->
+          <template v-else-if="selectedNode.node_type === 'ai_speak'">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Text to Speak</label>
+              <textarea v-model="selectedNode.config.text" @change="updateNode" rows="3" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Enter text or use {{variables}}"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Voice</label>
+              <select v-model="selectedNode.config.voice_id" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm">
+                <option value="alloy">Alloy (Neutral)</option>
+                <option value="echo">Echo (Male)</option>
+                <option value="fable">Fable (British)</option>
+                <option value="onyx">Onyx (Deep Male)</option>
+                <option value="nova">Nova (Female)</option>
+                <option value="shimmer">Shimmer (Soft Female)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Speaking Rate</label>
+              <input v-model.number="selectedNode.config.speaking_rate" @change="updateNode" type="range" min="0.5" max="2" step="0.1" class="w-full" />
+              <span class="text-xs text-gray-500">{{ selectedNode.config.speaking_rate || 1.0 }}x</span>
+            </div>
+          </template>
+
+          <!-- AI Intent Node -->
+          <template v-else-if="selectedNode.node_type === 'ai_intent'">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Input Variable</label>
+              <input v-model="selectedNode.config.input_variable" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="user_speech" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Intents to Detect</label>
+              <div class="space-y-2 max-h-40 overflow-y-auto">
+                <div v-for="(intent, idx) in (selectedNode.config.intents || [])" :key="idx" class="flex items-center gap-2">
+                  <input v-model="selectedNode.config.intents[idx]" @change="updateNode" class="flex-1 px-2 py-1 border rounded text-sm" placeholder="intent_name" />
+                  <button @click="selectedNode.config.intents.splice(idx, 1); updateNode()" class="text-red-500 hover:text-red-700">
+                    <TrashIcon class="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <button @click="if(!selectedNode.config.intents) selectedNode.config.intents = []; selectedNode.config.intents.push(''); updateNode()" class="mt-2 text-sm text-blue-600 hover:text-blue-700">
+                + Add Intent
+              </button>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Store Detected Intent In</label>
+              <input v-model="selectedNode.config.result_variable" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="detected_intent" />
+            </div>
+          </template>
+
+          <!-- AI Collect Node -->
+          <template v-else-if="selectedNode.node_type === 'ai_collect'">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Entity to Collect</label>
+              <input v-model="selectedNode.config.entity_name" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="phone_number" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Prompt</label>
+              <textarea v-model="selectedNode.config.prompt" @change="updateNode" rows="2" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="What is your phone number?"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Validation Pattern (regex)</label>
+              <input v-model="selectedNode.config.validation_pattern" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm font-mono" placeholder="^\d{10}$" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Max Retries</label>
+              <input v-model.number="selectedNode.config.max_retries" @change="updateNode" type="number" min="1" max="5" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="3" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Store Result In</label>
+              <input v-model="selectedNode.config.result_variable" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="collected_phone" />
+            </div>
+          </template>
+
+          <!-- AI Confirm Node -->
+          <template v-else-if="selectedNode.node_type === 'ai_confirm'">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Field to Confirm</label>
+              <input v-model="selectedNode.config.confirm_field" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="phone_number" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Confirmation Prompt</label>
+              <textarea v-model="selectedNode.config.prompt" @change="updateNode" rows="2" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Just to confirm, your phone number is {{phone_number}}. Is that correct?"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Yes Phrases</label>
+              <input v-model="selectedNode.config.yes_phrases" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="yes, correct, right, yep" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">No Phrases</label>
+              <input v-model="selectedNode.config.no_phrases" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="no, wrong, incorrect, nope" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Store Result In</label>
+              <input v-model="selectedNode.config.result_variable" @change="updateNode" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="is_confirmed" />
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -481,6 +653,14 @@ const ArrowPathIcon = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/
 const StopIcon = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', fill: 'none', viewBox: '0 0 24 24', 'stroke-width': '1.5', stroke: 'currentColor' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z' })]) }
 const PlayCircleIcon = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', fill: 'none', viewBox: '0 0 24 24', 'stroke-width': '1.5', stroke: 'currentColor' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }), h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z' })]) }
 
+// AI Voice Icons
+const ChatBubbleLeftRightIcon = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', fill: 'none', viewBox: '0 0 24 24', 'stroke-width': '1.5', stroke: 'currentColor' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155' })]) }
+const MicrophoneIcon = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', fill: 'none', viewBox: '0 0 24 24', 'stroke-width': '1.5', stroke: 'currentColor' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z' })]) }
+const SpeakerWaveIcon = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', fill: 'none', viewBox: '0 0 24 24', 'stroke-width': '1.5', stroke: 'currentColor' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z' })]) }
+const SparklesIcon = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', fill: 'none', viewBox: '0 0 24 24', 'stroke-width': '1.5', stroke: 'currentColor' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z' })]) }
+const QuestionMarkCircleIcon = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', fill: 'none', viewBox: '0 0 24 24', 'stroke-width': '1.5', stroke: 'currentColor' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z' })]) }
+const ClipboardDocumentCheckIcon = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', fill: 'none', viewBox: '0 0 24 24', 'stroke-width': '1.5', stroke: 'currentColor' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3l1.5 1.5 3-3.75' })]) }
+
 const route = useRoute()
 const canvas = ref(null)
 const nameInput = ref(null)
@@ -493,6 +673,7 @@ const variables = ref([])
 const audioAssets = ref([])
 const queues = ref([])
 const templates = ref([])
+const aiAssistants = ref([])
 
 const selectedNode = ref(null)
 const isEditingName = ref(false)
@@ -532,6 +713,13 @@ const nodeTypes = [
   { type: 'set_variable', label: 'Set Variable', description: 'Store value', icon: VariableIcon, bgColor: 'bg-cyan-100', iconColor: 'text-cyan-600' },
   { type: 'goto', label: 'Go To', description: 'Jump to node', icon: ArrowPathIcon, bgColor: 'bg-gray-100', iconColor: 'text-gray-600' },
   { type: 'end', label: 'End', description: 'Hang up', icon: StopIcon, bgColor: 'bg-red-100', iconColor: 'text-red-600' },
+  // AI Voice Assistant Nodes
+  { type: 'ai_conversation', label: 'AI Conversation', description: 'Natural language dialog', icon: ChatBubbleLeftRightIcon, bgColor: 'bg-violet-100', iconColor: 'text-violet-600' },
+  { type: 'ai_listen', label: 'AI Listen', description: 'Speech recognition', icon: MicrophoneIcon, bgColor: 'bg-emerald-100', iconColor: 'text-emerald-600' },
+  { type: 'ai_speak', label: 'AI Speak', description: 'Text-to-speech', icon: SpeakerWaveIcon, bgColor: 'bg-sky-100', iconColor: 'text-sky-600' },
+  { type: 'ai_intent', label: 'AI Intent', description: 'Intent detection', icon: SparklesIcon, bgColor: 'bg-amber-100', iconColor: 'text-amber-600' },
+  { type: 'ai_collect', label: 'AI Collect', description: 'Slot filling', icon: QuestionMarkCircleIcon, bgColor: 'bg-rose-100', iconColor: 'text-rose-600' },
+  { type: 'ai_confirm', label: 'AI Confirm', description: 'Verify information', icon: ClipboardDocumentCheckIcon, bgColor: 'bg-lime-100', iconColor: 'text-lime-600' },
 ]
 
 // Initialize
@@ -553,6 +741,7 @@ onMounted(async () => {
   await loadAudioAssets()
   await loadQueues()
   await loadTemplates()
+  await loadAIAssistants()
 })
 
 async function loadFlow(flowId) {
@@ -594,6 +783,15 @@ async function loadTemplates() {
     templates.value = data.templates || []
   } catch (error) {
     console.error('Failed to load templates:', error)
+  }
+}
+
+async function loadAIAssistants() {
+  try {
+    const { data } = await api.get('/voice/assistants?status=active')
+    aiAssistants.value = data.assistants || []
+  } catch (error) {
+    console.error('Failed to load AI assistants:', error)
   }
 }
 
@@ -855,7 +1053,14 @@ function getNodeHeaderClass(nodeType) {
     condition: 'bg-teal-100 text-teal-800',
     set_variable: 'bg-cyan-100 text-cyan-800',
     goto: 'bg-gray-100 text-gray-800',
-    end: 'bg-red-100 text-red-800'
+    end: 'bg-red-100 text-red-800',
+    // AI Voice nodes
+    ai_conversation: 'bg-violet-100 text-violet-800',
+    ai_listen: 'bg-emerald-100 text-emerald-800',
+    ai_speak: 'bg-sky-100 text-sky-800',
+    ai_intent: 'bg-amber-100 text-amber-800',
+    ai_collect: 'bg-rose-100 text-rose-800',
+    ai_confirm: 'bg-lime-100 text-lime-800'
   }
   return colors[nodeType] || 'bg-gray-100 text-gray-800'
 }

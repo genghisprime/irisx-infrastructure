@@ -59,6 +59,7 @@ import WorkforceManagement from '../views/WorkforceManagement.vue'
 import ReportBuilder from '../views/ReportBuilder.vue'
 import TranslationSettings from '../views/TranslationSettings.vue'
 import AISettings from '../views/AISettings.vue'
+import VoiceAssistants from '../views/VoiceAssistants.vue'
 
 const routes = [
   {
@@ -332,6 +333,13 @@ const routes = [
     path: '/ai',
     name: 'AISettings',
     component: AISettings,
+    meta: { requiresAuth: true }
+  },
+  // Voice Assistants
+  {
+    path: '/voice',
+    name: 'VoiceAssistants',
+    component: VoiceAssistants,
     meta: { requiresAuth: true }
   }
 ]

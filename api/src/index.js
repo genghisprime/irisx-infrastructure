@@ -139,6 +139,8 @@ import scripts from './routes/scripts.js'; // Agent Scripts / Guided Workflows
 import translation from './routes/translation.js'; // Multi-provider Translation Services
 import aiEngine from './routes/ai-engine.js'; // AI Engine (Multi-provider LLM Abstraction)
 import adminAI from './routes/admin-ai.js'; // Admin AI Engine Management
+import aiVoice from './routes/ai-voice.js'; // AI Voice Assistants (IVR Bots, TTS/STT)
+import adminAIVoice from './routes/admin-ai-voice.js'; // Admin AI Voice Management
 import { initWebSocket } from './services/websocket.js';
 import { initWallboardWebSocket } from './services/wallboard-websocket.js';
 import { initStreamingWebSocket } from './services/streaming-websocket.js';
@@ -549,6 +551,8 @@ app.route('/v1/scripts', scripts); // Agent Scripts / Guided Workflows
 app.route('/v1/translation', translation); // Multi-provider Translation Services
 app.route('/v1/ai', aiEngine); // AI Engine (Multi-provider LLM: OpenAI, Anthropic, Google, AWS, Azure, Cohere, Mistral, Groq)
 app.route('/admin/ai', adminAI); // Admin AI Engine Management (providers, credentials, models, usage)
+app.route('/v1/voice', aiVoice); // AI Voice Assistants (IVR Bots, TTS/STT, Conversations)
+app.route('/admin/voice', adminAIVoice); // Admin AI Voice Management (providers, credentials, analytics)
 
 // 404 handler
 app.notFound((c) => {

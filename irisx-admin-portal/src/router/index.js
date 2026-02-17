@@ -307,6 +307,13 @@ const routes = [
         name: 'AIManagement',
         component: () => import('../views/admin/ai/AIManagement.vue'),
         meta: { requiresRole: 'admin' }
+      },
+      // AI Voice Management
+      {
+        path: 'voice',
+        name: 'VoiceManagement',
+        component: () => import('../views/admin/ai/VoiceManagement.vue'),
+        meta: { requiresRole: 'admin' }
       }
     ]
   }
