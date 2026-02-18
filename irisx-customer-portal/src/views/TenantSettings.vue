@@ -534,6 +534,7 @@
 <script setup>
 import { ref, onMounted, h } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { apiClient } from '../utils/api'
 
 const authStore = useAuthStore()
 
@@ -632,16 +633,12 @@ const integrations = ref([
 // Methods
 const loadSettings = async () => {
   try {
-    const response = await fetch('/api/v1/tenant/settings', {
-      headers: { Authorization: `Bearer ${authStore.token}` }
-    })
-    if (response.ok) {
-      const data = await response.json()
-      if (data.profile) profile.value = { ...profile.value, ...data.profile }
-      if (data.branding) branding.value = { ...branding.value, ...data.branding }
-      if (data.notifications) notifications.value = { ...notifications.value, ...data.notifications }
-      if (data.security) security.value = { ...security.value, ...data.security }
-    }
+    const response = await apiClient.get('/v1/tenant/settings')
+    const data = response.data.data || response.data
+    if (data.profile) profile.value = { ...profile.value, ...data.profile }
+    if (data.branding) branding.value = { ...branding.value, ...data.branding }
+    if (data.notifications) notifications.value = { ...notifications.value, ...data.notifications }
+    if (data.security) security.value = { ...security.value, ...data.security }
   } catch (error) {
     console.error('Failed to load settings:', error)
   }
@@ -650,14 +647,7 @@ const loadSettings = async () => {
 const saveProfile = async () => {
   saving.value = true
   try {
-    await fetch('/api/v1/tenant/settings/profile', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authStore.token}`
-      },
-      body: JSON.stringify(profile.value)
-    })
+    await apiClient.put('/v1/tenant/settings/profile', profile.value)
     showSuccessToast()
   } catch (error) {
     console.error('Failed to save profile:', error)
@@ -669,14 +659,7 @@ const saveProfile = async () => {
 const saveBranding = async () => {
   saving.value = true
   try {
-    await fetch('/api/v1/tenant/settings/branding', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authStore.token}`
-      },
-      body: JSON.stringify(branding.value)
-    })
+    await apiClient.put('/v1/tenant/settings/branding', branding.value)
     showSuccessToast()
   } catch (error) {
     console.error('Failed to save branding:', error)
@@ -688,14 +671,7 @@ const saveBranding = async () => {
 const saveNotifications = async () => {
   saving.value = true
   try {
-    await fetch('/api/v1/tenant/settings/notifications', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authStore.token}`
-      },
-      body: JSON.stringify(notifications.value)
-    })
+    await apiClient.put('/v1/tenant/settings/notifications', notifications.value)
     showSuccessToast()
   } catch (error) {
     console.error('Failed to save notifications:', error)
@@ -707,14 +683,7 @@ const saveNotifications = async () => {
 const saveSecurity = async () => {
   saving.value = true
   try {
-    await fetch('/api/v1/tenant/settings/security', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authStore.token}`
-      },
-      body: JSON.stringify(security.value)
-    })
+    await apiClient.put('/v1/tenant/settings/security', security.value)
     showSuccessToast()
   } catch (error) {
     console.error('Failed to save security:', error)
@@ -731,16 +700,12 @@ const handleLogoUpload = async (event) => {
   formData.append('logo', file)
 
   try {
-    const response = await fetch('/api/v1/tenant/settings/logo', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${authStore.token}` },
-      body: formData
+    const response = await apiClient.post('/v1/tenant/settings/logo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     })
-    if (response.ok) {
-      const data = await response.json()
-      branding.value.logo_url = data.url
-      showSuccessToast()
-    }
+    const data = response.data.data || response.data
+    branding.value.logo_url = data.url
+    showSuccessToast()
   } catch (error) {
     console.error('Failed to upload logo:', error)
   }

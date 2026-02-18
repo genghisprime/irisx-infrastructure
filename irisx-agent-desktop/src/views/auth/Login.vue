@@ -112,7 +112,7 @@
           >
             Use Test Credentials
           </button>
-          <p class="text-xs text-gray-500 mt-2 text-center">demo@irisx.com / demo123</p>
+          <p class="text-xs text-gray-500 mt-2 text-center">demo@demo.com / test123</p>
         </div>
       </div>
 
@@ -143,8 +143,8 @@ const form = ref({
 const showPassword = ref(false)
 
 function fillTestCredentials() {
-  form.value.email = 'demo@irisx.com'
-  form.value.password = 'demo123'
+  form.value.email = 'demo@demo.com'
+  form.value.password = 'test123'
 }
 
 async function handleLogin() {

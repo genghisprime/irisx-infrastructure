@@ -1,6 +1,5 @@
 <template>
-  <DashboardLayout>
-    <div class="agent-management">
+  <div class="agent-management">
       <!-- Header -->
       <div class="page-header">
         <div>
@@ -425,14 +424,12 @@
           </div>
         </div>
       </div>
-    </div>
-  </DashboardLayout>
+  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
-import DashboardLayout from './dashboard/DashboardLayout.vue'
 
 const authStore = useAuthStore()
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://3.83.53.69:3000'

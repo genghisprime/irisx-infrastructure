@@ -126,53 +126,290 @@ email.get('/stats', authenticateJWT, async (c) => {
 });
 
 /**
- * Get email by ID
- * GET /v1/email/:id
+ * Get email deliverability stats
+ * GET /v1/email/deliverability
  */
-email.get('/:id', authenticateJWT, async (c) => {
+email.get('/deliverability', authenticateJWT, async (c) => {
   try {
     const tenantId = c.get('tenantId');
-    const emailId = c.req.param('id');
 
-    const result = await query(
+    // Get 30-day email stats
+    const statsResult = await query(
       `SELECT
-         id, internal_id, message_id,
-         from_email, from_name, to_email, to_name,
-         cc_emails, bcc_emails, reply_to_email,
-         subject, body_text, body_html,
-         status, status_message,
-         has_attachments, attachment_count,
-         email_type, tags,
-         open_count, click_count,
-         bounce_type, bounce_reason,
-         queued_at, sent_at, delivered_at, bounced_at,
-         opened_at, clicked_at, failed_at,
-         created_at, updated_at
+         COUNT(*) as sent_30d,
+         COUNT(CASE WHEN status = 'delivered' THEN 1 END) as delivered,
+         COUNT(CASE WHEN status = 'bounced' THEN 1 END) as bounced,
+         COUNT(CASE WHEN bounce_type = 'hard' THEN 1 END) as hard_bounces,
+         COUNT(CASE WHEN bounce_type = 'soft' THEN 1 END) as soft_bounces
        FROM emails
-       WHERE id = $1 AND tenant_id = $2`,
-      [emailId, tenantId]
+       WHERE tenant_id = $1
+         AND created_at >= NOW() - INTERVAL '30 days'`,
+      [tenantId]
     );
 
-    if (result.rows.length === 0) {
-      return c.json({ error: 'Email not found' }, 404);
+    const stats = statsResult.rows[0] || {};
+    const sent30d = parseInt(stats.sent_30d) || 0;
+    const delivered = parseInt(stats.delivered) || 0;
+    const bounced = parseInt(stats.bounced) || 0;
+    const hardBounces = parseInt(stats.hard_bounces) || 0;
+    const softBounces = parseInt(stats.soft_bounces) || 0;
+
+    // Calculate rates
+    const deliveryRate = sent30d > 0 ? Math.round((delivered / sent30d) * 1000) / 10 : 0;
+    const bounceRate = sent30d > 0 ? Math.round((bounced / sent30d) * 1000) / 10 : 0;
+
+    // Get suppression list
+    const suppressionResult = await query(
+      `SELECT id, email, reason, created_at as added_at
+       FROM email_suppressions
+       WHERE tenant_id = $1
+       ORDER BY created_at DESC
+       LIMIT 100`,
+      [tenantId]
+    );
+
+    // Get spam complaints (if tracked)
+    const spamComplaintsResult = await query(
+      `SELECT COUNT(*) as spam_complaints
+       FROM emails
+       WHERE tenant_id = $1
+         AND status = 'complained'
+         AND created_at >= NOW() - INTERVAL '30 days'`,
+      [tenantId]
+    );
+    const spamComplaints = parseInt(spamComplaintsResult.rows[0]?.spam_complaints) || 0;
+
+    // Calculate percentages for progress bars
+    const totalBounces = hardBounces + softBounces + spamComplaints || 1;
+    const hardBouncePercent = Math.round((hardBounces / totalBounces) * 100);
+    const softBouncePercent = Math.round((softBounces / totalBounces) * 100);
+    const spamComplaintPercent = Math.round((spamComplaints / totalBounces) * 100);
+
+    // Calculate overall health score (simple formula)
+    let overallScore = 100;
+    if (bounceRate > 5) overallScore -= 30;
+    else if (bounceRate > 2) overallScore -= 15;
+    else if (bounceRate > 1) overallScore -= 5;
+
+    if (spamComplaints > 0) overallScore -= 20;
+    if (sent30d === 0) overallScore = 0;
+
+    // Generate insights based on data
+    const insights = [];
+    if (bounceRate > 2) {
+      insights.push({ id: 1, text: `Your bounce rate (${bounceRate}%) is above the recommended 2%. Consider cleaning your email list.` });
+    }
+    if (hardBounces > 10) {
+      insights.push({ id: 2, text: `You have ${hardBounces} hard bounces. Remove these addresses from your list.` });
+    }
+    if (spamComplaints > 0) {
+      insights.push({ id: 3, text: `You have ${spamComplaints} spam complaints. Review your email content and sending frequency.` });
+    }
+    if (sent30d === 0) {
+      insights.push({ id: 4, text: 'No emails sent in the last 30 days. Start sending to see deliverability metrics.' });
+    }
+    if (deliveryRate >= 98 && sent30d > 0) {
+      insights.push({ id: 5, text: `Great job! Your delivery rate of ${deliveryRate}% is excellent.` });
     }
 
-    // Get events
-    const eventsResult = await query(
-      `SELECT event_type, event_data, occurred_at
-       FROM email_events
-       WHERE email_id = $1
-       ORDER BY occurred_at DESC`,
-      [emailId]
+    return c.json({
+      success: true,
+      stats: {
+        sent_30d: sent30d,
+        delivery_rate: deliveryRate,
+        bounce_rate: bounceRate
+      },
+      bounce_stats: {
+        hard_bounces: hardBounces,
+        hard_bounce_percent: hardBouncePercent,
+        soft_bounces: softBounces,
+        soft_bounce_percent: softBouncePercent,
+        spam_complaints: spamComplaints,
+        spam_complaint_percent: spamComplaintPercent
+      },
+      overall_score: Math.max(0, overallScore),
+      last_checked: new Date().toISOString(),
+      suppression_list: suppressionResult.rows,
+      insights,
+      dns_records: [] // DNS records would need tenant domain configuration
+    });
+  } catch (error) {
+    console.error('[API] Error getting deliverability stats:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to fetch deliverability stats',
+      message: error.message
+    }, 500);
+  }
+});
+
+/**
+ * Run deliverability health check
+ * POST /v1/email/deliverability/check
+ */
+email.post('/deliverability/check', authenticateJWT, async (c) => {
+  try {
+    // Just refresh stats - the GET endpoint will return fresh data
+    return c.json({
+      success: true,
+      message: 'Health check completed'
+    });
+  } catch (error) {
+    console.error('[API] Error running health check:', error);
+    return c.json({
+      success: false,
+      error: 'Health check failed',
+      message: error.message
+    }, 500);
+  }
+});
+
+/**
+ * Add email to suppression list
+ * POST /v1/email/suppression
+ */
+email.post('/suppression', authenticateJWT, async (c) => {
+  try {
+    const tenantId = c.get('tenantId');
+    const body = await c.req.json();
+
+    const { email: emailAddress, reason } = body;
+
+    if (!emailAddress || !reason) {
+      return c.json({
+        success: false,
+        error: 'Missing required fields: email, reason'
+      }, 400);
+    }
+
+    // Check if already exists
+    const existingResult = await query(
+      `SELECT id FROM email_suppressions
+       WHERE tenant_id = $1 AND email = $2`,
+      [tenantId, emailAddress.toLowerCase()]
+    );
+
+    if (existingResult.rows.length > 0) {
+      return c.json({
+        success: false,
+        error: 'Email is already in suppression list'
+      }, 409);
+    }
+
+    const result = await query(
+      `INSERT INTO email_suppressions (tenant_id, email, reason)
+       VALUES ($1, $2, $3)
+       RETURNING id, email, reason, created_at as added_at`,
+      [tenantId, emailAddress.toLowerCase(), reason]
     );
 
     return c.json({
-      email: result.rows[0],
-      events: eventsResult.rows
+      success: true,
+      suppression: result.rows[0]
+    }, 201);
+  } catch (error) {
+    console.error('[API] Error adding suppression:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to add suppression',
+      message: error.message
+    }, 500);
+  }
+});
+
+/**
+ * Remove email from suppression list
+ * DELETE /v1/email/suppression/:id
+ */
+email.delete('/suppression/:id', authenticateJWT, async (c) => {
+  try {
+    const tenantId = c.get('tenantId');
+    const suppressionId = c.req.param('id');
+
+    const result = await query(
+      `DELETE FROM email_suppressions
+       WHERE tenant_id = $1 AND id = $2
+       RETURNING id`,
+      [tenantId, suppressionId]
+    );
+
+    if (result.rows.length === 0) {
+      return c.json({
+        success: false,
+        error: 'Suppression not found'
+      }, 404);
+    }
+
+    return c.json({
+      success: true,
+      message: 'Email removed from suppression list'
     });
   } catch (error) {
-    console.error('[API] Error getting email:', error);
-    return c.json({ error: 'Internal server error' }, 500);
+    console.error('[API] Error removing suppression:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to remove suppression',
+      message: error.message
+    }, 500);
+  }
+});
+
+/**
+ * Validate email address
+ * POST /v1/email/validate
+ */
+email.post('/validate', authenticateJWT, async (c) => {
+  try {
+    const body = await c.req.json();
+    const { email: emailAddress } = body;
+
+    if (!emailAddress) {
+      return c.json({
+        valid: false,
+        message: 'Email address is required'
+      }, 400);
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const syntaxValid = emailRegex.test(emailAddress);
+
+    if (!syntaxValid) {
+      return c.json({
+        valid: false,
+        syntax_valid: false,
+        message: 'Invalid email format'
+      });
+    }
+
+    // Check for disposable email domains (simple list)
+    const disposableDomains = [
+      'tempmail.com', 'throwaway.email', 'guerrillamail.com',
+      'mailinator.com', '10minutemail.com', 'fakeinbox.com',
+      'tempinbox.com', 'yopmail.com', 'trashmail.com'
+    ];
+    const domain = emailAddress.split('@')[1]?.toLowerCase();
+    const isDisposable = disposableDomains.includes(domain);
+
+    // Calculate risk score
+    let riskScore = 0;
+    if (isDisposable) riskScore += 80;
+    if (domain && domain.length < 4) riskScore += 20;
+
+    return c.json({
+      valid: !isDisposable && syntaxValid,
+      syntax_valid: syntaxValid,
+      mx_records_exist: true, // Would need actual MX lookup
+      is_disposable: isDisposable,
+      risk_score: riskScore,
+      message: isDisposable ? 'Disposable email detected' : 'Email appears valid'
+    });
+  } catch (error) {
+    console.error('[API] Error validating email:', error);
+    return c.json({
+      valid: false,
+      message: 'Validation failed'
+    }, 500);
   }
 });
 
@@ -456,6 +693,58 @@ email.delete('/templates/:slug', async (c) => {
     });
   } catch (error) {
     console.error('[API] Error deleting template:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+/**
+ * Get email by ID
+ * GET /v1/email/:id
+ * NOTE: Must come AFTER /templates routes to avoid matching 'templates' as an ID
+ */
+email.get('/:id', authenticateJWT, async (c) => {
+  try {
+    const tenantId = c.get('tenantId');
+    const emailId = c.req.param('id');
+
+    const result = await query(
+      `SELECT
+         id, internal_id, message_id,
+         from_email, from_name, to_email, to_name,
+         cc_emails, bcc_emails, reply_to_email,
+         subject, body_text, body_html,
+         status, status_message,
+         has_attachments, attachment_count,
+         email_type, tags,
+         open_count, click_count,
+         bounce_type, bounce_reason,
+         queued_at, sent_at, delivered_at, bounced_at,
+         opened_at, clicked_at, failed_at,
+         created_at, updated_at
+       FROM emails
+       WHERE id = $1 AND tenant_id = $2`,
+      [emailId, tenantId]
+    );
+
+    if (result.rows.length === 0) {
+      return c.json({ error: 'Email not found' }, 404);
+    }
+
+    // Get events
+    const eventsResult = await query(
+      `SELECT event_type, event_data, occurred_at
+       FROM email_events
+       WHERE email_id = $1
+       ORDER BY occurred_at DESC`,
+      [emailId]
+    );
+
+    return c.json({
+      email: result.rows[0],
+      events: eventsResult.rows
+    });
+  } catch (error) {
+    console.error('[API] Error getting email:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
 });

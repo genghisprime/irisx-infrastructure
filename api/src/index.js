@@ -83,6 +83,7 @@ import adminSocialMedia from './routes/admin-social-media.js';
 import adminBillingRates from './routes/admin-billing-rates.js';
 import adminAnalyticsDashboard from './routes/admin-analytics-dashboard.js';
 import adminWhatsApp from './routes/admin-whatsapp.js';
+import whatsapp from './routes/whatsapp.js';
 import adminSMSTemplates from './routes/admin-sms-templates.js';
 import adminEmailTemplates from './routes/admin-email-templates.js';
 import adminApiKeys from './routes/admin-api-keys.js';
@@ -440,6 +441,7 @@ app.route('/v1/tts', tts);
 app.route('/v1/stt', stt); // Speech-to-Text API (multi-provider transcription)
 app.route('/v1/ivr', ivr);
 app.route('/v1/sms', sms);
+app.route('/v1/whatsapp', whatsapp); // WhatsApp Business API (send/receive messages, templates, contacts)
 app.route('/v1/messages', messages);
 app.route('/v1/phone-numbers', phoneNumbers);
 app.route('/v1/contacts', contacts);

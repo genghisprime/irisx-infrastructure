@@ -360,17 +360,18 @@ const availableVariables = [
   { key: 'resetLink', label: '{{resetLink}}', description: 'Password reset link' }
 ]
 
-const sampleData = {
-  firstName: 'John',
-  lastName: 'Doe',
-  email: 'john.doe@example.com',
-  companyName: 'Tazzi Communications',
-  supportEmail: 'support@irisx.com',
-  phoneNumber: '+1-555-123-4567',
-  accountNumber: 'ACC-12345',
-  invoiceAmount: '$299.00',
-  dueDate: 'December 15, 2025',
-  resetLink: 'https://app.irisx.com/reset-password?token=abc123'
+// Preview data for template variable replacement
+const previewVariables = {
+  firstName: '[First Name]',
+  lastName: '[Last Name]',
+  email: '[email@example.com]',
+  companyName: '[Company Name]',
+  supportEmail: '[support@company.com]',
+  phoneNumber: '[Phone Number]',
+  accountNumber: '[Account #]',
+  invoiceAmount: '[$0.00]',
+  dueDate: '[Due Date]',
+  resetLink: '[Reset Link]'
 }
 
 const filteredTemplates = computed(() => {
@@ -476,7 +477,7 @@ function insertVariable(key, field) {
 function renderPreview(content) {
   if (!content) return ''
   let rendered = content
-  for (const [key, value] of Object.entries(sampleData)) {
+  for (const [key, value] of Object.entries(previewVariables)) {
     rendered = rendered.replace(new RegExp(`{{${key}}}`, 'g'), value)
   }
   return rendered

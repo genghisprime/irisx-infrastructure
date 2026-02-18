@@ -81,7 +81,15 @@
       </div>
 
       <div class="dns-records">
+        <div v-if="loading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading DNS records...</p>
+        </div>
+        <div v-else-if="dnsRecords.length === 0" class="empty-state-sm">
+          <p>No DNS records configured. Run a health check to verify your email domain setup.</p>
+        </div>
         <div
+          v-else
           v-for="record in dnsRecords"
           :key="record.type"
           class="dns-record"
@@ -401,59 +409,21 @@ import { useAuthStore } from '../stores/auth';
 const authStore = useAuthStore();
 
 // State
+const loading = ref(false);
 const checking = ref(false);
-const lastChecked = ref(new Date());
-const overallScore = ref(85);
+const lastChecked = ref(null);
+const overallScore = ref(0);
 const expandedRecords = ref([]);
 
-// Stats
+// Stats - populated from API
 const stats = ref({
-  sent_30d: 15234,
-  delivery_rate: 98.5,
-  bounce_rate: 1.5,
+  sent_30d: 0,
+  delivery_rate: 0,
+  bounce_rate: 0,
 });
 
-// DNS Records
-const dnsRecords = ref([
-  {
-    type: 'SPF',
-    status: 'valid',
-    status_text: 'Configured',
-    description: 'Sender Policy Framework - Authorizes mail servers to send on your behalf',
-    value: 'v=spf1 include:_spf.elasticemail.com ~all',
-    recommendation: null,
-  },
-  {
-    type: 'DKIM',
-    status: 'valid',
-    status_text: 'Configured',
-    description: 'DomainKeys Identified Mail - Cryptographically signs your emails',
-    value: 'k=rsa; p=MIGfMA0GCSqGSIb3DQEBA...',
-    recommendation: null,
-  },
-  {
-    type: 'DMARC',
-    status: 'warning',
-    status_text: 'Partially Configured',
-    description: 'Domain-based Message Authentication - Protects against email spoofing',
-    value: 'v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com',
-    recommendation: 'Set policy to "quarantine" or "reject" for better protection',
-    fix_instructions: [
-      'Log in to your DNS provider',
-      'Add a TXT record for _dmarc.yourdomain.com',
-      'Set value to: v=DMARC1; p=quarantine; rua=mailto:dmarc@yourdomain.com',
-      'Wait 24-48 hours for DNS propagation',
-    ],
-  },
-  {
-    type: 'MX',
-    status: 'valid',
-    status_text: 'Configured',
-    description: 'Mail Exchange records - Routes incoming email to your mail server',
-    value: '10 mail.yourdomain.com',
-    recommendation: null,
-  },
-]);
+// DNS Records - populated from API
+const dnsRecords = ref([]);
 
 // Email Validation
 const emailToValidate = ref('');
@@ -466,32 +436,24 @@ const suppressionFilter = ref('');
 const suppressionSearch = ref('');
 const suppressionPage = ref(1);
 const suppressionPerPage = 10;
-const suppressionList = ref([
-  { id: 1, email: 'bounce@example.com', reason: 'bounce', added_at: new Date('2025-10-15') },
-  { id: 2, email: 'spam@example.com', reason: 'complaint', added_at: new Date('2025-10-20') },
-  { id: 3, email: 'unsubscribed@example.com', reason: 'unsubscribe', added_at: new Date('2025-10-25') },
-]);
+const suppressionList = ref([]);
 
 const newSuppression = ref({
   email: '',
   reason: '',
 });
 
-// Bounce Stats
+// Bounce Stats - populated from API
 const bounceStats = ref({
-  hard_bounces: 156,
-  hard_bounce_percent: 62,
-  soft_bounces: 78,
-  soft_bounce_percent: 31,
-  spam_complaints: 18,
-  spam_complaint_percent: 7,
+  hard_bounces: 0,
+  hard_bounce_percent: 0,
+  soft_bounces: 0,
+  soft_bounce_percent: 0,
+  spam_complaints: 0,
+  spam_complaint_percent: 0,
 });
 
-const insights = ref([
-  { id: 1, text: 'Your bounce rate is below the 2% industry threshold. Good job!' },
-  { id: 2, text: 'Consider upgrading DMARC policy to "quarantine" for better security' },
-  { id: 3, text: '18 spam complaints in 30 days - Review email content and targeting' },
-]);
+const insights = ref([]);
 
 // Computed
 const filteredSuppressionList = computed(() => {
@@ -522,10 +484,27 @@ const totalSuppressionPages = computed(() => {
 // Methods
 async function runHealthCheck() {
   checking.value = true;
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  lastChecked.value = new Date();
-  checking.value = false;
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/v1/email/deliverability/check`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`,
+        },
+      }
+    );
+
+    if (response.ok) {
+      // Refresh all data after health check
+      await fetchDeliverabilityStats();
+    }
+  } catch (error) {
+    console.error('Health check failed:', error);
+  } finally {
+    lastChecked.value = new Date();
+    checking.value = false;
+  }
 }
 
 function toggleRecord(type) {
@@ -551,21 +530,40 @@ async function validateEmail() {
   if (!emailToValidate.value) return;
 
   validating.value = true;
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/v1/email/validate`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: emailToValidate.value }),
+      }
+    );
 
-  // Demo validation result
-  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToValidate.value);
-  validationResult.value = {
-    valid: isValid && !emailToValidate.value.includes('fake'),
-    syntax_valid: isValid,
-    mx_records_exist: isValid,
-    is_disposable: emailToValidate.value.includes('temp') || emailToValidate.value.includes('disposable'),
-    risk_score: isValid ? Math.floor(Math.random() * 30) : 85,
-    message: isValid ? 'This email address appears to be valid and deliverable.' : 'This email address has issues and may not be deliverable.',
-  };
-
-  validating.value = false;
+    if (response.ok) {
+      const data = await response.json();
+      validationResult.value = data;
+    } else {
+      // Basic client-side validation as fallback
+      const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToValidate.value);
+      validationResult.value = {
+        valid: isValid,
+        syntax_valid: isValid,
+        message: isValid ? 'Email format is valid.' : 'Invalid email format.',
+      };
+    }
+  } catch (error) {
+    console.error('Email validation failed:', error);
+    validationResult.value = {
+      valid: false,
+      message: 'Validation service unavailable.',
+    };
+  } finally {
+    validating.value = false;
+  }
 }
 
 function formatReason(reason) {
@@ -578,23 +576,61 @@ function formatReason(reason) {
   return reasons[reason] || reason;
 }
 
-function addSuppression() {
-  suppressionList.value.push({
-    id: Date.now(),
-    email: newSuppression.value.email,
-    reason: newSuppression.value.reason,
-    added_at: new Date(),
-  });
+async function addSuppression() {
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/v1/email/suppression`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: newSuppression.value.email,
+          reason: newSuppression.value.reason,
+        }),
+      }
+    );
 
-  showAddSuppressionModal.value = false;
-  newSuppression.value = { email: '', reason: '' };
+    if (response.ok) {
+      // Refresh suppression list
+      await fetchDeliverabilityStats();
+      showAddSuppressionModal.value = false;
+      newSuppression.value = { email: '', reason: '' };
+    } else {
+      const error = await response.json();
+      alert(`Failed to add email: ${error.message || 'Unknown error'}`);
+    }
+  } catch (error) {
+    console.error('Failed to add suppression:', error);
+    alert('Failed to add email to suppression list');
+  }
 }
 
-function removeSuppression(item) {
+async function removeSuppression(item) {
   if (confirm(`Remove ${item.email} from suppression list?`)) {
-    const index = suppressionList.value.findIndex(s => s.id === item.id);
-    if (index > -1) {
-      suppressionList.value.splice(index, 1);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/v1/email/suppression/${item.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${authStore.token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        // Refresh suppression list
+        await fetchDeliverabilityStats();
+      } else {
+        const error = await response.json();
+        alert(`Failed to remove: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to remove suppression:', error);
+      alert('Failed to remove email from suppression list');
     }
   }
 }
@@ -618,9 +654,71 @@ function formatDate(dateString) {
   return date.toLocaleDateString();
 }
 
+// Fetch deliverability stats from API
+async function fetchDeliverabilityStats() {
+  loading.value = true;
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/v1/email/deliverability`,
+      {
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`,
+        },
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        // Update stats
+        stats.value = {
+          sent_30d: data.stats?.sent_30d || 0,
+          delivery_rate: data.stats?.delivery_rate || 0,
+          bounce_rate: data.stats?.bounce_rate || 0,
+        };
+
+        // Update DNS records
+        if (data.dns_records && Array.isArray(data.dns_records)) {
+          dnsRecords.value = data.dns_records;
+        }
+
+        // Update bounce stats
+        if (data.bounce_stats) {
+          bounceStats.value = {
+            hard_bounces: data.bounce_stats.hard_bounces || 0,
+            hard_bounce_percent: data.bounce_stats.hard_bounce_percent || 0,
+            soft_bounces: data.bounce_stats.soft_bounces || 0,
+            soft_bounce_percent: data.bounce_stats.soft_bounce_percent || 0,
+            spam_complaints: data.bounce_stats.spam_complaints || 0,
+            spam_complaint_percent: data.bounce_stats.spam_complaint_percent || 0,
+          };
+        }
+
+        // Update insights
+        if (data.insights && Array.isArray(data.insights)) {
+          insights.value = data.insights;
+        }
+
+        // Update suppression list
+        if (data.suppression_list && Array.isArray(data.suppression_list)) {
+          suppressionList.value = data.suppression_list;
+        }
+
+        // Update overall score
+        overallScore.value = data.overall_score || 0;
+        lastChecked.value = data.last_checked ? new Date(data.last_checked) : new Date();
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch deliverability stats:', error);
+  } finally {
+    loading.value = false;
+  }
+}
+
 // Lifecycle
 onMounted(() => {
-  // Initial data load
+  fetchDeliverabilityStats();
 });
 </script>
 
@@ -1155,6 +1253,27 @@ onMounted(() => {
   text-align: center;
   padding: 2rem;
   color: #9ca3af;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.loading-state p {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid #e5e7eb;
+  border-top-color: #4f46e5;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto;
 }
 
 /* Modal */

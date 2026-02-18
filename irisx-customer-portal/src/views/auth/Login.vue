@@ -112,18 +112,6 @@
           </p>
         </div>
 
-        <!-- Test Credentials -->
-        <div class="mt-6 pt-6 border-t border-gray-200 bg-yellow-50 -mx-8 -mb-8 px-8 py-4 rounded-b-lg">
-          <p class="text-xs text-gray-600 font-semibold mb-2">Test Credentials:</p>
-          <button
-            type="button"
-            @click="fillTestCredentials"
-            class="w-full mt-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-md transition-colors"
-          >
-            Use Test Credentials
-          </button>
-          <p class="text-xs text-gray-500 mt-2 text-center">demo@demo.com / test123</p>
-        </div>
       </div>
 
       <!-- Footer -->
@@ -151,11 +139,6 @@ const form = ref({
 })
 
 const showPassword = ref(false)
-
-function fillTestCredentials() {
-  form.value.email = 'demo@demo.com'
-  form.value.password = 'test123'
-}
 
 async function handleLogin() {
   const result = await authStore.login(form.value.email, form.value.password)

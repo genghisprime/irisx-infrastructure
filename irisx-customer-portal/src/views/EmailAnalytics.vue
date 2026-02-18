@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
-import DashboardLayout from './dashboard/DashboardLayout.vue';
 import { downloadMultiSheetExcel } from '../utils/excelExport';
 import { Line, Bar, Doughnut } from 'vue-chartjs';
 import {
@@ -37,33 +36,22 @@ const authStore = useAuthStore();
 
 // State
 const loading = ref(false);
-const dateRange = ref('30d'); // '7d', '30d', '90d', 'all'
-const selectedCampaign = ref(null);
+const dateRange = ref('30d');
+const hasData = ref(false);
 
-// Analytics data
+// Analytics data from API
 const metrics = ref({
   sent: 0,
   delivered: 0,
   opened: 0,
   clicked: 0,
   bounced: 0,
-  unsubscribed: 0,
-  complained: 0,
+  failed: 0,
+  deliveryRate: 0,
   openRate: 0,
-  clickRate: 0,
-  bounceRate: 0,
 });
 
 const timelineData = ref([]);
-const geographicData = ref([]);
-const deviceData = ref({
-  desktop: 0,
-  mobile: 0,
-  tablet: 0,
-});
-const clientData = ref({});
-const linkClicksData = ref([]);
-const bounceReasonsData = ref({});
 
 // Date range options
 const dateRanges = [
@@ -75,18 +63,16 @@ const dateRanges = [
 
 // Chart configurations
 const timelineChartData = computed(() => {
-  const days = dateRange.value === '7d' ? 7 : dateRange.value === '30d' ? 30 : 90;
-  const labels = [];
-  for (let i = days - 1; i >= 0; i--) {
-    labels.push(format(subDays(new Date(), i), 'MMM d'));
+  if (timelineData.value.length === 0) {
+    return { labels: [], datasets: [] };
   }
 
   return {
-    labels,
+    labels: timelineData.value.map(d => d.date),
     datasets: [
       {
         label: 'Sent',
-        data: generateDemoData(days, 100, 500),
+        data: timelineData.value.map(d => d.sent),
         borderColor: '#6366f1',
         backgroundColor: 'rgba(99, 102, 241, 0.1)',
         fill: true,
@@ -94,7 +80,7 @@ const timelineChartData = computed(() => {
       },
       {
         label: 'Delivered',
-        data: generateDemoData(days, 95, 480),
+        data: timelineData.value.map(d => d.delivered),
         borderColor: '#10b981',
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
         fill: true,
@@ -102,17 +88,9 @@ const timelineChartData = computed(() => {
       },
       {
         label: 'Opened',
-        data: generateDemoData(days, 40, 200),
+        data: timelineData.value.map(d => d.opened),
         borderColor: '#f59e0b',
         backgroundColor: 'rgba(245, 158, 11, 0.1)',
-        fill: true,
-        tension: 0.4,
-      },
-      {
-        label: 'Clicked',
-        data: generateDemoData(days, 10, 80),
-        borderColor: '#8b5cf6',
-        backgroundColor: 'rgba(139, 92, 246, 0.1)',
         fill: true,
         tension: 0.4,
       },
@@ -139,124 +117,38 @@ const timelineChartOptions = {
   },
 };
 
-const deviceChartData = computed(() => {
-  return {
-    labels: ['Desktop', 'Mobile', 'Tablet'],
-    datasets: [
-      {
-        data: [deviceData.value.desktop, deviceData.value.mobile, deviceData.value.tablet],
-        backgroundColor: ['#6366f1', '#10b981', '#f59e0b'],
-        borderWidth: 0,
-      },
-    ],
-  };
-});
-
-const deviceChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'bottom',
-    },
-  },
-};
-
-const clientChartData = computed(() => {
-  const clients = Object.keys(clientData.value);
-  const values = Object.values(clientData.value);
-
-  return {
-    labels: clients,
-    datasets: [
-      {
-        label: 'Opens by Email Client',
-        data: values,
-        backgroundColor: [
-          '#6366f1',
-          '#10b981',
-          '#f59e0b',
-          '#8b5cf6',
-          '#ec4899',
-          '#06b6d4',
-        ],
-      },
-    ],
-  };
-});
-
-const clientChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'bottom',
-    },
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-    },
-  },
-};
-
-const bounceChartData = computed(() => {
-  const reasons = Object.keys(bounceReasonsData.value);
-  const counts = Object.values(bounceReasonsData.value);
-
-  return {
-    labels: reasons,
-    datasets: [
-      {
-        data: counts,
-        backgroundColor: [
-          '#ef4444',
-          '#f59e0b',
-          '#eab308',
-          '#84cc16',
-          '#22c55e',
-        ],
-        borderWidth: 0,
-      },
-    ],
-  };
-});
-
-const bounceChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'right',
-    },
-  },
-};
-
 // Computed metrics
 const engagementScore = computed(() => {
   if (metrics.value.delivered === 0) return 0;
   const openWeight = 0.4;
   const clickWeight = 0.6;
-  const score =
-    (metrics.value.openRate * openWeight + metrics.value.clickRate * clickWeight) * 100;
+  const openRate = metrics.value.openRate || 0;
+  const clickRate = metrics.value.delivered > 0
+    ? (metrics.value.clicked / metrics.value.delivered) * 100
+    : 0;
+  const score = (openRate * openWeight + clickRate * clickWeight);
   return Math.round(score);
 });
 
-// Methods
-function generateDemoData(days, min, max) {
-  const data = [];
-  for (let i = 0; i < days; i++) {
-    data.push(Math.floor(Math.random() * (max - min + 1)) + min);
-  }
-  return data;
-}
+const bounceRate = computed(() => {
+  if (metrics.value.sent === 0) return 0;
+  return ((metrics.value.bounced / metrics.value.sent) * 100).toFixed(1);
+});
 
+const clickRate = computed(() => {
+  if (metrics.value.delivered === 0) return 0;
+  return ((metrics.value.clicked / metrics.value.delivered) * 100).toFixed(1);
+});
+
+// Methods
 async function fetchAnalytics() {
   loading.value = true;
+  hasData.value = false;
+
   try {
-    // Fetch metrics
-    const metricsResponse = await fetch(
-      `${import.meta.env.VITE_API_URL}/v1/email/stats?range=${dateRange.value}`,
+    // Fetch email stats from API
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/v1/emails/stats`,
       {
         headers: {
           'Authorization': `Bearer ${authStore.token}`,
@@ -264,14 +156,27 @@ async function fetchAnalytics() {
       }
     );
 
-    if (metricsResponse.ok) {
-      const data = await metricsResponse.json();
-      metrics.value = data.metrics || metrics.value;
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success && result.data) {
+        metrics.value = {
+          sent: result.data.sent || 0,
+          delivered: result.data.delivered || 0,
+          opened: result.data.opened || 0,
+          clicked: result.data.clicked || 0,
+          bounced: result.data.bounced || 0,
+          failed: result.data.failed || 0,
+          deliveryRate: result.data.deliveryRate || 0,
+          openRate: result.data.openRate || 0,
+        };
+        hasData.value = result.data.total > 0;
+      }
     }
 
-    // Fetch geographic data
-    const geoResponse = await fetch(
-      `${import.meta.env.VITE_API_URL}/v1/email/analytics/geographic?range=${dateRange.value}`,
+    // Fetch timeline data
+    const days = dateRange.value === '7d' ? 7 : dateRange.value === '30d' ? 30 : 90;
+    const timelineResponse = await fetch(
+      `${import.meta.env.VITE_API_URL}/v1/emails/stats/timeline?days=${days}`,
       {
         headers: {
           'Authorization': `Bearer ${authStore.token}`,
@@ -279,77 +184,29 @@ async function fetchAnalytics() {
       }
     );
 
-    if (geoResponse.ok) {
-      const data = await geoResponse.json();
-      geographicData.value = data.countries || [];
+    if (timelineResponse.ok) {
+      const result = await timelineResponse.json();
+      if (result.success && result.data) {
+        timelineData.value = result.data;
+      }
+    } else {
+      // Generate empty timeline labels if endpoint doesn't exist
+      const labels = [];
+      for (let i = days - 1; i >= 0; i--) {
+        labels.push({
+          date: format(subDays(new Date(), i), 'MMM d'),
+          sent: 0,
+          delivered: 0,
+          opened: 0,
+        });
+      }
+      timelineData.value = labels;
     }
-
-    // Set demo data for now
-    setDemoData();
   } catch (error) {
     console.error('Failed to fetch analytics:', error);
-    setDemoData();
   } finally {
     loading.value = false;
   }
-}
-
-function setDemoData() {
-  metrics.value = {
-    sent: 45230,
-    delivered: 44105,
-    opened: 18442,
-    clicked: 3762,
-    bounced: 1125,
-    unsubscribed: 89,
-    complained: 12,
-    openRate: 41.8,
-    clickRate: 8.5,
-    bounceRate: 2.5,
-  };
-
-  deviceData.value = {
-    desktop: 12500,
-    mobile: 23000,
-    tablet: 3200,
-  };
-
-  clientData.value = {
-    'Gmail': 15000,
-    'Apple Mail': 8500,
-    'Outlook': 6200,
-    'Yahoo': 3800,
-    'Other': 4942,
-  };
-
-  bounceReasonsData.value = {
-    'Invalid Email': 450,
-    'Mailbox Full': 320,
-    'Blocked': 180,
-    'Spam': 125,
-    'Other': 50,
-  };
-
-  linkClicksData.value = [
-    { url: 'https://example.com/promo', clicks: 1520, uniqueClicks: 980 },
-    { url: 'https://example.com/product', clicks: 850, uniqueClicks: 620 },
-    { url: 'https://example.com/contact', clicks: 642, uniqueClicks: 510 },
-    { url: 'https://example.com/blog', clicks: 480, uniqueClicks: 380 },
-    { url: 'https://example.com/signup', clicks: 270, uniqueClicks: 230 },
-  ];
-
-  geographicData.value = [
-    { country: 'United States', opens: 15200, clicks: 3100 },
-    { country: 'United Kingdom', opens: 3800, clicks: 720 },
-    { country: 'Canada', opens: 2400, clicks: 480 },
-    { country: 'Australia', opens: 1900, clicks: 380 },
-    { country: 'Germany', opens: 1600, clicks: 320 },
-  ];
-}
-
-function changeRange(range) {
-  dateRange.value = range;
-  fetchAnalytics();
 }
 
 function exportData() {
@@ -364,11 +221,10 @@ function exportData() {
         { metric: 'Opens', value: metrics.value.opened },
         { metric: 'Clicks', value: metrics.value.clicked },
         { metric: 'Bounces', value: metrics.value.bounced },
-        { metric: 'Unsubscribed', value: metrics.value.unsubscribed },
-        { metric: 'Complaints', value: metrics.value.complained },
+        { metric: 'Failed', value: metrics.value.failed },
+        { metric: 'Delivery Rate', value: `${metrics.value.deliveryRate}%` },
         { metric: 'Open Rate', value: `${metrics.value.openRate}%` },
-        { metric: 'Click Rate', value: `${metrics.value.clickRate}%` },
-        { metric: 'Bounce Rate', value: `${metrics.value.bounceRate}%` },
+        { metric: 'Bounce Rate', value: `${bounceRate.value}%` },
         { metric: 'Engagement Score', value: engagementScore.value },
       ],
       columns: [
@@ -376,70 +232,6 @@ function exportData() {
         { key: 'value', label: 'Value', width: 100 }
       ]
     },
-    {
-      name: 'Devices',
-      data: [
-        { device: 'Desktop', opens: deviceData.value.desktop },
-        { device: 'Mobile', opens: deviceData.value.mobile },
-        { device: 'Tablet', opens: deviceData.value.tablet },
-      ],
-      columns: [
-        { key: 'device', label: 'Device', width: 100 },
-        { key: 'opens', label: 'Opens', width: 80, type: 'Number' }
-      ]
-    },
-    {
-      name: 'Email Clients',
-      data: Object.entries(clientData.value).map(([client, count]) => ({
-        client,
-        opens: count
-      })),
-      columns: [
-        { key: 'client', label: 'Email Client', width: 120 },
-        { key: 'opens', label: 'Opens', width: 80, type: 'Number' }
-      ]
-    },
-    {
-      name: 'Geography',
-      data: geographicData.value.map(geo => ({
-        country: geo.country,
-        opens: geo.opens,
-        clicks: geo.clicks,
-        click_rate: `${((geo.clicks / geo.opens) * 100).toFixed(1)}%`
-      })),
-      columns: [
-        { key: 'country', label: 'Country', width: 120 },
-        { key: 'opens', label: 'Opens', width: 80, type: 'Number' },
-        { key: 'clicks', label: 'Clicks', width: 80, type: 'Number' },
-        { key: 'click_rate', label: 'Click Rate', width: 100 }
-      ]
-    },
-    {
-      name: 'Top Links',
-      data: linkClicksData.value.map((link, i) => ({
-        rank: i + 1,
-        url: link.url,
-        total_clicks: link.clicks,
-        unique_clicks: link.uniqueClicks
-      })),
-      columns: [
-        { key: 'rank', label: 'Rank', width: 50, type: 'Number' },
-        { key: 'url', label: 'URL', width: 250 },
-        { key: 'total_clicks', label: 'Total Clicks', width: 100, type: 'Number' },
-        { key: 'unique_clicks', label: 'Unique Clicks', width: 100, type: 'Number' }
-      ]
-    },
-    {
-      name: 'Bounce Reasons',
-      data: Object.entries(bounceReasonsData.value).map(([reason, count]) => ({
-        reason,
-        count
-      })),
-      columns: [
-        { key: 'reason', label: 'Reason', width: 120 },
-        { key: 'count', label: 'Count', width: 80, type: 'Number' }
-      ]
-    }
   ];
 
   downloadMultiSheetExcel(sheets, filename);
@@ -451,42 +243,57 @@ onMounted(() => {
 </script>
 
 <template>
-  <DashboardLayout>
-    <div class="analytics-page">
-      <!-- Header -->
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Email Analytics</h1>
-          <p class="page-description">Track performance and engagement metrics</p>
-        </div>
-        <div class="header-actions">
-          <!-- Date Range Selector -->
-          <select v-model="dateRange" @change="fetchAnalytics" class="date-select">
-            <option v-for="range in dateRanges" :key="range.value" :value="range.value">
-              {{ range.label }}
-            </option>
-          </select>
-          <button @click="exportData" class="btn btn-outline">
-            <svg style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" class=" icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export
-          </button>
-        </div>
+  <div class="analytics-page">
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Email Analytics</h1>
+        <p class="page-description">Track performance and engagement metrics</p>
       </div>
+      <div class="header-actions">
+        <!-- Date Range Selector -->
+        <select v-model="dateRange" @change="fetchAnalytics" class="date-select">
+          <option v-for="range in dateRanges" :key="range.value" :value="range.value">
+            {{ range.label }}
+          </option>
+        </select>
+        <button @click="exportData" class="btn btn-outline" :disabled="!hasData">
+          <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export
+        </button>
+      </div>
+    </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading analytics...</p>
+    </div>
+
+    <!-- No Data State -->
+    <div v-else-if="!hasData" class="empty-state">
+      <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+      <h3>No Email Data Yet</h3>
+      <p>Start sending emails to see your analytics here.</p>
+    </div>
+
+    <!-- Analytics Content -->
+    <template v-else>
       <!-- Key Metrics Cards -->
       <div class="metrics-grid">
         <div class="metric-card">
           <div class="metric-label">Total Sent</div>
           <div class="metric-value">{{ metrics.sent.toLocaleString() }}</div>
-          <div class="metric-trend positive">+12.5% from last period</div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Delivered</div>
           <div class="metric-value">{{ metrics.delivered.toLocaleString() }}</div>
-          <div class="metric-sublabel">{{ ((metrics.delivered / metrics.sent) * 100).toFixed(1) }}% delivery rate</div>
+          <div class="metric-sublabel">{{ metrics.deliveryRate }}% delivery rate</div>
         </div>
 
         <div class="metric-card">
@@ -498,13 +305,13 @@ onMounted(() => {
         <div class="metric-card">
           <div class="metric-label">Clicks</div>
           <div class="metric-value">{{ metrics.clicked.toLocaleString() }}</div>
-          <div class="metric-sublabel">{{ metrics.clickRate }}% click rate</div>
+          <div class="metric-sublabel">{{ clickRate }}% click rate</div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Bounces</div>
           <div class="metric-value">{{ metrics.bounced.toLocaleString() }}</div>
-          <div class="metric-sublabel">{{ metrics.bounceRate }}% bounce rate</div>
+          <div class="metric-sublabel">{{ bounceRate }}% bounce rate</div>
         </div>
 
         <div class="metric-card highlight">
@@ -519,7 +326,7 @@ onMounted(() => {
       </div>
 
       <!-- Timeline Chart -->
-      <div class="chart-section">
+      <div class="chart-section" v-if="timelineData.length > 0">
         <div class="chart-header">
           <h2 class="chart-title">Engagement Timeline</h2>
           <p class="chart-description">Track email performance over time</p>
@@ -528,119 +335,8 @@ onMounted(() => {
           <Line :data="timelineChartData" :options="timelineChartOptions" />
         </div>
       </div>
-
-      <!-- Charts Grid -->
-      <div class="charts-grid">
-        <!-- Device Breakdown -->
-        <div class="chart-section">
-          <div class="chart-header">
-            <h3 class="chart-title">Device Breakdown</h3>
-            <p class="chart-description">Opens by device type</p>
-          </div>
-          <div class="chart-container" style="height: 300px">
-            <Doughnut :data="deviceChartData" :options="deviceChartOptions" />
-          </div>
-          <div class="device-stats">
-            <div class="device-stat">
-              <span class="device-dot" style="background: #6366f1"></span>
-              <span>Desktop: {{ deviceData.desktop.toLocaleString() }}</span>
-            </div>
-            <div class="device-stat">
-              <span class="device-dot" style="background: #10b981"></span>
-              <span>Mobile: {{ deviceData.mobile.toLocaleString() }}</span>
-            </div>
-            <div class="device-stat">
-              <span class="device-dot" style="background: #f59e0b"></span>
-              <span>Tablet: {{ deviceData.tablet.toLocaleString() }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Email Client Breakdown -->
-        <div class="chart-section">
-          <div class="chart-header">
-            <h3 class="chart-title">Email Clients</h3>
-            <p class="chart-description">Opens by email client</p>
-          </div>
-          <div class="chart-container" style="height: 300px">
-            <Bar :data="clientChartData" :options="clientChartOptions" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Geographic Data -->
-      <div class="chart-section">
-        <div class="chart-header">
-          <h2 class="chart-title">Geographic Distribution</h2>
-          <p class="chart-description">Email engagement by country</p>
-        </div>
-        <div class="geo-table">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Country</th>
-                <th>Opens</th>
-                <th>Clicks</th>
-                <th>Click Rate</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="country in geographicData" :key="country.country">
-                <td class="country-cell">
-                  <span class="country-name">{{ country.country }}</span>
-                </td>
-                <td>{{ country.opens.toLocaleString() }}</td>
-                <td>{{ country.clicks.toLocaleString() }}</td>
-                <td>
-                  <span class="rate-badge">
-                    {{ ((country.clicks / country.opens) * 100).toFixed(1) }}%
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Link Clicks -->
-      <div class="chart-section">
-        <div class="chart-header">
-          <h2 class="chart-title">Top Performing Links</h2>
-          <p class="chart-description">Most clicked links in your emails</p>
-        </div>
-        <div class="links-list">
-          <div v-for="(link, index) in linkClicksData" :key="index" class="link-item">
-            <div class="link-rank">{{ index + 1 }}</div>
-            <div class="link-info">
-              <div class="link-url">{{ link.url }}</div>
-              <div class="link-stats">
-                <span>{{ link.clicks }} total clicks</span>
-                <span class="separator">•</span>
-                <span>{{ link.uniqueClicks }} unique</span>
-              </div>
-            </div>
-            <div class="link-bar">
-              <div
-                class="link-bar-fill"
-                :style="{ width: `${(link.clicks / linkClicksData[0].clicks) * 100}%` }"
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bounce Reasons -->
-      <div class="chart-section">
-        <div class="chart-header">
-          <h2 class="chart-title">Bounce Reasons</h2>
-          <p class="chart-description">Why emails bounced</p>
-        </div>
-        <div class="chart-container" style="height: 300px">
-          <Doughnut :data="bounceChartData" :options="bounceChartOptions" />
-        </div>
-      </div>
-    </div>
-  </DashboardLayout>
+    </template>
+  </div>
 </template>
 
 <style scoped>
@@ -682,6 +378,62 @@ onMounted(() => {
   font-size: 0.875rem;
   background: white;
   cursor: pointer;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  color: #d1d5db;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-state p {
+  color: #6b7280;
+  margin: 0;
 }
 
 /* Metrics Grid */
@@ -730,15 +482,6 @@ onMounted(() => {
 .metric-sublabel {
   font-size: 0.875rem;
   color: #9ca3af;
-}
-
-.metric-trend {
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.metric-trend.positive {
-  color: #10b981;
 }
 
 .score-badge {
@@ -794,145 +537,6 @@ onMounted(() => {
   position: relative;
 }
 
-.charts-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.device-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.device-stat {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.device-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-/* Geographic Table */
-.geo-table {
-  overflow-x: auto;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.data-table th {
-  text-align: left;
-  padding: 0.75rem;
-  background: #f9fafb;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.data-table td {
-  padding: 0.75rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.country-name {
-  font-weight: 500;
-  color: #111827;
-}
-
-.rate-badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  background: #eef2ff;
-  color: #4f46e5;
-  border-radius: 9999px;
-  font-weight: 600;
-  font-size: 0.75rem;
-}
-
-/* Links List */
-.links-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.link-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f9fafb;
-  border-radius: 0.375rem;
-}
-
-.link-rank {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #4f46e5;
-  color: white;
-  border-radius: 50%;
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.link-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.link-url {
-  font-size: 0.875rem;
-  color: #4f46e5;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 0.25rem;
-}
-
-.link-stats {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.separator {
-  margin: 0 0.5rem;
-}
-
-.link-bar {
-  width: 120px;
-  height: 8px;
-  background: #e5e7eb;
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.link-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
-  transition: width 0.3s;
-}
-
 /* Buttons */
 .btn {
   padding: 0.625rem 1.25rem;
@@ -946,25 +550,24 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-outline {
   background: white;
   color: #374151;
   border: 1px solid #d1d5db;
 }
 
-.btn-outline:hover {
+.btn-outline:hover:not(:disabled) {
   background: #f9fafb;
 }
 
 .icon-sm {
   width: 1rem;
   height: 1rem;
-}
-
-@media (max-width: 1024px) {
-  .charts-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 768px) {

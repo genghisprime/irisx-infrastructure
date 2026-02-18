@@ -1377,14 +1377,7 @@ async function fetchAgents() {
     agents.value = response.data?.agents || []
   } catch (error) {
     console.error('Failed to fetch agents:', error)
-    // Demo data
-    agents.value = [
-      { id: '1', name: 'John Smith', role: 'Agent' },
-      { id: '2', name: 'Sarah Johnson', role: 'Agent' },
-      { id: '3', name: 'Mike Williams', role: 'Senior Agent' },
-      { id: '4', name: 'Emily Davis', role: 'Agent' },
-      { id: '5', name: 'David Brown', role: 'Team Lead' }
-    ]
+    agents.value = []
   }
 }
 
@@ -1396,13 +1389,7 @@ async function fetchSchedule() {
     shifts.value = response.data?.data || []
   } catch (error) {
     console.error('Failed to fetch schedule:', error)
-    // Demo data
-    shifts.value = [
-      { id: '1', agent_id: '1', date: weekDays.value[1].date, start_time: '09:00', end_time: '17:00', color: '#4F46E5', template_name: 'Day Shift' },
-      { id: '2', agent_id: '1', date: weekDays.value[2].date, start_time: '09:00', end_time: '17:00', color: '#4F46E5', template_name: 'Day Shift' },
-      { id: '3', agent_id: '2', date: weekDays.value[1].date, start_time: '14:00', end_time: '22:00', color: '#10B981', template_name: 'Evening Shift' },
-      { id: '4', agent_id: '3', date: weekDays.value[3].date, start_time: '06:00', end_time: '14:00', color: '#F59E0B', template_name: 'Morning Shift' }
-    ]
+    shifts.value = []
   }
 }
 
@@ -1412,13 +1399,7 @@ async function fetchTemplates() {
     templates.value = response.data?.data || []
   } catch (error) {
     console.error('Failed to fetch templates:', error)
-    // Demo data
-    templates.value = [
-      { id: '1', name: 'Day Shift', start_time: '09:00', end_time: '17:00', break_minutes: 60, color: '#4F46E5' },
-      { id: '2', name: 'Evening Shift', start_time: '14:00', end_time: '22:00', break_minutes: 60, color: '#10B981' },
-      { id: '3', name: 'Morning Shift', start_time: '06:00', end_time: '14:00', break_minutes: 60, color: '#F59E0B' },
-      { id: '4', name: 'Night Shift', start_time: '22:00', end_time: '06:00', break_minutes: 60, color: '#8B5CF6' }
-    ]
+    templates.value = []
   }
 }
 
@@ -1429,12 +1410,8 @@ async function fetchTimeOff() {
     tabs.value[1].badge = timeOffRequests.value.filter(r => r.status === 'pending').length
   } catch (error) {
     console.error('Failed to fetch time-off:', error)
-    // Demo data
-    timeOffRequests.value = [
-      { id: '1', agent_id: '1', agent_name: 'John Smith', start_date: '2026-02-20', end_date: '2026-02-21', request_type: 'pto', status: 'pending', reason: 'Family vacation' },
-      { id: '2', agent_id: '2', agent_name: 'Sarah Johnson', start_date: '2026-02-25', end_date: '2026-02-25', request_type: 'personal', status: 'approved', reason: 'Doctor appointment' }
-    ]
-    tabs.value[1].badge = 1
+    timeOffRequests.value = []
+    tabs.value[1].badge = 0
   }
 }
 
@@ -1444,13 +1421,7 @@ async function fetchAdherence() {
     adherenceData.value = response.data?.data || []
   } catch (error) {
     console.error('Failed to fetch adherence:', error)
-    // Demo data
-    adherenceData.value = [
-      { id: '1', name: 'John Smith', scheduledStart: '09:00 AM', scheduledEnd: '05:00 PM', actualStatus: 'Available', clockIn: '09:02 AM', clockInLate: false, lateMinutes: 0, adherencePercent: 98, adherent: true },
-      { id: '2', name: 'Sarah Johnson', scheduledStart: '09:00 AM', scheduledEnd: '05:00 PM', actualStatus: 'On Call', clockIn: '09:15 AM', clockInLate: true, lateMinutes: 15, adherencePercent: 85, adherent: false },
-      { id: '3', name: 'Mike Williams', scheduledStart: '06:00 AM', scheduledEnd: '02:00 PM', actualStatus: 'Break', clockIn: '05:58 AM', clockInLate: false, lateMinutes: 0, adherencePercent: 100, adherent: true },
-      { id: '4', name: 'Emily Davis', scheduledStart: '09:00 AM', scheduledEnd: '05:00 PM', actualStatus: 'Available', clockIn: '08:55 AM', clockInLate: false, lateMinutes: 0, adherencePercent: 100, adherent: true }
-    ]
+    adherenceData.value = []
   }
 }
 
@@ -1464,13 +1435,7 @@ async function fetchMyUpcomingShifts() {
     myUpcomingShifts.value = response.data?.data || []
   } catch (error) {
     console.error('Failed to fetch my shifts:', error)
-    // Demo data
-    const today = new Date()
-    myUpcomingShifts.value = [
-      { id: 's1', date: new Date(today.getTime() + 86400000).toISOString().split('T')[0], start_time: '09:00', end_time: '17:00' },
-      { id: 's2', date: new Date(today.getTime() + 172800000).toISOString().split('T')[0], start_time: '09:00', end_time: '17:00' },
-      { id: 's3', date: new Date(today.getTime() + 259200000).toISOString().split('T')[0], start_time: '14:00', end_time: '22:00' }
-    ]
+    myUpcomingShifts.value = []
   }
 }
 
@@ -1487,29 +1452,9 @@ async function fetchSwaps() {
     tabs.value[2].badge = incomingSwaps.value.length
   } catch (error) {
     console.error('Failed to fetch swaps:', error)
-    // Demo data
-    incomingSwaps.value = [
-      {
-        id: 'sw1',
-        requester_name: 'Sarah Johnson',
-        shift_date: '2026-02-18',
-        shift_start: '14:00',
-        shift_end: '22:00',
-        notes: 'Need to take my kid to the doctor',
-        status: 'pending'
-      }
-    ]
-    mySwapRequests.value = [
-      {
-        id: 'sw2',
-        shift_date: '2026-02-20',
-        shift_start: '09:00',
-        shift_end: '17:00',
-        target_agent_name: null,
-        status: 'pending'
-      }
-    ]
-    tabs.value[2].badge = 1
+    incomingSwaps.value = []
+    mySwapRequests.value = []
+    tabs.value[2].badge = 0
   }
 }
 
@@ -1519,27 +1464,7 @@ async function fetchOpenOffers() {
     openOffers.value = response.data?.data || []
   } catch (error) {
     console.error('Failed to fetch offers:', error)
-    // Demo data
-    openOffers.value = [
-      {
-        id: 'of1',
-        agent_name: 'Mike Williams',
-        shift_date: '2026-02-19',
-        shift_start: '06:00',
-        shift_end: '14:00',
-        offer_type: 'giveaway',
-        notes: 'Family emergency, need someone to cover'
-      },
-      {
-        id: 'of2',
-        agent_name: 'Emily Davis',
-        shift_date: '2026-02-21',
-        shift_start: '09:00',
-        shift_end: '17:00',
-        offer_type: 'trade',
-        notes: 'Looking to swap for an evening shift'
-      }
-    ]
+    openOffers.value = []
   }
 }
 

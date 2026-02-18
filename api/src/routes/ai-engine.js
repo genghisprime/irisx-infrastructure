@@ -7,14 +7,15 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { createAIEngineService } from '../services/ai-engine.js';
+import pool from '../db/connection.js';
 
 const router = new Hono();
 
 // Initialize AI service
 let aiService = null;
-const getAIService = (c) => {
+const getAIService = () => {
   if (!aiService) {
-    aiService = createAIEngineService(c.get('db'));
+    aiService = createAIEngineService(pool);
   }
   return aiService;
 };
@@ -421,7 +422,7 @@ router.get('/models', async (c) => {
 
 router.get('/providers', async (c) => {
   try {
-    const db = c.get('db');
+    const db = pool;
 
     const result = await db.query(`
       SELECT id, name, display_name, description, supported_features, is_active
@@ -448,7 +449,7 @@ router.get('/providers', async (c) => {
 router.get('/templates', async (c) => {
   try {
     const tenantId = c.get('tenantId');
-    const db = c.get('db');
+    const db = pool;
     const useCase = c.req.query('use_case');
 
     let query = `
@@ -492,7 +493,7 @@ router.post('/templates', zValidator('json', templateSchema), async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const body = c.req.valid('json');
-    const db = c.get('db');
+    const db = pool;
 
     const result = await db.query(`
       INSERT INTO ai_prompt_templates
@@ -527,7 +528,7 @@ router.delete('/templates/:id', async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const templateId = c.req.param('id');
-    const db = c.get('db');
+    const db = pool;
 
     await db.query(`
       UPDATE ai_prompt_templates
@@ -629,9 +630,8 @@ router.get('/usage', async (c) => {
 router.get('/settings', async (c) => {
   try {
     const tenantId = c.get('tenantId');
-    const db = c.get('db');
 
-    const result = await db.query(`
+    const result = await pool.query(`
       SELECT * FROM tenant_ai_settings WHERE tenant_id = $1
     `, [tenantId]);
 
@@ -662,7 +662,7 @@ router.put('/settings', zValidator('json', settingsSchema), async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const body = c.req.valid('json');
-    const db = c.get('db');
+    const db = pool;
 
     const result = await db.query(`
       INSERT INTO tenant_ai_settings (tenant_id, is_enabled, default_quality_tier, max_cost_per_request, monthly_budget, enabled_features, content_moderation_enabled, allowed_models)
@@ -698,7 +698,7 @@ router.put('/settings', zValidator('json', settingsSchema), async (c) => {
 router.get('/credentials', async (c) => {
   try {
     const tenantId = c.get('tenantId');
-    const db = c.get('db');
+    const db = pool;
 
     const result = await db.query(`
       SELECT tac.id, tac.provider_id, ap.name as provider_name, ap.display_name,
@@ -731,7 +731,7 @@ router.post('/credentials', zValidator('json', credentialSchema), async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const body = c.req.valid('json');
-    const db = c.get('db');
+    const db = pool;
 
     const result = await db.query(`
       INSERT INTO tenant_ai_credentials (tenant_id, provider_id, credentials)
@@ -759,7 +759,7 @@ router.delete('/credentials/:id', async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const credentialId = c.req.param('id');
-    const db = c.get('db');
+    const db = pool;
 
     await db.query(`
       DELETE FROM tenant_ai_credentials
@@ -783,7 +783,7 @@ router.delete('/credentials/:id', async (c) => {
 router.get('/chatbots', async (c) => {
   try {
     const tenantId = c.get('tenantId');
-    const db = c.get('db');
+    const db = pool;
 
     const result = await db.query(`
       SELECT c.*, am.model_id, ap.display_name as provider_name
@@ -823,7 +823,7 @@ router.post('/chatbots', zValidator('json', chatbotSchema), async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const body = c.req.valid('json');
-    const db = c.get('db');
+    const db = pool;
 
     const result = await db.query(`
       INSERT INTO ai_chatbots
@@ -852,7 +852,7 @@ router.put('/chatbots/:id', zValidator('json', chatbotSchema), async (c) => {
     const tenantId = c.get('tenantId');
     const chatbotId = c.req.param('id');
     const body = c.req.valid('json');
-    const db = c.get('db');
+    const db = pool;
 
     const result = await db.query(`
       UPDATE ai_chatbots SET
@@ -888,7 +888,7 @@ router.delete('/chatbots/:id', async (c) => {
   try {
     const tenantId = c.get('tenantId');
     const chatbotId = c.req.param('id');
-    const db = c.get('db');
+    const db = pool;
 
     await db.query(`
       UPDATE ai_chatbots SET is_active = false

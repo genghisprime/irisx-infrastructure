@@ -564,71 +564,13 @@ const loadChartData = async () => {
         utilizationData.value = data.utilization
         renderUtilizationChart()
       }
-    } else {
-      // Generate demo data if API not available
-      generateDemoChartData()
     }
   } catch (error) {
     console.error('Failed to load chart data:', error)
-    generateDemoChartData()
   }
 }
 
-const generateDemoChartData = () => {
-  // Generate hourly data for past 12 hours
-  const now = new Date()
-  const hourlyDemo = []
-  for (let i = 11; i >= 0; i--) {
-    const hour = new Date(now - i * 3600000)
-    hourlyDemo.push({
-      hour: hour.getHours(),
-      label: `${hour.getHours()}:00`,
-      inbound: Math.floor(Math.random() * 50) + 20,
-      outbound: Math.floor(Math.random() * 30) + 10,
-      answered: Math.floor(Math.random() * 40) + 15,
-      abandoned: Math.floor(Math.random() * 10)
-    })
-  }
-  hourlyData.value = hourlyDemo
-
-  // Generate SL trend
-  const slDemo = []
-  for (let i = 11; i >= 0; i--) {
-    const hour = new Date(now - i * 3600000)
-    slDemo.push({
-      label: `${hour.getHours()}:00`,
-      value: Math.floor(Math.random() * 20) + 75
-    })
-  }
-  serviceLevelData.value = slDemo
-
-  // Channel distribution
-  channelData.value = {
-    voice: Math.floor(Math.random() * 200) + 100,
-    sms: Math.floor(Math.random() * 80) + 20,
-    email: Math.floor(Math.random() * 60) + 30,
-    chat: Math.floor(Math.random() * 40) + 20,
-    social: Math.floor(Math.random() * 20) + 5
-  }
-
-  // Utilization trend (4 hours)
-  const utilDemo = []
-  for (let i = 3; i >= 0; i--) {
-    const hour = new Date(now - i * 3600000)
-    utilDemo.push({
-      label: `${hour.getHours()}:00`,
-      utilization: Math.floor(Math.random() * 30) + 60,
-      occupancy: Math.floor(Math.random() * 25) + 70
-    })
-  }
-  utilizationData.value = utilDemo
-
-  // Render all charts
-  renderHourlyChart()
-  renderServiceLevelChart()
-  renderChannelChart()
-  renderUtilizationChart()
-}
+// Charts will show empty state when no API data is available
 
 const renderHourlyChart = () => {
   if (!hourlyChartRef.value || hourlyData.value.length === 0) return

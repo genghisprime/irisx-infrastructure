@@ -4,7 +4,8 @@
   "description": "> **Next-generation unified communications platform: Voice + SMS + Email + Social from ONE API**",
   "main": "index.js",
   "directories": {
-    "doc": "docs"
+    "doc": "docs",
+    "test": "tests"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -15,5 +16,8 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "playwright": "^1.58.2"
+  },
+  "dependencies": {
+    "playwright-core": "^1.58.2"
   }
 }

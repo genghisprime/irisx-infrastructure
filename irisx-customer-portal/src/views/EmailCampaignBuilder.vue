@@ -2,7 +2,6 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import DashboardLayout from './dashboard/DashboardLayout.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -305,8 +304,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <DashboardLayout>
-    <div class="campaign-builder">
+  <div class="campaign-builder">
       <!-- Header -->
       <div class="builder-header">
         <div>
@@ -635,8 +633,7 @@ onMounted(() => {
           {{ saving ? 'Launching...' : '🚀 Launch Campaign' }}
         </button>
       </div>
-    </div>
-  </DashboardLayout>
+  </div>
 </template>
 
 <style scoped>
