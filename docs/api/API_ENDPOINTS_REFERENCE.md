@@ -273,6 +273,92 @@ Get AI-generated transcript for a recorded call.
 
 ---
 
+### Call Recordings
+
+#### List Recordings
+
+**GET /v1/recordings**
+
+List call recordings for the tenant.
+
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `page` | integer | Page number (default: 1) |
+| `limit` | integer | Results per page (max 100) |
+| `status` | string | Filter by recording status |
+| `startDate` | string | Filter from date (ISO) |
+| `endDate` | string | Filter to date (ISO) |
+| `search` | string | Search by phone number |
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "recordings": [
+      {
+        "id": 1,
+        "call_sid": "CA123...",
+        "call_uuid": "uuid-123",
+        "from_number": "+15555551234",
+        "to_number": "+15555559999",
+        "direction": "outbound",
+        "call_status": "completed",
+        "recording_url": "https://...",
+        "recording_status": "completed",
+        "recording_duration_seconds": 125,
+        "recording_size_bytes": 250000,
+        "transcription_text": "Hello...",
+        "transcription_confidence": 0.95,
+        "agent_name": "John Doe",
+        "created_at": "2026-02-17T12:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 25,
+      "total": 150,
+      "totalPages": 6
+    }
+  }
+}
+```
+
+#### Get Recording
+
+**GET /v1/recordings/:id**
+
+Get details for a specific recording.
+
+#### Delete Recording
+
+**DELETE /v1/recordings/:id**
+
+Delete a recording (marks as deleted, removes URL).
+
+#### Recording Statistics
+
+**GET /v1/recordings/stats**
+
+Get recording statistics for the tenant.
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "totalRecordings": 1500,
+    "totalDuration": 125000,
+    "totalSize": 2500000000,
+    "transcribedCount": 1200
+  }
+}
+```
+
+---
+
 ### SMS Messages
 
 #### Send SMS
@@ -399,6 +485,91 @@ Send a transactional email.
 **GET /v1/email/analytics/deliverability** - Deliverability metrics
 **GET /v1/email/analytics/engagement** - Engagement metrics
 
+#### Email Statistics
+
+**GET /v1/emails/stats** - Get email statistics
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "total": 5000,
+    "sent": 4800,
+    "delivered": 4700,
+    "opened": 2500,
+    "clicked": 800,
+    "bounced": 100,
+    "failed": 50,
+    "deliveryRate": 98,
+    "openRate": 53
+  }
+}
+```
+
+**GET /v1/emails/stats/timeline** - Get email statistics over time
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `days` | integer | 30 | Number of days to include |
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "timeline": [
+      {
+        "date": "2026-02-17",
+        "total": 150,
+        "sent": 145,
+        "delivered": 140,
+        "opened": 75,
+        "clicked": 25,
+        "bounced": 5
+      }
+    ],
+    "period": 30
+  }
+}
+```
+
+#### Email Deliverability
+
+**GET /v1/email/deliverability** - Get email deliverability stats and health
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "stats": {
+      "sent_30d": 15234,
+      "delivery_rate": 98.5,
+      "bounce_rate": 1.5,
+      "open_rate": 45.2,
+      "click_rate": 12.8
+    },
+    "bounce_stats": {
+      "hard_bounces": 50,
+      "soft_bounces": 150
+    },
+    "overall_score": 92,
+    "suppression_list": [],
+    "insights": [],
+    "dns_records": {
+      "spf": { "status": "valid" },
+      "dkim": { "status": "valid" },
+      "dmarc": { "status": "valid" }
+    }
+  }
+}
+```
+
+**POST /v1/email/deliverability/check** - Run deliverability health check
+
 ---
 
 ## Messaging Channels
@@ -457,6 +628,47 @@ Send a transactional email.
 ---
 
 ### Social Media
+
+#### Social Hub
+
+**GET /v1/social/accounts** - List connected social media accounts
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "accounts": [
+      {
+        "id": 1,
+        "platform": "discord",
+        "name": "Support Server",
+        "status": "connected",
+        "created_at": "2026-02-01T00:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+**GET /v1/social/stats** - Get social media statistics
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "total_messages": 5000,
+    "by_platform": {
+      "discord": 2000,
+      "slack": 1500,
+      "teams": 1000,
+      "telegram": 500
+    },
+    "avg_response_time": 45
+  }
+}
+```
 
 #### Facebook Messenger
 
@@ -1308,6 +1520,20 @@ Send a transactional email.
 
 ## Changelog
 
+### v2.1.0 (February 2026)
+
+**New Features:**
+- Call Recordings API (`/v1/recordings`) - List, get, delete recordings
+- Email Statistics Timeline (`/v1/emails/stats/timeline`) - Daily email metrics
+- Email Deliverability (`/v1/email/deliverability`) - DNS health, bounce stats
+- Social Hub (`/v1/social/accounts`, `/v1/social/stats`) - Unified social media management
+- Email Automation Rules (`/v1/email/automation/rules`) - Automation rule management
+
+**Bug Fixes:**
+- Fixed route ordering for `/v1/contacts/lists`
+- Fixed WFM tables (shift_swaps, shift_offers)
+- Fixed analytics unified metrics
+
 ### v2.0.0 (February 2026)
 
 **New Features:**
@@ -1347,4 +1573,4 @@ Send a transactional email.
 
 ---
 
-Last Updated: February 17, 2026
+Last Updated: February 18, 2026
