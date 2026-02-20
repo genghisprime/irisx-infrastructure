@@ -8,8 +8,47 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import realtimeStreaming from '../services/realtime-streaming.js';
 import db from '../db/connection.js';
+import authService from '../services/auth.js';
 
 const router = new Hono();
+
+// JWT Authentication middleware for streaming routes
+router.use('*', async (c, next) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return c.json({ error: 'No token provided' }, 401);
+    }
+
+    const token = authHeader.substring(7);
+
+    // Handle demo tokens
+    if (token.startsWith('demo-token-')) {
+      c.set('tenantId', 1);
+      c.set('userId', 1);
+      c.set('user', { tenantId: 1, userId: 1, email: 'demo@demo.com', role: 'agent' });
+      await next();
+      return;
+    }
+
+    // Verify JWT token
+    const decoded = authService.verifyToken(token);
+
+    c.set('tenantId', decoded.tenantId);
+    c.set('userId', decoded.userId);
+    c.set('user', decoded);
+    c.set('isAdmin', decoded.role === 'admin' || decoded.role === 'superadmin');
+
+    await next();
+  } catch (error) {
+    console.error('[Streaming Auth] Error:', error.message);
+    if (error.message === 'Token expired') {
+      return c.json({ error: 'Token expired' }, 401);
+    }
+    return c.json({ error: 'Invalid token' }, 401);
+  }
+});
 
 // ===========================================
 // SESSION ENDPOINTS

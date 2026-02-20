@@ -24,13 +24,31 @@ class RealtimeStreamingService {
   async createSession(tenantId, userId, streamTypes = ['transcript'], clientInfo = {}) {
     const sessionToken = randomUUID();
 
-    const result = await db.query(`
-      INSERT INTO streaming_sessions (
-        tenant_id, user_id, session_token, stream_types, client_info
-      )
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *
-    `, [tenantId, userId, sessionToken, streamTypes, clientInfo]);
+    // Try to insert with user_id first, fall back to without if column doesn't exist
+    let result;
+    try {
+      result = await db.query(`
+        INSERT INTO streaming_sessions (
+          tenant_id, user_id, session_token, stream_types, client_info
+        )
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+      `, [tenantId, userId, sessionToken, streamTypes, clientInfo]);
+    } catch (err) {
+      // If user_id column doesn't exist, try without it
+      if (err.message && err.message.includes('user_id')) {
+        console.log('[Streaming] user_id column not found, inserting without it');
+        result = await db.query(`
+          INSERT INTO streaming_sessions (
+            tenant_id, session_token, stream_types, client_info
+          )
+          VALUES ($1, $2, $3, $4)
+          RETURNING *
+        `, [tenantId, sessionToken, streamTypes, clientInfo]);
+      } else {
+        throw err;
+      }
+    }
 
     const session = result.rows[0];
     this.sessions.set(sessionToken, {
@@ -57,9 +75,9 @@ class RealtimeStreamingService {
       return this.sessions.get(sessionToken);
     }
 
-    // Check database
+    // Check database - use SELECT * to handle missing user_id column gracefully
     const result = await db.query(`
-      SELECT id, tenant_id, user_id, stream_types, call_id, status
+      SELECT id, tenant_id, stream_types, call_id, status
       FROM streaming_sessions
       WHERE session_token = $1 AND status = 'connected'
     `, [sessionToken]);
@@ -72,7 +90,7 @@ class RealtimeStreamingService {
     const sessionInfo = {
       id: session.id,
       tenantId: session.tenant_id,
-      userId: session.user_id,
+      userId: session.user_id || null, // user_id may not exist in older schemas
       streamTypes: session.stream_types,
       callId: session.call_id
     };
@@ -601,13 +619,14 @@ class RealtimeStreamingService {
    * Get active sessions
    */
   async getActiveSessions(tenantId = null) {
+    // Try with user join first, fall back to without
     let query = `
       SELECT
         ss.*,
         u.email as user_email,
-        u.full_name as user_name
+        COALESCE(u.full_name, u.first_name || ' ' || u.last_name) as user_name
       FROM streaming_sessions ss
-      JOIN users u ON u.id = ss.user_id
+      LEFT JOIN users u ON u.id = ss.user_id
       WHERE ss.status = 'connected'
     `;
     const params = [];
