@@ -619,12 +619,12 @@ class RealtimeStreamingService {
    * Get active sessions
    */
   async getActiveSessions(tenantId = null) {
-    // Try with user join first, fall back to without
+    // Query sessions with user info, handle missing columns gracefully
     let query = `
       SELECT
         ss.*,
         u.email as user_email,
-        COALESCE(u.full_name, u.first_name || ' ' || u.last_name) as user_name
+        COALESCE(u.name, u.first_name || ' ' || u.last_name) as user_name
       FROM streaming_sessions ss
       LEFT JOIN users u ON u.id = ss.user_id
       WHERE ss.status = 'connected'
